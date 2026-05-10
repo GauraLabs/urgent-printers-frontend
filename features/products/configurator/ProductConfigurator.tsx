@@ -10,6 +10,9 @@ import type { Product, SidesOption, CartItemConfig } from "@/types";
 
 interface ProductConfiguratorProps {
   product: Product;
+  artworkFileKey?: string;
+  artworkFileName?: string;
+  templateData?: Record<string, string>;
 }
 
 function OptionButton({
@@ -17,12 +20,17 @@ function OptionButton({
   description,
   selected,
   onClick,
+  delta,
+  isDefault,
 }: {
   label: string;
   description?: string;
   selected: boolean;
   onClick: () => void;
+  delta?: number;
+  isDefault?: boolean;
 }) {
+  const showDelta = delta !== undefined && Math.abs(delta) >= 0.01;
   return (
     <button
       onClick={onClick}
@@ -33,12 +41,37 @@ function OptionButton({
           : "border-border hover:border-primary/40 hover:bg-muted/50"
       )}
     >
-      <span className={cn("text-sm font-medium", selected && "text-primary")}>{label}</span>
+      <div className="flex items-center justify-between w-full gap-1.5">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className={cn("text-sm font-medium leading-snug truncate", selected && "text-primary")}>
+            {label}
+          </span>
+          {isDefault && (
+            <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary uppercase tracking-wide">
+              Popular
+            </span>
+          )}
+        </div>
+        {showDelta && (
+          <span className={cn(
+            "shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full",
+            delta! > 0
+              ? "bg-brand-orange/10 text-brand-orange"
+              : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+          )}>
+            {delta! > 0 ? "+" : "−"}{formatPrice(Math.abs(delta!))}
+          </span>
+        )}
+      </div>
       {description && (
         <span className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{description}</span>
       )}
     </button>
   );
+}
+
+function getDefault<T extends { isDefault: boolean }>(options: T[]): T {
+  return options.find((o) => o.isDefault) ?? options[0];
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -51,26 +84,43 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 // Exposed via ref so StickyAddToCart can observe the button
 export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfiguratorProps>(
-  function ProductConfigurator({ product }, ref) {
+  function ProductConfigurator({ product, artworkFileKey, artworkFileName, templateData }, ref) {
     const { pricingTiers, turnaroundOptions, printSpec } = product;
-    const defaultTier = pricingTiers[2] ?? pricingTiers[0];
+    const defaultTier = pricingTiers.find((t) => t.isBestValue) ?? pricingTiers[0];
 
-    const [selectedSize, setSelectedSize] = useState(printSpec.sizes[0]);
-    const [selectedPaper, setSelectedPaper] = useState(printSpec.papers[0]);
-    const [selectedFinish, setSelectedFinish] = useState(printSpec.finishes[0]);
-    const [selectedSides, setSelectedSides] = useState<SidesOption>(printSpec.sides[0]);
+    const [selectedSize, setSelectedSize] = useState(() => getDefault(printSpec.sizes));
+    const [selectedPaper, setSelectedPaper] = useState(() => getDefault(printSpec.papers));
+    const [selectedFinish, setSelectedFinish] = useState(() => getDefault(printSpec.finishes));
+    const [selectedSides, setSelectedSides] = useState<SidesOption>(() => getDefault(printSpec.sides));
     const [selectedQuantity, setSelectedQuantity] = useState(defaultTier.quantity);
     const [selectedTurnaround, setSelectedTurnaround] = useState(turnaroundOptions[0]);
 
     const addItem = useCartStore((s) => s.addItem);
 
-    // Computed pricing
+    // Price = tier base × spec multipliers; turnaround extraCost is flat INR added once
     const baseTier =
       pricingTiers.find((t) => t.quantity === selectedQuantity) ?? pricingTiers[0];
-    const pricePerUnit = parseFloat(
-      (baseTier.pricePerUnit * selectedTurnaround.priceMultiplier).toFixed(2)
-    );
-    const totalPrice = parseFloat((pricePerUnit * selectedQuantity).toFixed(2));
+    const sizeM   = selectedSize?.priceMultiplier ?? 1;
+    const paperM  = selectedPaper?.priceMultiplier ?? 1;
+    const finishM = selectedFinish?.priceMultiplier ?? 1;
+    const sidesM  = selectedSides?.priceMultiplier ?? 1;
+    const pricePerUnit = parseFloat((baseTier.pricePerUnit * sizeM * paperM * finishM * sidesM).toFixed(2));
+    const totalPrice = parseFloat((pricePerUnit * selectedQuantity + selectedTurnaround.extraCost).toFixed(2));
+
+    // Delta helpers — show cost impact vs cheapest option in each category
+    const minSizeM   = Math.min(...printSpec.sizes.map((s) => s.priceMultiplier));
+    const minPaperM  = Math.min(...printSpec.papers.map((p) => p.priceMultiplier));
+    const minFinishM = Math.min(...printSpec.finishes.map((f) => f.priceMultiplier));
+    const minSidesM  = Math.min(...printSpec.sides.map((s) => s.priceMultiplier));
+    // "base without this category" = what the per-unit price would be using the cheapest option there
+    const baseWithoutSize   = baseTier.pricePerUnit * paperM  * finishM * sidesM;
+    const baseWithoutPaper  = baseTier.pricePerUnit * sizeM   * finishM * sidesM;
+    const baseWithoutFinish = baseTier.pricePerUnit * sizeM   * paperM  * sidesM;
+    const baseWithoutSides  = baseTier.pricePerUnit * sizeM   * paperM  * finishM;
+    const sizeDelta   = (m: number) => parseFloat((baseWithoutSize   * (m - minSizeM)).toFixed(2));
+    const paperDelta  = (m: number) => parseFloat((baseWithoutPaper  * (m - minPaperM)).toFixed(2));
+    const finishDelta = (m: number) => parseFloat((baseWithoutFinish * (m - minFinishM)).toFixed(2));
+    const sidesDelta  = (m: number) => parseFloat((baseWithoutSides  * (m - minSidesM)).toFixed(2));
 
     function handleAddToCart() {
       const config: CartItemConfig = {
@@ -80,10 +130,13 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
         paperLabel: selectedPaper.label,
         finishId: selectedFinish.id,
         finishLabel: selectedFinish.label,
-        sides: selectedSides,
+        sides: selectedSides?.label ?? "",
         quantity: selectedQuantity,
         turnaroundId: selectedTurnaround.id,
         turnaroundLabel: selectedTurnaround.label,
+        artworkFileKey,
+        artworkFileName,
+        templateData,
       };
 
       addItem(
@@ -129,6 +182,8 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
                 label={size.label}
                 selected={selectedSize.id === size.id}
                 onClick={() => setSelectedSize(size)}
+                delta={sizeDelta(size.priceMultiplier)}
+                isDefault={size.isDefault}
               />
             ))}
           </div>
@@ -145,6 +200,8 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
                 description={paper.description}
                 selected={selectedPaper.id === paper.id}
                 onClick={() => setSelectedPaper(paper)}
+                delta={paperDelta(paper.priceMultiplier)}
+                isDefault={paper.isDefault}
               />
             ))}
           </div>
@@ -161,6 +218,8 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
                 description={finish.description}
                 selected={selectedFinish.id === finish.id}
                 onClick={() => setSelectedFinish(finish)}
+                delta={finishDelta(finish.priceMultiplier)}
+                isDefault={finish.isDefault}
               />
             ))}
           </div>
@@ -173,10 +232,12 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
             <div className="grid grid-cols-2 gap-2">
               {printSpec.sides.map((side) => (
                 <OptionButton
-                  key={side}
-                  label={side === "single" ? "Single-sided" : "Double-sided"}
-                  selected={selectedSides === side}
+                  key={side.label}
+                  label={side.label}
+                  selected={selectedSides?.label === side.label}
                   onClick={() => setSelectedSides(side)}
+                  delta={sidesDelta(side.priceMultiplier)}
+                  isDefault={side.isDefault}
                 />
               ))}
             </div>
@@ -198,8 +259,8 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
           <SectionLabel>Turnaround Time</SectionLabel>
           <div className="flex flex-col gap-2">
             {turnaroundOptions.map((opt) => {
-              const extraCost = opt.priceMultiplier > 1
-                ? `+${Math.round((opt.priceMultiplier - 1) * 100)}%`
+              const costLabel = opt.extraCost > 0
+                ? `+${formatPrice(opt.extraCost)}`
                 : "Included";
               return (
                 <button
@@ -216,14 +277,15 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
                     <p className={cn("text-sm font-medium", selectedTurnaround.id === opt.id && "text-primary")}>
                       {opt.label}
                     </p>
+                    <p className="text-[11px] text-muted-foreground">{opt.businessDays} business days</p>
                   </div>
                   <span className={cn(
                     "text-xs font-semibold px-2 py-0.5 rounded-full",
-                    opt.priceMultiplier === 1
+                    opt.extraCost === 0
                       ? "bg-success/10 text-success"
                       : "bg-brand-orange/10 text-brand-orange"
                   )}>
-                    {extraCost}
+                    {costLabel}
                   </span>
                 </button>
               );

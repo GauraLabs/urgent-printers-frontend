@@ -19,12 +19,7 @@ interface ProductCardProps {
 export function ProductCard({ product, className }: ProductCardProps) {
   const lowestTier = product.pricingTiers[0];
   const href = ROUTES.product(product.categorySlug, product.slug);
-
-  // Discount display support
-  const discountPct = (product as Product & { discountPercent?: number }).discountPercent;
-  const originalPrice = discountPct
-    ? parseFloat((lowestTier.pricePerUnit / (1 - discountPct / 100)).toFixed(2))
-    : null;
+  const displayPrice = lowestTier?.pricePerUnit ?? product.priceFrom ?? 0;
 
   return (
     <motion.article
@@ -45,19 +40,20 @@ export function ProductCard({ product, className }: ProductCardProps) {
           className="object-cover transition-transform duration-500 group-hover:scale-105"
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
         />
-        {discountPct && (
-          <Badge className="absolute top-2.5 left-2.5 bg-red-500 text-white border-0 text-[10px] px-2 font-bold">
-            {discountPct}% OFF
-          </Badge>
-        )}
-        {!discountPct && product.tags.includes("bestseller") && (
-          <Badge className="absolute top-2.5 left-2.5 bg-brand-orange text-brand-orange-foreground border-0 text-[10px] px-2">
-            Bestseller
-          </Badge>
-        )}
-        {!discountPct && product.tags.includes("luxury") && !product.tags.includes("bestseller") && (
-          <Badge className="absolute top-2.5 left-2.5 bg-primary text-primary-foreground border-0 text-[10px] px-2">
-            Premium
+        {product.badge && product.badge !== "none" && (
+          <Badge
+            className={cn(
+              "absolute top-2.5 left-2.5 border-0 text-[10px] px-2 capitalize",
+              product.badge === "bestseller"
+                ? "bg-brand-orange text-brand-orange-foreground"
+                : product.badge === "new"
+                  ? "bg-emerald-500 text-white"
+                  : product.badge === "sale"
+                    ? "bg-red-500 text-white font-bold"
+                    : "bg-primary text-primary-foreground"
+            )}
+          >
+            {product.badge}
           </Badge>
         )}
       </Link>
@@ -91,13 +87,8 @@ export function ProductCard({ product, className }: ProductCardProps) {
             <p className="text-[10px] text-muted-foreground mb-0.5">From</p>
             <div className="flex items-baseline gap-1.5">
               <p className="font-heading font-bold text-base leading-none">
-                {formatPricePerUnit(lowestTier.pricePerUnit)}
+                {formatPricePerUnit(displayPrice)}
               </p>
-              {originalPrice && (
-                <p className="text-[10px] text-muted-foreground line-through leading-none">
-                  {formatPricePerUnit(originalPrice)}
-                </p>
-              )}
             </div>
             <p className="text-[10px] text-muted-foreground mt-0.5">per unit</p>
           </div>

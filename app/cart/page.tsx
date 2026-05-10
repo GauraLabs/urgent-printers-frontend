@@ -105,7 +105,7 @@ export default function CartPage() {
                     </Link>
                     <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
                       <p>{item.config.sizeLabel}</p>
-                      <p>{item.config.paperLabel} · {item.config.finishLabel} · {item.config.sides === "double" ? "Double-sided" : "Single-sided"}</p>
+                      <p>{item.config.paperLabel} · {item.config.finishLabel} · {item.config.sides.toLowerCase().includes("double") ? "Double-sided" : "Single-sided"}</p>
                       <p className="text-primary font-medium">{item.config.turnaroundLabel}</p>
                     </div>
 

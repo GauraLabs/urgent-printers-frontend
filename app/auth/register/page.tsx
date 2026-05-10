@@ -9,6 +9,7 @@ import { z } from "zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { FormField } from "@/components/common/FormField";
+import { useAuthStore } from "@/features/auth/store";
 import { register as apiRegister } from "@/lib/api";
 import { ROUTES } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils";
@@ -18,11 +19,6 @@ const schema = z
     firstName: z.string().min(1, "First name is required").max(50),
     lastName: z.string().min(1, "Last name is required").max(50),
     email: z.string().min(1, "Email is required").email("Enter a valid email"),
-    phone: z
-      .string()
-      .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number")
-      .optional()
-      .or(z.literal("")),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
@@ -39,6 +35,7 @@ type FormValues = z.infer<typeof schema>;
 
 export default function RegisterPage() {
   const router = useRouter();
+  const setUser = useAuthStore((s) => s.setUser);
   const [showPassword, setShowPassword] = useState(false);
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
@@ -47,14 +44,15 @@ export default function RegisterPage() {
 
   async function onSubmit(data: FormValues) {
     try {
-      await apiRegister({
+      const { user, token } = await apiRegister({
         email: data.email,
         password: data.password,
         firstName: data.firstName,
         lastName: data.lastName,
       });
-      toast.success("Account created! Please verify your email.");
-      router.push(`${ROUTES.verifyOtp}?email=${encodeURIComponent(data.email)}`);
+      setUser(user, token);
+      toast.success(`Welcome, ${user.firstName}! Your account has been created.`);
+      router.replace(ROUTES.account);
     } catch {
       toast.error("Something went wrong. Please try again.");
     }
@@ -62,10 +60,10 @@ export default function RegisterPage() {
 
   return (
     <>
-      <div className="mb-7">
+      <div className="mb-6">
         <h1 className="font-heading font-bold text-2xl">Create account</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Join Urgent Printers — it only takes a minute
+          Sign up with email and password
         </p>
       </div>
 
@@ -99,16 +97,6 @@ export default function RegisterPage() {
           required
           error={errors.email?.message}
           {...register("email")}
-        />
-
-        <FormField
-          label="Mobile number"
-          type="tel"
-          autoComplete="tel"
-          placeholder="9876543210"
-          hint="10-digit Indian mobile number (optional)"
-          error={errors.phone?.message}
-          {...register("phone")}
         />
 
         <div className="relative">
@@ -145,7 +133,7 @@ export default function RegisterPage() {
           type="submit"
           disabled={isSubmitting}
           className={cn(
-            "w-full h-11 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 mt-2",
+            "w-full h-11 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 mt-1",
             "bg-brand-orange hover:bg-brand-orange/90 text-brand-orange-foreground",
             "disabled:opacity-60 disabled:cursor-not-allowed transition-all"
           )}
@@ -154,11 +142,17 @@ export default function RegisterPage() {
         </button>
       </form>
 
-      <div className="mt-6 pt-6 border-t border-border text-center">
+      <div className="mt-6 pt-6 border-t border-border text-center space-y-2">
         <p className="text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link href={ROUTES.login} className="text-primary font-medium hover:underline">
             Sign in
+          </Link>
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Prefer mobile OTP?{" "}
+          <Link href={ROUTES.login} className="text-primary font-medium hover:underline">
+            Sign in with phone
           </Link>
         </p>
       </div>

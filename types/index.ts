@@ -1,3 +1,16 @@
+// ─── Customization ────────────────────────────────────────────────────────────
+
+export type CustomizationMode = "artwork" | "template" | "both" | "none";
+
+export interface TemplateField {
+  id: string;
+  label: string;
+  type: "text" | "email" | "phone" | "multiline" | "url";
+  placeholder?: string;
+  required: boolean;
+  maxLength?: number;
+}
+
 // ─── Category ────────────────────────────────────────────────────────────────
 
 export interface Category {
@@ -7,6 +20,15 @@ export interface Category {
   description: string;
   imageUrl: string;
   productCount: number;
+  // Fields populated when fetched from the real backend (absent in mock data)
+  thumbnailUrl?: string | null;
+  bannerUrl?: string | null;
+  iconName?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  isActive?: boolean;
+  parentId?: number | null;
+  sortOrder?: number;
 }
 
 // ─── Print Specifications ─────────────────────────────────────────────────────
@@ -17,6 +39,8 @@ export interface SizeOption {
   width: number;
   height: number;
   unit: "in" | "mm" | "cm";
+  priceMultiplier: number;
+  isDefault: boolean;
 }
 
 export interface PaperOption {
@@ -24,15 +48,23 @@ export interface PaperOption {
   label: string;
   weight: string;
   description: string;
+  priceMultiplier: number;
+  isDefault: boolean;
 }
 
 export interface FinishOption {
   id: string;
   label: string;
   description: string;
+  priceMultiplier: number;
+  isDefault: boolean;
 }
 
-export type SidesOption = "single" | "double";
+export interface SidesOption {
+  label: string;
+  priceMultiplier: number;
+  isDefault: boolean;
+}
 
 export interface PrintSpec {
   sizes: SizeOption[];
@@ -56,7 +88,7 @@ export interface TurnaroundOption {
   id: string;
   label: string;
   businessDays: number;
-  priceMultiplier: number;
+  extraCost: number;
 }
 
 // ─── Product ──────────────────────────────────────────────────────────────────
@@ -78,7 +110,10 @@ export interface Product {
   reviewCount: number;
   isFeatured: boolean;
   tags: string[];
-  discountPercent?: number;
+  badge?: string;
+  priceFrom?: number;
+  customizationMode: CustomizationMode;
+  templateFields: TemplateField[];
 }
 
 // ─── Cart ─────────────────────────────────────────────────────────────────────
@@ -90,12 +125,14 @@ export interface CartItemConfig {
   paperLabel: string;
   finishId: string;
   finishLabel: string;
-  sides: SidesOption;
+  sides: string;
   quantity: number;
   turnaroundId: string;
   turnaroundLabel: string;
   artworkFileName?: string;
   artworkFileSize?: number;
+  artworkFileKey?: string;
+  templateData?: Record<string, string>;
 }
 
 export interface CartItem {

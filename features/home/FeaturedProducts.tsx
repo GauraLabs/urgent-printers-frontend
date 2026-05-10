@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Star } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { StarRating } from "@/components/common/StarRating";
 import { ROUTES } from "@/lib/constants/routes";
@@ -12,7 +12,7 @@ interface FeaturedProductsProps {
 }
 
 function ProductCard({ product }: { product: Product }) {
-  const lowestTier = product.pricingTiers[0];
+  const displayPrice = product.pricingTiers[0]?.pricePerUnit ?? product.priceFrom ?? 0;
   const href = ROUTES.product(product.categorySlug, product.slug);
 
   return (
@@ -32,9 +32,9 @@ function ProductCard({ product }: { product: Product }) {
           className="object-cover transition-transform duration-500 group-hover:scale-105"
           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
         />
-        {product.tags.includes("bestseller") && (
-          <Badge className="absolute top-3 left-3 bg-brand-orange text-brand-orange-foreground border-0 text-[10px]">
-            Bestseller
+        {product.badge && product.badge !== "none" && (
+          <Badge className="absolute top-3 left-3 bg-brand-orange text-brand-orange-foreground border-0 text-[10px] capitalize">
+            {product.badge}
           </Badge>
         )}
       </div>
@@ -51,7 +51,7 @@ function ProductCard({ product }: { product: Product }) {
           <div>
             <p className="text-xs text-muted-foreground">From</p>
             <p className="font-heading font-bold text-base">
-              {formatPricePerUnit(lowestTier.pricePerUnit)}
+              {formatPricePerUnit(displayPrice)}
               <span className="text-xs font-normal text-muted-foreground ml-1">/ unit</span>
             </p>
           </div>

@@ -1,11 +1,11 @@
-import type { Product, PricingTier, TurnaroundOption, PrintSpec } from "@/types";
+import type { Product, PricingTier, TurnaroundOption, PrintSpec, SidesOption, TemplateField, CustomizationMode } from "@/types";
 
 // ─── Shared turnaround options ────────────────────────────────────────────────
 
 const standardTurnaround: TurnaroundOption[] = [
-  { id: "to-standard", label: "Standard (5–7 business days)", businessDays: 7, priceMultiplier: 1.0 },
-  { id: "to-rush", label: "Rush (3 business days)", businessDays: 3, priceMultiplier: 1.35 },
-  { id: "to-overnight", label: "Overnight (next business day)", businessDays: 1, priceMultiplier: 1.85 },
+  { id: "to-standard", label: "Standard (5–7 business days)", businessDays: 7, extraCost: 0 },
+  { id: "to-rush", label: "Rush (3 business days)", businessDays: 3, extraCost: 200 },
+  { id: "to-overnight", label: "Overnight (next business day)", businessDays: 1, extraCost: 500 },
 ];
 
 // ─── Pricing tier helpers ─────────────────────────────────────────────────────
@@ -25,134 +25,149 @@ function makeTiers(base: number, quantities: number[]): PricingTier[] {
 
 // ─── Shared print specs ───────────────────────────────────────────────────────
 
+const SIDES_SINGLE: SidesOption = { label: "Single", priceMultiplier: 1, isDefault: true };
+const SIDES_DOUBLE: SidesOption = { label: "Double", priceMultiplier: 1.5, isDefault: false };
+
 const businessCardSpec: PrintSpec = {
   sizes: [
-    { id: "sz-std", label: 'Standard (3.5" × 2")', width: 3.5, height: 2, unit: "in" },
-    { id: "sz-sq", label: 'Square (2.5" × 2.5")', width: 2.5, height: 2.5, unit: "in" },
-    { id: "sz-eu", label: 'European (3.35" × 2.17")', width: 3.35, height: 2.17, unit: "in" },
+    { id: "sz-std", label: 'Standard (3.5" × 2")', width: 3.5, height: 2, unit: "in", priceMultiplier: 1, isDefault: true },
+    { id: "sz-sq", label: 'Square (2.5" × 2.5")', width: 2.5, height: 2.5, unit: "in", priceMultiplier: 1.05, isDefault: false },
+    { id: "sz-eu", label: 'European (3.35" × 2.17")', width: 3.35, height: 2.17, unit: "in", priceMultiplier: 1, isDefault: false },
   ],
   papers: [
-    { id: "pp-14pt", label: "14pt Cardstock", weight: "14pt", description: "Standard thick card stock" },
-    { id: "pp-16pt", label: "16pt Cardstock", weight: "16pt", description: "Premium thick, great rigidity" },
-    { id: "pp-32pt", label: "32pt Ultra Thick", weight: "32pt", description: "Luxuriously thick, premium feel" },
+    { id: "pp-14pt", label: "14pt Cardstock", weight: "14pt", description: "Standard thick card stock", priceMultiplier: 1, isDefault: true },
+    { id: "pp-16pt", label: "16pt Cardstock", weight: "16pt", description: "Premium thick, great rigidity", priceMultiplier: 1.15, isDefault: false },
+    { id: "pp-32pt", label: "32pt Ultra Thick", weight: "32pt", description: "Luxuriously thick, premium feel", priceMultiplier: 1.4, isDefault: false },
   ],
   finishes: [
-    { id: "fn-matte", label: "Matte", description: "Soft, non-reflective finish" },
-    { id: "fn-gloss", label: "Gloss", description: "Shiny, vibrant colors" },
-    { id: "fn-uv", label: "Spot UV", description: "Glossy highlights on matte base" },
-    { id: "fn-foil", label: "Foil Stamp", description: "Metallic foil accents" },
+    { id: "fn-matte", label: "Matte", description: "Soft, non-reflective finish", priceMultiplier: 1, isDefault: true },
+    { id: "fn-gloss", label: "Gloss", description: "Shiny, vibrant colors", priceMultiplier: 1, isDefault: false },
+    { id: "fn-uv", label: "Spot UV", description: "Glossy highlights on matte base", priceMultiplier: 1.3, isDefault: false },
+    { id: "fn-foil", label: "Foil Stamp", description: "Metallic foil accents", priceMultiplier: 1.5, isDefault: false },
   ],
-  sides: ["single", "double"],
+  sides: [SIDES_SINGLE, SIDES_DOUBLE],
   minDpi: 300,
   bleedMm: 3,
 };
 
 const flyerSpec: PrintSpec = {
   sizes: [
-    { id: "sz-a5", label: 'A5 (5.83" × 8.27")', width: 5.83, height: 8.27, unit: "in" },
-    { id: "sz-a4", label: 'A4 (8.27" × 11.69")', width: 8.27, height: 11.69, unit: "in" },
-    { id: "sz-dl", label: 'DL (3.9" × 8.27")', width: 3.9, height: 8.27, unit: "in" },
+    { id: "sz-a5", label: 'A5 (5.83" × 8.27")', width: 5.83, height: 8.27, unit: "in", priceMultiplier: 1, isDefault: true },
+    { id: "sz-a4", label: 'A4 (8.27" × 11.69")', width: 8.27, height: 11.69, unit: "in", priceMultiplier: 1.3, isDefault: false },
+    { id: "sz-dl", label: 'DL (3.9" × 8.27")', width: 3.9, height: 8.27, unit: "in", priceMultiplier: 0.9, isDefault: false },
   ],
   papers: [
-    { id: "pp-100gsm", label: "100gsm Silk", weight: "100gsm", description: "Standard quality, semi-gloss" },
-    { id: "pp-130gsm", label: "130gsm Silk", weight: "130gsm", description: "Mid-weight, vibrant print" },
-    { id: "pp-170gsm", label: "170gsm Silk", weight: "170gsm", description: "Heavier, more premium feel" },
+    { id: "pp-100gsm", label: "100gsm Silk", weight: "100gsm", description: "Standard quality, semi-gloss", priceMultiplier: 1, isDefault: true },
+    { id: "pp-130gsm", label: "130gsm Silk", weight: "130gsm", description: "Mid-weight, vibrant print", priceMultiplier: 1.15, isDefault: false },
+    { id: "pp-170gsm", label: "170gsm Silk", weight: "170gsm", description: "Heavier, more premium feel", priceMultiplier: 1.3, isDefault: false },
   ],
   finishes: [
-    { id: "fn-matte", label: "Matte Laminate", description: "Soft, elegant, anti-glare" },
-    { id: "fn-gloss", label: "Gloss Laminate", description: "Shiny, bright, eye-catching" },
-    { id: "fn-uncoated", label: "Uncoated", description: "Natural paper feel, writable" },
+    { id: "fn-matte", label: "Matte Laminate", description: "Soft, elegant, anti-glare", priceMultiplier: 1.1, isDefault: true },
+    { id: "fn-gloss", label: "Gloss Laminate", description: "Shiny, bright, eye-catching", priceMultiplier: 1.1, isDefault: false },
+    { id: "fn-uncoated", label: "Uncoated", description: "Natural paper feel, writable", priceMultiplier: 1, isDefault: false },
   ],
-  sides: ["single", "double"],
+  sides: [SIDES_SINGLE, SIDES_DOUBLE],
   minDpi: 300,
   bleedMm: 3,
 };
 
 const bannerSpec: PrintSpec = {
   sizes: [
-    { id: "sz-2x4", label: "2ft × 4ft", width: 24, height: 48, unit: "in" },
-    { id: "sz-3x6", label: "3ft × 6ft", width: 36, height: 72, unit: "in" },
-    { id: "sz-4x8", label: "4ft × 8ft", width: 48, height: 96, unit: "in" },
-    { id: "sz-5x10", label: "5ft × 10ft", width: 60, height: 120, unit: "in" },
+    { id: "sz-2x4", label: "2ft × 4ft", width: 24, height: 48, unit: "in", priceMultiplier: 1, isDefault: true },
+    { id: "sz-3x6", label: "3ft × 6ft", width: 36, height: 72, unit: "in", priceMultiplier: 1.8, isDefault: false },
+    { id: "sz-4x8", label: "4ft × 8ft", width: 48, height: 96, unit: "in", priceMultiplier: 2.5, isDefault: false },
+    { id: "sz-5x10", label: "5ft × 10ft", width: 60, height: 120, unit: "in", priceMultiplier: 3.5, isDefault: false },
   ],
   papers: [
-    { id: "pp-13oz", label: "13oz Vinyl", weight: "13oz", description: "Standard indoor/outdoor vinyl" },
-    { id: "pp-18oz", label: "18oz Heavy Vinyl", weight: "18oz", description: "Heavy-duty, wind-resistant" },
-    { id: "pp-fabric", label: "Polyester Fabric", weight: "fabric", description: "Wrinkle-resistant, elegant" },
+    { id: "pp-13oz", label: "13oz Vinyl", weight: "13oz", description: "Standard indoor/outdoor vinyl", priceMultiplier: 1, isDefault: true },
+    { id: "pp-18oz", label: "18oz Heavy Vinyl", weight: "18oz", description: "Heavy-duty, wind-resistant", priceMultiplier: 1.25, isDefault: false },
+    { id: "pp-fabric", label: "Polyester Fabric", weight: "fabric", description: "Wrinkle-resistant, elegant", priceMultiplier: 1.4, isDefault: false },
   ],
   finishes: [
-    { id: "fn-matte", label: "Matte", description: "Reduced glare, professional look" },
-    { id: "fn-gloss", label: "Gloss", description: "High-impact, vivid colors" },
+    { id: "fn-matte", label: "Matte", description: "Reduced glare, professional look", priceMultiplier: 1, isDefault: true },
+    { id: "fn-gloss", label: "Gloss", description: "High-impact, vivid colors", priceMultiplier: 1, isDefault: false },
   ],
-  sides: ["single", "double"],
+  sides: [SIDES_SINGLE, SIDES_DOUBLE],
   minDpi: 150,
   bleedMm: 6,
 };
 
 const packagingSpec: PrintSpec = {
   sizes: [
-    { id: "sz-sm", label: "Small Box (4×4×4 in)", width: 4, height: 4, unit: "in" },
-    { id: "sz-md", label: "Medium Box (6×6×6 in)", width: 6, height: 6, unit: "in" },
-    { id: "sz-lg", label: "Large Box (12×10×4 in)", width: 12, height: 10, unit: "in" },
+    { id: "sz-sm", label: "Small Box (4×4×4 in)", width: 4, height: 4, unit: "in", priceMultiplier: 1, isDefault: true },
+    { id: "sz-md", label: "Medium Box (6×6×6 in)", width: 6, height: 6, unit: "in", priceMultiplier: 1.5, isDefault: false },
+    { id: "sz-lg", label: "Large Box (12×10×4 in)", width: 12, height: 10, unit: "in", priceMultiplier: 2.2, isDefault: false },
   ],
   papers: [
-    { id: "pp-eco", label: "Eco Kraft", weight: "350gsm", description: "Sustainable, natural brown kraft" },
-    { id: "pp-white", label: "White SBS Board", weight: "350gsm", description: "Premium white coated board" },
-    { id: "pp-rigid", label: "Rigid Setup Box", weight: "2mm", description: "Luxury rigid box material" },
+    { id: "pp-eco", label: "Eco Kraft", weight: "350gsm", description: "Sustainable, natural brown kraft", priceMultiplier: 1, isDefault: true },
+    { id: "pp-white", label: "White SBS Board", weight: "350gsm", description: "Premium white coated board", priceMultiplier: 1.2, isDefault: false },
+    { id: "pp-rigid", label: "Rigid Setup Box", weight: "2mm", description: "Luxury rigid box material", priceMultiplier: 1.8, isDefault: false },
   ],
   finishes: [
-    { id: "fn-matte", label: "Matte Laminate", description: "Refined, tactile finish" },
-    { id: "fn-gloss", label: "Gloss Laminate", description: "Bold, striking appearance" },
-    { id: "fn-uv", label: "Spot UV", description: "Premium selective gloss" },
-    { id: "fn-foil", label: "Foil Stamp", description: "Luxury metallic accents" },
+    { id: "fn-matte", label: "Matte Laminate", description: "Refined, tactile finish", priceMultiplier: 1.1, isDefault: true },
+    { id: "fn-gloss", label: "Gloss Laminate", description: "Bold, striking appearance", priceMultiplier: 1.1, isDefault: false },
+    { id: "fn-uv", label: "Spot UV", description: "Premium selective gloss", priceMultiplier: 1.3, isDefault: false },
+    { id: "fn-foil", label: "Foil Stamp", description: "Luxury metallic accents", priceMultiplier: 1.5, isDefault: false },
   ],
-  sides: ["single"],
+  sides: [{ ...SIDES_SINGLE, isDefault: true }],
   minDpi: 300,
   bleedMm: 3,
 };
 
 const brochureSpec: PrintSpec = {
   sizes: [
-    { id: "sz-a4-tri", label: 'A4 Tri-Fold (8.27" × 11.69")', width: 8.27, height: 11.69, unit: "in" },
-    { id: "sz-a4-bi", label: 'A4 Bi-Fold (8.27" × 11.69")', width: 8.27, height: 11.69, unit: "in" },
-    { id: "sz-dl-fold", label: 'DL Tri-Fold (3.9" × 8.27")', width: 3.9, height: 8.27, unit: "in" },
+    { id: "sz-a4-tri", label: 'A4 Tri-Fold (8.27" × 11.69")', width: 8.27, height: 11.69, unit: "in", priceMultiplier: 1, isDefault: true },
+    { id: "sz-a4-bi", label: 'A4 Bi-Fold (8.27" × 11.69")', width: 8.27, height: 11.69, unit: "in", priceMultiplier: 1, isDefault: false },
+    { id: "sz-dl-fold", label: 'DL Tri-Fold (3.9" × 8.27")', width: 3.9, height: 8.27, unit: "in", priceMultiplier: 0.85, isDefault: false },
   ],
   papers: [
-    { id: "pp-130gsm", label: "130gsm Silk", weight: "130gsm", description: "Quality, vibrant colour" },
-    { id: "pp-170gsm", label: "170gsm Silk", weight: "170gsm", description: "Heavier, more premium" },
-    { id: "pp-250gsm", label: "250gsm Silk", weight: "250gsm", description: "Very thick, luxurious" },
+    { id: "pp-130gsm", label: "130gsm Silk", weight: "130gsm", description: "Quality, vibrant colour", priceMultiplier: 1, isDefault: true },
+    { id: "pp-170gsm", label: "170gsm Silk", weight: "170gsm", description: "Heavier, more premium", priceMultiplier: 1.2, isDefault: false },
+    { id: "pp-250gsm", label: "250gsm Silk", weight: "250gsm", description: "Very thick, luxurious", priceMultiplier: 1.45, isDefault: false },
   ],
   finishes: [
-    { id: "fn-matte", label: "Matte Laminate", description: "Smooth, anti-fingerprint" },
-    { id: "fn-gloss", label: "Gloss Laminate", description: "Vibrant, high-shine" },
-    { id: "fn-soft", label: "Soft-Touch Laminate", description: "Velvet-like premium feel" },
+    { id: "fn-matte", label: "Matte Laminate", description: "Smooth, anti-fingerprint", priceMultiplier: 1.1, isDefault: true },
+    { id: "fn-gloss", label: "Gloss Laminate", description: "Vibrant, high-shine", priceMultiplier: 1.1, isDefault: false },
+    { id: "fn-soft", label: "Soft-Touch Laminate", description: "Velvet-like premium feel", priceMultiplier: 1.25, isDefault: false },
   ],
-  sides: ["double"],
+  sides: [{ ...SIDES_DOUBLE, isDefault: true }],
   minDpi: 300,
   bleedMm: 3,
 };
 
 const merchSpec: PrintSpec = {
   sizes: [
-    { id: "sz-sm", label: "Small (S)", width: 0, height: 0, unit: "in" },
-    { id: "sz-md", label: "Medium (M)", width: 0, height: 0, unit: "in" },
-    { id: "sz-lg", label: "Large (L)", width: 0, height: 0, unit: "in" },
-    { id: "sz-xl", label: "Extra Large (XL)", width: 0, height: 0, unit: "in" },
+    { id: "sz-sm", label: "Small (S)", width: 0, height: 0, unit: "in", priceMultiplier: 1, isDefault: false },
+    { id: "sz-md", label: "Medium (M)", width: 0, height: 0, unit: "in", priceMultiplier: 1, isDefault: true },
+    { id: "sz-lg", label: "Large (L)", width: 0, height: 0, unit: "in", priceMultiplier: 1.05, isDefault: false },
+    { id: "sz-xl", label: "Extra Large (XL)", width: 0, height: 0, unit: "in", priceMultiplier: 1.1, isDefault: false },
   ],
   papers: [
-    { id: "pp-100cotton", label: "100% Cotton", weight: "180gsm", description: "Soft, breathable, natural" },
-    { id: "pp-polycotton", label: "Poly-Cotton Blend", weight: "200gsm", description: "Durable, colour-fast" },
-    { id: "pp-performance", label: "Performance Polyester", weight: "160gsm", description: "Moisture-wicking, athletic" },
+    { id: "pp-100cotton", label: "100% Cotton", weight: "180gsm", description: "Soft, breathable, natural", priceMultiplier: 1, isDefault: true },
+    { id: "pp-polycotton", label: "Poly-Cotton Blend", weight: "200gsm", description: "Durable, colour-fast", priceMultiplier: 1.1, isDefault: false },
+    { id: "pp-performance", label: "Performance Polyester", weight: "160gsm", description: "Moisture-wicking, athletic", priceMultiplier: 1.15, isDefault: false },
   ],
   finishes: [
-    { id: "fn-dtg", label: "DTG Print", description: "Direct-to-garment, full colour" },
-    { id: "fn-screen", label: "Screen Print", description: "Classic, durable ink" },
-    { id: "fn-embroidery", label: "Embroidery", description: "Premium raised texture" },
+    { id: "fn-dtg", label: "DTG Print", description: "Direct-to-garment, full colour", priceMultiplier: 1, isDefault: true },
+    { id: "fn-screen", label: "Screen Print", description: "Classic, durable ink", priceMultiplier: 0.9, isDefault: false },
+    { id: "fn-embroidery", label: "Embroidery", description: "Premium raised texture", priceMultiplier: 1.4, isDefault: false },
   ],
-  sides: ["single", "double"],
+  sides: [SIDES_SINGLE, SIDES_DOUBLE],
   minDpi: 300,
   bleedMm: 0,
 };
+
+// ─── Template fields ──────────────────────────────────────────────────────────
+
+const businessCardTemplateFields: TemplateField[] = [
+  { id: "full_name", label: "Full Name", type: "text", placeholder: "e.g. Arjun Sharma", required: true, maxLength: 60 },
+  { id: "job_title", label: "Job Title", type: "text", placeholder: "e.g. Marketing Manager", required: false, maxLength: 80 },
+  { id: "company", label: "Company", type: "text", placeholder: "e.g. Urgent Printers", required: false, maxLength: 80 },
+  { id: "phone", label: "Phone", type: "phone", placeholder: "e.g. +91 98765 43210", required: true, maxLength: 20 },
+  { id: "email", label: "Email", type: "email", placeholder: "e.g. arjun@company.com", required: true, maxLength: 120 },
+  { id: "website", label: "Website", type: "url", placeholder: "e.g. www.company.com", required: false, maxLength: 120 },
+  { id: "address", label: "Address", type: "multiline", placeholder: "Business address (optional)", required: false, maxLength: 200 },
+];
 
 // ─── Products ─────────────────────────────────────────────────────────────────
 
@@ -179,7 +194,9 @@ export const mockProducts: Product[] = [
     reviewCount: 142,
     isFeatured: true,
     tags: ["bestseller", "professional", "networking"],
-    discountPercent: 20,
+    badge: "sale",
+    customizationMode: "template" as CustomizationMode,
+    templateFields: businessCardTemplateFields,
   },
   {
     id: "prod-bc-2",
@@ -202,6 +219,8 @@ export const mockProducts: Product[] = [
     reviewCount: 87,
     isFeatured: true,
     tags: ["luxury", "premium", "foil", "executive"],
+    customizationMode: "template" as CustomizationMode,
+    templateFields: businessCardTemplateFields,
   },
   {
     id: "prod-bc-3",
@@ -224,6 +243,8 @@ export const mockProducts: Product[] = [
     reviewCount: 63,
     isFeatured: false,
     tags: ["spot-uv", "luxury", "contrast"],
+    customizationMode: "template" as CustomizationMode,
+    templateFields: businessCardTemplateFields,
   },
 
   // ── Flyers ─────────────────────────────────────────────────────────────────
@@ -248,7 +269,9 @@ export const mockProducts: Product[] = [
     reviewCount: 98,
     isFeatured: true,
     tags: ["promotion", "event", "handout", "bestseller"],
-    discountPercent: 15,
+    badge: "sale",
+    customizationMode: "artwork" as CustomizationMode,
+    templateFields: [],
   },
   {
     id: "prod-fl-2",
@@ -271,6 +294,8 @@ export const mockProducts: Product[] = [
     reviewCount: 74,
     isFeatured: false,
     tags: ["full-page", "menu", "catalogue"],
+    customizationMode: "artwork" as CustomizationMode,
+    templateFields: [],
   },
   {
     id: "prod-fl-3",
@@ -293,6 +318,8 @@ export const mockProducts: Product[] = [
     reviewCount: 51,
     isFeatured: false,
     tags: ["direct-mail", "slim", "leaflet"],
+    customizationMode: "artwork" as CustomizationMode,
+    templateFields: [],
   },
 
   // ── Banners ────────────────────────────────────────────────────────────────
@@ -317,6 +344,8 @@ export const mockProducts: Product[] = [
     reviewCount: 118,
     isFeatured: true,
     tags: ["outdoor", "event", "storefront", "bestseller"],
+    customizationMode: "artwork" as CustomizationMode,
+    templateFields: [],
   },
   {
     id: "prod-bn-2",
@@ -335,8 +364,8 @@ export const mockProducts: Product[] = [
     printSpec: {
       ...bannerSpec,
       sizes: [
-        { id: "sz-33x80", label: '33" × 80" (Standard)', width: 33, height: 80, unit: "in" },
-        { id: "sz-47x80", label: '47" × 80" (Wide)', width: 47, height: 80, unit: "in" },
+        { id: "sz-33x80", label: '33" × 80" (Standard)', width: 33, height: 80, unit: "in", priceMultiplier: 1, isDefault: true },
+        { id: "sz-47x80", label: '47" × 80" (Wide)', width: 47, height: 80, unit: "in", priceMultiplier: 1.3, isDefault: false },
       ],
     },
     pricingTiers: makeTiers(1400.00, [1, 2, 5, 10, 25, 50]),
@@ -345,6 +374,8 @@ export const mockProducts: Product[] = [
     reviewCount: 92,
     isFeatured: false,
     tags: ["trade-show", "retractable", "professional"],
+    customizationMode: "artwork" as CustomizationMode,
+    templateFields: [],
   },
   {
     id: "prod-bn-3",
@@ -367,6 +398,8 @@ export const mockProducts: Product[] = [
     reviewCount: 44,
     isFeatured: false,
     tags: ["fabric", "premium", "exhibition", "reusable"],
+    customizationMode: "artwork" as CustomizationMode,
+    templateFields: [],
   },
 
   // ── Packaging ─────────────────────────────────────────────────────────────
@@ -391,6 +424,8 @@ export const mockProducts: Product[] = [
     reviewCount: 76,
     isFeatured: true,
     tags: ["unboxing", "ecommerce", "retail", "custom"],
+    customizationMode: "artwork" as CustomizationMode,
+    templateFields: [],
   },
   {
     id: "prod-pk-2",
@@ -413,6 +448,8 @@ export const mockProducts: Product[] = [
     reviewCount: 103,
     isFeatured: false,
     tags: ["ecommerce", "shipping", "mailer", "bestseller"],
+    customizationMode: "artwork" as CustomizationMode,
+    templateFields: [],
   },
   {
     id: "prod-pk-3",
@@ -435,7 +472,9 @@ export const mockProducts: Product[] = [
     reviewCount: 58,
     isFeatured: false,
     tags: ["eco", "sustainable", "kraft", "artisan"],
-    discountPercent: 25,
+    badge: "sale",
+    customizationMode: "artwork" as CustomizationMode,
+    templateFields: [],
   },
 
   // ── Brochures ─────────────────────────────────────────────────────────────
@@ -460,6 +499,8 @@ export const mockProducts: Product[] = [
     reviewCount: 82,
     isFeatured: true,
     tags: ["trifold", "corporate", "informational", "bestseller"],
+    customizationMode: "artwork" as CustomizationMode,
+    templateFields: [],
   },
   {
     id: "prod-br-2",
@@ -482,6 +523,8 @@ export const mockProducts: Product[] = [
     reviewCount: 61,
     isFeatured: false,
     tags: ["bifold", "property", "menu", "booklet"],
+    customizationMode: "artwork" as CustomizationMode,
+    templateFields: [],
   },
   {
     id: "prod-br-3",
@@ -504,6 +547,8 @@ export const mockProducts: Product[] = [
     reviewCount: 38,
     isFeatured: false,
     tags: ["luxury", "soft-touch", "premium", "prestige"],
+    customizationMode: "artwork" as CustomizationMode,
+    templateFields: [],
   },
 
   // ── Custom Merch ──────────────────────────────────────────────────────────
@@ -528,7 +573,9 @@ export const mockProducts: Product[] = [
     reviewCount: 134,
     isFeatured: true,
     tags: ["apparel", "event", "team", "bestseller"],
-    discountPercent: 10,
+    badge: "sale",
+    customizationMode: "artwork" as CustomizationMode,
+    templateFields: [],
   },
   {
     id: "prod-mc-2",
@@ -544,13 +591,15 @@ export const mockProducts: Product[] = [
       "https://picsum.photos/seed/mc2b/800/600",
       "https://picsum.photos/seed/mc2c/800/600",
     ],
-    printSpec: { ...merchSpec, sizes: [{ id: "sz-std", label: "Standard (38×42cm)", width: 38, height: 42, unit: "cm" }] },
+    printSpec: { ...merchSpec, sizes: [{ id: "sz-std", label: "Standard (38×42cm)", width: 38, height: 42, unit: "cm", priceMultiplier: 1, isDefault: true }] },
     pricingTiers: makeTiers(110.00, [10, 25, 50, 100, 250, 500]),
     turnaroundOptions: standardTurnaround,
     averageRating: 4.6,
     reviewCount: 89,
     isFeatured: false,
     tags: ["eco", "tote", "everyday", "promotion"],
+    customizationMode: "artwork" as CustomizationMode,
+    templateFields: [],
   },
   {
     id: "prod-mc-3",
@@ -566,12 +615,14 @@ export const mockProducts: Product[] = [
       "https://picsum.photos/seed/mc3b/800/600",
       "https://picsum.photos/seed/mc3c/800/600",
     ],
-    printSpec: { ...merchSpec, sizes: [{ id: "sz-onesize", label: "One Size (adjustable)", width: 0, height: 0, unit: "in" }], finishes: [{ id: "fn-embroidery", label: "Embroidery", description: "Premium raised texture" }] },
+    printSpec: { ...merchSpec, sizes: [{ id: "sz-onesize", label: "One Size (adjustable)", width: 0, height: 0, unit: "in", priceMultiplier: 1, isDefault: true }], finishes: [{ id: "fn-embroidery", label: "Embroidery", description: "Premium raised texture", priceMultiplier: 1.4, isDefault: true }] },
     pricingTiers: makeTiers(180.00, [10, 25, 50, 100, 250, 500]),
     turnaroundOptions: standardTurnaround,
     averageRating: 4.8,
     reviewCount: 57,
     isFeatured: false,
     tags: ["caps", "embroidery", "sports", "corporate"],
+    customizationMode: "artwork" as CustomizationMode,
+    templateFields: [],
   },
 ];

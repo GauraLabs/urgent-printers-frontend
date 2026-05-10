@@ -50,7 +50,7 @@ export function CartDrawerItem({ item }: CartDrawerItemProps) {
           {item.config.sizeLabel} · {item.config.paperLabel} · {item.config.finishLabel}
         </p>
         <p className="text-xs text-muted-foreground">
-          {item.config.sides === "double" ? "Double-sided" : "Single-sided"} · {item.config.turnaroundLabel.split(" ")[0]}
+          {item.config.sides.toLowerCase().includes("double") ? "Double-sided" : "Single-sided"} · {item.config.turnaroundLabel.split(" ")[0]}
         </p>
 
         {/* Quantity + price row */}

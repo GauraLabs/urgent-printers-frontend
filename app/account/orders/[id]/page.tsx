@@ -89,7 +89,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
                 </Link>
                 <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
                   <p>{item.config.sizeLabel} · {item.config.paperLabel} · {item.config.finishLabel}</p>
-                  <p>{item.config.sides === "double" ? "Double-sided" : "Single-sided"} · {item.config.quantity.toLocaleString("en-IN")} units</p>
+                  <p>{item.config.sides.toLowerCase().includes("double") ? "Double-sided" : "Single-sided"} · {item.config.quantity.toLocaleString("en-IN")} units</p>
                   <p>{item.config.turnaroundLabel}</p>
                   {item.config.artworkFileName && <p>Artwork: {item.config.artworkFileName}</p>}
                 </div>

@@ -4,9 +4,10 @@ import { useRef, useState, useCallback } from "react";
 import { ProductConfigurator } from "./configurator/ProductConfigurator";
 import { StickyAddToCart } from "./StickyAddToCart";
 import { ArtworkUpload } from "./artwork/ArtworkUpload";
-import { useCartStore } from "@/features/cart/store";
+import { SavedArtworks } from "./artwork/SavedArtworks";
+import { TemplateForm } from "./template/TemplateForm";
 import { formatPrice } from "@/lib/utils";
-import type { Product, CartItemConfig } from "@/types";
+import type { Product } from "@/types";
 
 interface ProductDetailClientProps {
   product: Product;
@@ -14,27 +15,54 @@ interface ProductDetailClientProps {
 
 export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const addItemRef = useRef<HTMLButtonElement>(null);
-  const addItem = useCartStore((s) => s.addItem);
 
-  // Mirror the configurator's current total so the sticky bar shows accurate price
-  const [stickyLabel, setStickyLabel] = useState(
-    formatPrice(product.pricingTiers[2]?.totalPrice ?? product.pricingTiers[0].totalPrice)
-  );
+  const [artworkFileKey, setArtworkFileKey] = useState<string>("");
+  const [artworkFileName, setArtworkFileName] = useState<string>("");
+  const [templateData, setTemplateData] = useState<Record<string, string>>({});
 
-  // The sticky bar calls this which clicks the main button — keeps a single source of truth
+  const handleArtworkChange = useCallback((fileKey: string, fileName: string) => {
+    setArtworkFileKey(fileKey);
+    setArtworkFileName(fileName);
+  }, []);
+
   const handleStickyAdd = useCallback(() => {
     addItemRef.current?.click();
   }, []);
 
+  const showArtwork =
+    product.customizationMode === "artwork" || product.customizationMode === "both";
+  const showTemplate =
+    product.customizationMode === "template" || product.customizationMode === "both";
+
   return (
     <>
-      <ProductConfigurator ref={addItemRef} product={product} />
-      <div className="mt-8 pt-6 border-t border-border">
-        <ArtworkUpload />
-      </div>
+      <ProductConfigurator
+        ref={addItemRef}
+        product={product}
+        artworkFileKey={artworkFileKey || undefined}
+        artworkFileName={artworkFileName || undefined}
+        templateData={Object.keys(templateData).length > 0 ? templateData : undefined}
+      />
+
+      {showTemplate && product.templateFields.length > 0 && (
+        <div className="mt-8 pt-6 border-t border-border">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+            Personalise Your Print
+          </p>
+          <TemplateForm fields={product.templateFields} onChange={setTemplateData} />
+        </div>
+      )}
+
+      {showArtwork && (
+        <div className="mt-8 pt-6 border-t border-border">
+          <ArtworkUpload onChange={handleArtworkChange} />
+          <SavedArtworks onSelect={handleArtworkChange} />
+        </div>
+      )}
+
       <StickyAddToCart
         productName={product.name}
-        price="Tap to configure"
+        price={formatPrice(product.pricingTiers[0]?.totalPrice ?? product.priceFrom ?? 0)}
         observeRef={addItemRef}
         onAddToCart={handleStickyAdd}
       />
