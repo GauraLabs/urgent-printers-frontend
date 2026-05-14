@@ -2,16 +2,20 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { CartItem, CartItemConfig, Product } from "@/types";
+import type { CartItem, CartItemConfig, Product, AppliedCoupon } from "@/types";
+import { makeCartItemId } from "./cartItemId";
 
 interface CartStore {
   items: CartItem[];
   isOpen: boolean;
+  appliedCoupon: AppliedCoupon | null;
 
   // Actions
-  addItem: (product: Pick<Product, "id" | "slug" | "name" | "images" | "categoryName">, config: CartItemConfig, pricePerUnit: number) => void;
+  addItem: (product: Pick<Product, "id" | "slug" | "name" | "images" | "categoryName" | "categorySlug">, config: CartItemConfig, pricePerUnit: number) => void;
   removeItem: (cartItemId: string) => void;
   updateQuantity: (cartItemId: string, quantity: number) => void;
+  setItems: (items: CartItem[]) => void;
+  setAppliedCoupon: (coupon: AppliedCoupon | null) => void;
   clearCart: () => void;
   openCart: () => void;
   closeCart: () => void;
@@ -27,9 +31,13 @@ export const useCartStore = create<CartStore>()(
     (set, get) => ({
       items: [],
       isOpen: false,
+      appliedCoupon: null,
 
       addItem: (product, config, pricePerUnit) => {
-        const cartItemId = `${product.id}-${config.sizeId}-${config.paperId}-${config.finishId}-${config.sides}-${config.turnaroundId}`;
+        const cartItemId = makeCartItemId(
+          product.id, config.sizeId, config.paperId, config.finishId,
+          config.sides, config.turnaroundId, config.artworkFileKey, config.templateData
+        );
         const totalPrice = parseFloat((pricePerUnit * config.quantity).toFixed(2));
 
         set((state) => {
@@ -47,14 +55,7 @@ export const useCartStore = create<CartStore>()(
           return {
             items: [
               ...state.items,
-              {
-                cartItemId,
-                product,
-                config,
-                pricePerUnit,
-                totalPrice,
-                addedAt: new Date().toISOString(),
-              },
+              { cartItemId, product, config, pricePerUnit, totalPrice, addedAt: new Date().toISOString() },
             ],
             isOpen: true,
           };
@@ -62,40 +63,33 @@ export const useCartStore = create<CartStore>()(
       },
 
       removeItem: (cartItemId) =>
-        set((state) => ({
-          items: state.items.filter((i) => i.cartItemId !== cartItemId),
-        })),
+        set((state) => ({ items: state.items.filter((i) => i.cartItemId !== cartItemId) })),
 
       updateQuantity: (cartItemId, quantity) =>
         set((state) => ({
           items: state.items.map((i) =>
             i.cartItemId === cartItemId
-              ? {
-                  ...i,
-                  config: { ...i.config, quantity },
-                  totalPrice: parseFloat((i.pricePerUnit * quantity).toFixed(2)),
-                }
+              ? { ...i, config: { ...i.config, quantity }, totalPrice: parseFloat((i.pricePerUnit * quantity).toFixed(2)) }
               : i
           ),
         })),
 
-      clearCart: () => set({ items: [] }),
+      setItems: (items) => set({ items }),
+
+      // Coupon is cleared when items change significantly (backend will revalidate anyway)
+      setAppliedCoupon: (coupon) => set({ appliedCoupon: coupon }),
+
+      clearCart: () => set({ items: [], appliedCoupon: null }),
       openCart: () => set({ isOpen: true }),
       closeCart: () => set({ isOpen: false }),
       toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
 
-      itemCount: () => get().items.reduce((sum, i) => sum + i.config.quantity, 0),
-      subtotal: () =>
-        parseFloat(
-          get()
-            .items.reduce((sum, i) => sum + i.totalPrice, 0)
-            .toFixed(2)
-        ),
+      itemCount: () => get().items.length,
+      subtotal: () => parseFloat(get().items.reduce((sum, i) => sum + i.totalPrice, 0).toFixed(2)),
     }),
     {
       name: "urgent-printers-cart",
-      // Persist only items, not UI state
-      partialize: (state) => ({ items: state.items }),
+      partialize: (state) => ({ items: state.items, appliedCoupon: state.appliedCoupon }),
     }
   )
 );

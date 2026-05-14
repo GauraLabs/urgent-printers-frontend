@@ -14,11 +14,17 @@ interface ProductDetailClientProps {
 }
 
 export function ProductDetailClient({ product }: ProductDetailClientProps) {
-  const addItemRef = useRef<HTMLButtonElement>(null);
+  const addItemRef         = useRef<HTMLButtonElement>(null);
+  const templateSectionRef = useRef<HTMLDivElement>(null);
 
-  const [artworkFileKey, setArtworkFileKey] = useState<string>("");
-  const [artworkFileName, setArtworkFileName] = useState<string>("");
-  const [templateData, setTemplateData] = useState<Record<string, string>>({});
+  const [artworkFileKey,     setArtworkFileKey]     = useState<string>("");
+  const [artworkFileName,    setArtworkFileName]    = useState<string>("");
+  const [templateData,       setTemplateData]       = useState<Record<string, string>>({});
+  const [showTemplateErrors, setShowTemplateErrors] = useState(false);
+  const [configuratorState,  setConfiguratorState]  = useState({
+    isInCart:   false,
+    totalPrice: product.pricingTiers[0]?.totalPrice ?? product.priceFrom ?? 0,
+  });
 
   const handleArtworkChange = useCallback((fileKey: string, fileName: string) => {
     setArtworkFileKey(fileKey);
@@ -27,6 +33,12 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
   const handleStickyAdd = useCallback(() => {
     addItemRef.current?.click();
+  }, []);
+
+  // Called by ProductConfigurator when required template fields are missing
+  const handleBlockedByTemplate = useCallback(() => {
+    setShowTemplateErrors(true);
+    templateSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, []);
 
   const showArtwork =
@@ -42,14 +54,20 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         artworkFileKey={artworkFileKey || undefined}
         artworkFileName={artworkFileName || undefined}
         templateData={Object.keys(templateData).length > 0 ? templateData : undefined}
+        onBlockedByTemplate={handleBlockedByTemplate}
+        onStateChange={setConfiguratorState}
       />
 
       {showTemplate && product.templateFields.length > 0 && (
-        <div className="mt-8 pt-6 border-t border-border">
+        <div ref={templateSectionRef} className="mt-8 pt-6 border-t border-border">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
             Personalise Your Print
           </p>
-          <TemplateForm fields={product.templateFields} onChange={setTemplateData} />
+          <TemplateForm
+            fields={product.templateFields}
+            onChange={setTemplateData}
+            showErrors={showTemplateErrors}
+          />
         </div>
       )}
 
@@ -62,7 +80,8 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
       <StickyAddToCart
         productName={product.name}
-        price={formatPrice(product.pricingTiers[0]?.totalPrice ?? product.priceFrom ?? 0)}
+        price={formatPrice(configuratorState.totalPrice)}
+        isInCart={configuratorState.isInCart}
         observeRef={addItemRef}
         onAddToCart={handleStickyAdd}
       />

@@ -1,32 +1,46 @@
-import type { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
-import { Package, Heart, MapPin, ArrowRight, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Package, Heart, MapPin, ArrowRight, Clock, Loader2 } from "lucide-react";
 import { getOrders } from "@/lib/api";
-import { Badge } from "@/components/ui/badge";
+import { useAuthStore } from "@/features/auth/store";
 import { ROUTES } from "@/lib/constants/routes";
 import { formatPrice } from "@/lib/utils";
 import { ORDER_STATUS_LABELS } from "@/lib/constants/print-specs";
-
-export const metadata: Metadata = { title: "My Account" };
+import type { OrderCard } from "@/types";
 
 const STATUS_COLORS: Record<string, string> = {
-  placed:     "bg-muted text-muted-foreground",
-  confirmed:  "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-  printing:   "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
-  shipped:    "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
-  delivered:  "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
-  cancelled:  "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+  placed:           "bg-muted text-muted-foreground",
+  confirmed:        "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+  artwork_approved: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
+  printing:         "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
+  shipped:          "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
+  delivered:        "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+  cancelled:        "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
 };
 
-export default async function DashboardPage() {
-  const orders = await getOrders("user-me");
-  const recentOrders = orders.slice(0, 3);
+export default function DashboardPage() {
+  const user  = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.token);
+
+  const [orders,  setOrders]  = useState<OrderCard[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!token || !user) return;
+    getOrders(user.id, token)
+      .then(({ orders }) => setOrders(orders))
+      .finally(() => setLoading(false));
+  }, [token, user]);
+
+  const activeCount = orders.filter((o) => !["delivered", "cancelled"].includes(o.status)).length;
 
   const stats = [
-    { label: "Total Orders",    value: orders.length,                                     icon: Package,  href: ROUTES.accountOrders    },
-    { label: "Active Orders",   value: orders.filter(o => !["delivered","cancelled"].includes(o.status)).length, icon: Clock, href: ROUTES.accountOrders },
-    { label: "Saved Items",     value: "View",                                            icon: Heart,    href: ROUTES.accountSaved     },
-    { label: "Addresses",       value: "Manage",                                          icon: MapPin,   href: ROUTES.accountAddresses },
+    { label: "Total Orders",  value: loading ? "…" : orders.length, icon: Package, href: ROUTES.accountOrders    },
+    { label: "Active Orders", value: loading ? "…" : activeCount,   icon: Clock,   href: ROUTES.accountOrders    },
+    { label: "Saved Items",   value: "View",                         icon: Heart,   href: ROUTES.accountSaved     },
+    { label: "Addresses",     value: "Manage",                       icon: MapPin,  href: ROUTES.accountAddresses },
   ];
 
   return (
@@ -67,13 +81,18 @@ export default async function DashboardPage() {
           </Link>
         </div>
 
-        {recentOrders.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 size={20} className="animate-spin text-primary" />
+          </div>
+        ) : orders.length === 0 ? (
           <div className="text-center py-10 text-muted-foreground text-sm border border-dashed border-border rounded-2xl">
-            No orders yet. <Link href={ROUTES.products} className="text-primary hover:underline">Browse products</Link>
+            No orders yet.{" "}
+            <Link href={ROUTES.products} className="text-primary hover:underline">Browse products</Link>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {recentOrders.map((order) => (
+            {orders.slice(0, 3).map((order) => (
               <Link
                 key={order.id}
                 href={ROUTES.accountOrder(order.id)}
@@ -83,7 +102,7 @@ export default async function DashboardPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-semibold text-sm">{order.orderNumber}</p>
                     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${STATUS_COLORS[order.status] ?? ""}`}>
-                      {ORDER_STATUS_LABELS[order.status]}
+                      {ORDER_STATUS_LABELS[order.status] ?? order.status}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">

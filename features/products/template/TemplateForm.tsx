@@ -7,9 +7,10 @@ import type { TemplateField } from "@/types";
 interface TemplateFormProps {
   fields: TemplateField[];
   onChange: (data: Record<string, string>) => void;
+  showErrors?: boolean;  // set true externally to force-show all required-field errors
 }
 
-export function TemplateForm({ fields, onChange }: TemplateFormProps) {
+export function TemplateForm({ fields, onChange, showErrors = false }: TemplateFormProps) {
   const [values, setValues] = useState<Record<string, string>>(
     () => Object.fromEntries(fields.map((f) => [f.id, ""]))
   );
@@ -34,7 +35,7 @@ export function TemplateForm({ fields, onChange }: TemplateFormProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {fields.map((field) => {
-        const hasError = touched[field.id] && field.required && !values[field.id];
+        const hasError = (touched[field.id] || showErrors) && field.required && !values[field.id];
         const borderClass = hasError
           ? "border-destructive"
           : "border-border hover:border-primary/40";

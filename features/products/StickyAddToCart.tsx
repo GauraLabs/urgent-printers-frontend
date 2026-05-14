@@ -1,18 +1,19 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { ShoppingBag } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ShoppingBag, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 
 interface StickyAddToCartProps {
   productName: string;
   price: string;
+  isInCart?: boolean;
   observeRef: React.RefObject<HTMLButtonElement | null>;
   onAddToCart: () => void;
 }
 
-export function StickyAddToCart({ productName, price, observeRef, onAddToCart }: StickyAddToCartProps) {
+export function StickyAddToCart({ productName, price, isInCart = false, observeRef, onAddToCart }: StickyAddToCartProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -49,12 +50,14 @@ export function StickyAddToCart({ productName, price, observeRef, onAddToCart }:
               onClick={onAddToCart}
               className={cn(
                 "shrink-0 flex items-center gap-2 h-10 px-5 rounded-xl font-semibold text-sm",
-                "bg-brand-orange hover:bg-brand-orange/90 text-brand-orange-foreground",
-                "transition-all active:scale-[0.98] shadow-md shadow-brand-orange/20"
+                "transition-all active:scale-[0.98] shadow-md",
+                isInCart
+                  ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20"
+                  : "bg-brand-orange hover:bg-brand-orange/90 text-brand-orange-foreground shadow-brand-orange/20"
               )}
             >
-              <ShoppingBag size={16} />
-              Add to Cart
+              {isInCart ? <CheckCircle2 size={16} /> : <ShoppingBag size={16} />}
+              {isInCart ? "Update Cart" : "Add to Cart"}
             </button>
           </div>
         </motion.div>

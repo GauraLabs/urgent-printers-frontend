@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { Sora, DM_Sans } from "next/font/google";
+import Script from "next/script";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { TokenRefreshProvider } from "@/features/auth/TokenRefreshProvider";
+import { CartSyncProvider } from "@/features/cart/CartSyncProvider";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -24,7 +27,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en-IN" className={`${sora.variable} ${dmSans.variable} h-full`}>
       <body className="min-h-full flex flex-col antialiased">
+        <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
         <QueryProvider>
+          <TokenRefreshProvider>
+          <CartSyncProvider>
           <ThemeProvider>
             <Header />
             <main className="flex-1 pb-16 lg:pb-0">{children}</main>
@@ -43,6 +50,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               }}
             />
           </ThemeProvider>
+          </CartSyncProvider>
+          </TokenRefreshProvider>
         </QueryProvider>
       </body>
     </html>

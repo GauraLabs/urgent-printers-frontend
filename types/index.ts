@@ -137,7 +137,7 @@ export interface CartItemConfig {
 
 export interface CartItem {
   cartItemId: string;
-  product: Pick<Product, "id" | "slug" | "name" | "images" | "categoryName">;
+  product: Pick<Product, "id" | "slug" | "name" | "images" | "categoryName" | "categorySlug">;
   config: CartItemConfig;
   pricePerUnit: number;
   totalPrice: number;
@@ -148,10 +148,10 @@ export interface CartItem {
 
 export interface User {
   id: string;
-  email: string;
+  email?: string;      // null for phone-only users
   firstName: string;
   lastName: string;
-  phone?: string;
+  phone?: string;      // null for email/google users before phone linking
   avatarUrl?: string;
   createdAt: string;
 }
@@ -169,6 +169,7 @@ export interface Address {
   userId: string;
   label: string;
   fullName: string;
+  phone: string;
   line1: string;
   line2?: string;
   city: string;
@@ -178,11 +179,81 @@ export interface Address {
   isDefault: boolean;
 }
 
+// ─── Coupon ───────────────────────────────────────────────────────────────────
+
+export interface AppliedCoupon {
+  code: string;
+  discountType: "percentage" | "flat";
+  discountValue: number;
+  discountAmount: number;   // computed server-side based on subtotal
+  description: string;
+}
+
+// ─── Order creation ───────────────────────────────────────────────────────────
+
+export interface CreateOrderItem {
+  productId: string;
+  productSlug: string;
+  productName: string;
+  sizeId: string;
+  sizeLabel: string;
+  paperId: string;
+  paperLabel: string;
+  finishId: string;
+  finishLabel: string;
+  sides: string;
+  quantity: number;
+  turnaroundId: string;
+  turnaroundLabel: string;
+  artworkFileKey?: string;
+  templateData?: Record<string, string>;
+}
+
+export interface CreateOrderAddress {
+  label: string;
+  fullName: string;
+  phone: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
+
+export interface CreateOrderRequest {
+  items: CreateOrderItem[];
+  shippingAddress: CreateOrderAddress;
+  paymentMethod: "cod" | "upi" | "card" | "netbanking" | "wallet";
+  couponCode?: string;
+}
+
+// POST /api/v1/orders returns the same shape as the full Order
+export type CreatedOrder = Order;
+
+// ─── Order preview ────────────────────────────────────────────────────────────
+
+export interface OrderPreviewItem {
+  productId: string;
+  productName: string;
+  quantity: number;
+  pricePerUnit: number;
+  totalPrice: number;
+  turnaroundLabel: string;
+}
+
+export interface OrderPreview {
+  pricing: OrderPricing;
+  items: OrderPreviewItem[];
+  estimatedDelivery?: string;
+}
+
 // ─── Order ────────────────────────────────────────────────────────────────────
 
 export type OrderStatus =
   | "placed"
   | "confirmed"
+  | "artwork_approved"
   | "printing"
   | "shipped"
   | "delivered"
@@ -192,35 +263,99 @@ export interface OrderStatusEvent {
   status: OrderStatus;
   timestamp: string;
   note?: string;
+  createdBy?: string;
 }
 
+// Item shape returned in the full order detail response
 export interface OrderItem {
+  id: string;
   productId: string;
   productName: string;
   productSlug: string;
-  productImage: string;
-  config: CartItemConfig;
+  thumbnailUrl: string | null;
+  categoryName?: string;
+  sizeLabel: string;
+  paperLabel: string;
+  finishLabel: string;
+  sides: string;
+  quantity: number;
+  turnaroundLabel: string;
   pricePerUnit: number;
   totalPrice: number;
+  artworkFileKey?: string;
+  artworkUrl?: string;
+  artworkStatus?: string;
+  templateData?: Record<string, string>;
 }
 
+// Compact item shape used only in the orders list card
+export interface OrderListItem {
+  productName: string;
+  thumbnailUrl: string | null;
+  quantity: number;
+}
+
+export interface OrderPricing {
+  subtotal: number;
+  discountAmount: number;
+  couponCode?: string;
+  couponDescription?: string;
+  shippingCost: number;
+  gstRate: number;
+  gstAmount: number;
+  totalAmount: number;
+}
+
+export interface OrderShippingAddress {
+  label?: string;
+  fullName: string;
+  phone: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
+
+export interface OrderPayment {
+  method: string;
+  status: string;
+  amount: number;
+  razorpayOrderId?: string | null;
+  razorpayKeyId?: string | null;
+}
+
+// Full order (detail + POST response)
 export interface Order {
   id: string;
-  userId: string;
   orderNumber: string;
   status: OrderStatus;
-  statusHistory: OrderStatusEvent[];
-  items: OrderItem[];
-  shippingAddress: Omit<Address, "id" | "userId" | "isDefault">;
-  subtotal: number;
-  shippingCost: number;
-  taxAmount: number;
-  totalAmount: number;
   paymentMethod: string;
+  paymentStatus: string;
+  payment?: OrderPayment;
+  items: OrderItem[];
+  shippingAddress: OrderShippingAddress;
+  pricing: OrderPricing;
+  totalAmount: number;          // convenience copy of pricing.totalAmount
+  notes?: string;
   trackingNumber?: string;
   estimatedDelivery?: string;
+  statusHistory: OrderStatusEvent[];
   placedAt: string;
   updatedAt: string;
+}
+
+// Compact order shape for the orders list page
+export interface OrderCard {
+  id: string;
+  orderNumber: string;
+  status: OrderStatus;
+  paymentMethod: string;
+  paymentStatus: string;
+  totalAmount: number;
+  placedAt: string;
+  items: OrderListItem[];
 }
 
 // ─── Review ───────────────────────────────────────────────────────────────────

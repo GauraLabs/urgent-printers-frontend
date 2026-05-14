@@ -4,9 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Trash2, Plus, Minus } from "lucide-react";
 import { useCartStore } from "./store";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, slugify, cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants/routes";
-import { cn } from "@/lib/utils";
 import type { CartItem } from "@/types";
 
 interface CartDrawerItemProps {
@@ -18,7 +17,8 @@ export function CartDrawerItem({ item }: CartDrawerItemProps) {
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const closeCart = useCartStore((s) => s.closeCart);
 
-  const productHref = ROUTES.product(item.product.slug.split("-").slice(0, -2).join("-") || "products", item.product.slug);
+  const categorySlug = item.product.categorySlug || slugify(item.product.categoryName) || "products";
+  const productHref = ROUTES.product(categorySlug, item.product.slug);
 
   return (
     <div className="flex gap-3 py-4">
@@ -28,13 +28,19 @@ export function CartDrawerItem({ item }: CartDrawerItemProps) {
         onClick={closeCart}
         className="relative shrink-0 w-16 h-16 rounded-lg overflow-hidden border border-border bg-muted"
       >
-        <Image
-          src={item.product.images[0]}
-          alt={item.product.name}
-          fill
-          className="object-cover"
-          sizes="64px"
-        />
+        {item.product.images[0] ? (
+          <Image
+            src={item.product.images[0]}
+            alt={item.product.name}
+            fill
+            className="object-cover"
+            sizes="64px"
+          />
+        ) : (
+          <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground text-[10px] font-medium px-1 text-center leading-tight">
+            {item.product.name.slice(0, 12)}
+          </div>
+        )}
       </Link>
 
       {/* Details */}

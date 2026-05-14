@@ -1,64 +1,119 @@
 import type { Address } from "@/types";
-import { delay } from "./delay";
+import { apiFetch } from "./client";
 
-// ─── Real API: replace the body of each function with a fetch() call ─────────
+const BASE = "/api/v1/addresses";
 
-const mockAddresses: Address[] = [
-  {
-    id: "addr-1",
-    userId: "user-me",
-    label: "Home",
-    fullName: "Arjun Sharma",
-    line1: "42, Linking Road",
-    line2: "Bandra West",
-    city: "Mumbai",
-    state: "Maharashtra",
-    postalCode: "400050",
-    country: "India",
-    isDefault: true,
-  },
-  {
-    id: "addr-2",
-    userId: "user-me",
-    label: "Office",
-    fullName: "Arjun Sharma",
-    line1: "15, Brigade Road",
-    line2: "3rd Floor, Tech Hub",
-    city: "Bengaluru",
-    state: "Karnataka",
-    postalCode: "560001",
-    country: "India",
-    isDefault: false,
-  },
-];
+// ─── Backend shape (snake_case) ───────────────────────────────────────────────
 
-export async function getAddresses(userId: string): Promise<Address[]> {
-  // REAL API: return fetch(`/api/users/${userId}/addresses`).then(r => r.json())
-  await delay(400);
-  return mockAddresses.filter((a) => a.userId === userId || userId === "user-me");
+interface BackendAddress {
+  id: number;
+  label: string;
+  full_name: string;
+  phone: string;
+  line1: string;
+  line2: string | null;
+  city: string;
+  state: string;
+  postal_code: string;
+  country: string;
+  is_default: boolean;
+}
+
+function mapAddress(a: BackendAddress): Address {
+  return {
+    id: String(a.id),
+    userId: "",
+    label: a.label,
+    fullName: a.full_name,
+    phone: a.phone,
+    line1: a.line1,
+    line2: a.line2 ?? undefined,
+    city: a.city,
+    state: a.state,
+    postalCode: a.postal_code,
+    country: a.country,
+    isDefault: a.is_default,
+  };
+}
+
+function authHeader(token: string) {
+  return { Authorization: `Bearer ${token}` };
+}
+
+// ─── API functions ────────────────────────────────────────────────────────────
+
+export async function getAddresses(_userId: string, token: string): Promise<Address[]> {
+  // REAL API: GET /api/v1/addresses
+  const data = await apiFetch<BackendAddress[]>(BASE, {
+    headers: authHeader(token),
+  });
+  return data.map(mapAddress);
 }
 
 export async function createAddress(
-  userId: string,
-  data: Omit<Address, "id" | "userId">
+  _userId: string,
+  data: Omit<Address, "id" | "userId">,
+  token: string
 ): Promise<Address> {
-  // REAL API: return fetch(`/api/users/${userId}/addresses`, { method: 'POST', body: JSON.stringify(data) }).then(r => r.json())
-  await delay(600);
-  return { ...data, id: `addr-${Date.now()}`, userId };
+  // REAL API: POST /api/v1/addresses
+  const res = await apiFetch<BackendAddress>(BASE, {
+    method: "POST",
+    headers: authHeader(token),
+    body: JSON.stringify({
+      label: data.label,
+      full_name: data.fullName,
+      phone: data.phone,
+      line1: data.line1,
+      line2: data.line2 ?? null,
+      city: data.city,
+      state: data.state,
+      postal_code: data.postalCode,
+      country: data.country ?? "India",
+      is_default: data.isDefault,
+    }),
+  });
+  return mapAddress(res);
 }
 
 export async function updateAddress(
   addressId: string,
-  data: Partial<Omit<Address, "id" | "userId">>
+  data: Partial<Omit<Address, "id" | "userId">>,
+  token: string
 ): Promise<Address> {
-  // REAL API: return fetch(`/api/addresses/${addressId}`, { method: 'PATCH', body: JSON.stringify(data) }).then(r => r.json())
-  await delay(500);
-  const existing = mockAddresses.find((a) => a.id === addressId);
-  if (!existing) throw new Error("Address not found");
-  return { ...existing, ...data };
+  // REAL API: PATCH /api/v1/addresses/{id}
+  const body: Record<string, unknown> = {};
+  if (data.label !== undefined) body.label = data.label;
+  if (data.fullName !== undefined) body.full_name = data.fullName;
+  if (data.phone !== undefined) body.phone = data.phone;
+  if (data.line1 !== undefined) body.line1 = data.line1;
+  if (data.line2 !== undefined) body.line2 = data.line2 ?? null;
+  if (data.city !== undefined) body.city = data.city;
+  if (data.state !== undefined) body.state = data.state;
+  if (data.postalCode !== undefined) body.postal_code = data.postalCode;
+  if (data.country !== undefined) body.country = data.country;
+  if (data.isDefault !== undefined) body.is_default = data.isDefault;
+
+  const res = await apiFetch<BackendAddress>(`${BASE}/${addressId}`, {
+    method: "PATCH",
+    headers: authHeader(token),
+    body: JSON.stringify(body),
+  });
+  return mapAddress(res);
 }
 
-export async function deleteAddress(addressId: string): Promise<void> {
-  // REAL API: return fetch(`/api/addresses/${addressId}`, { method: 'DELETE' }).then(r => r.json())
-  await delay(400);
+export async function deleteAddress(addressId: string, token: string): Promise<void> {
+  // REAL API: DELETE /api/v1/addresses/{id}
+  await apiFetch<void>(`${BASE}/${addressId}`, {
+    method: "DELETE",
+    headers: authHeader(token),
+  });
+}
+
+export async function setDefaultAddress(addressId: string, token: string): Promise<Address> {
+  // REAL API: PATCH /api/v1/addresses/{id}/default
+  const res = await apiFetch<BackendAddress>(`${BASE}/${addressId}/default`, {
+    method: "PATCH",
+    headers: authHeader(token),
+  });
+  return mapAddress(res);
 }

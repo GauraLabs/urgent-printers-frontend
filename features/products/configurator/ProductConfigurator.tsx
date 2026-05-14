@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useId, forwardRef } from "react";
-import { ShoppingBag, ChevronDown, Info } from "lucide-react";
+import { useState, useId, forwardRef, useEffect } from "react";
+import { ShoppingBag, CheckCircle2, Info } from "lucide-react";
 import { toast } from "sonner";
 import { PricingTable } from "./PricingTable";
 import { useCartStore } from "@/features/cart/store";
+import { makeCartItemId } from "@/features/cart/cartItemId";
 import { formatPrice, formatPricePerUnit, cn } from "@/lib/utils";
+import { ROUTES } from "@/lib/constants/routes";
+import Link from "next/link";
 import type { Product, SidesOption, CartItemConfig } from "@/types";
 
 interface ProductConfiguratorProps {
@@ -13,6 +16,8 @@ interface ProductConfiguratorProps {
   artworkFileKey?: string;
   artworkFileName?: string;
   templateData?: Record<string, string>;
+  onBlockedByTemplate?: () => void;
+  onStateChange?: (state: { isInCart: boolean; totalPrice: number }) => void;
 }
 
 function OptionButton({
@@ -84,7 +89,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 // Exposed via ref so StickyAddToCart can observe the button
 export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfiguratorProps>(
-  function ProductConfigurator({ product, artworkFileKey, artworkFileName, templateData }, ref) {
+  function ProductConfigurator({ product, artworkFileKey, artworkFileName, templateData, onBlockedByTemplate, onStateChange }, ref) {
     const { pricingTiers, turnaroundOptions, printSpec } = product;
     const defaultTier = pricingTiers.find((t) => t.isBestValue) ?? pricingTiers[0];
 
@@ -95,7 +100,18 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     const [selectedQuantity, setSelectedQuantity] = useState(defaultTier.quantity);
     const [selectedTurnaround, setSelectedTurnaround] = useState(turnaroundOptions[0]);
 
-    const addItem = useCartStore((s) => s.addItem);
+    const addItem    = useCartStore((s) => s.addItem);
+    const cartItems  = useCartStore((s) => s.items);
+
+    // Matches the cartItemId formula in the cart store (same function)
+    const currentCartItemId = makeCartItemId(
+      product.id,
+      selectedSize?.id ?? "", selectedPaper?.id ?? "",
+      selectedFinish?.id ?? "", selectedSides?.label ?? "",
+      selectedTurnaround?.id ?? "",
+      artworkFileKey, templateData
+    );
+    const isInCart = cartItems.some((i) => i.cartItemId === currentCartItemId);
 
     // Price = tier base × spec multipliers; turnaround extraCost is flat INR added once
     const baseTier =
@@ -106,6 +122,11 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     const sidesM  = selectedSides?.priceMultiplier ?? 1;
     const pricePerUnit = parseFloat((baseTier.pricePerUnit * sizeM * paperM * finishM * sidesM).toFixed(2));
     const totalPrice = parseFloat((pricePerUnit * selectedQuantity + selectedTurnaround.extraCost).toFixed(2));
+
+    // Notify parent (ProductDetailClient) so StickyAddToCart stays in sync
+    useEffect(() => {
+      onStateChange?.({ isInCart, totalPrice });
+    }, [isInCart, totalPrice, onStateChange]);
 
     // Delta helpers — show cost impact vs cheapest option in each category
     const minSizeM   = Math.min(...printSpec.sizes.map((s) => s.priceMultiplier));
@@ -123,6 +144,22 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     const sidesDelta  = (m: number) => parseFloat((baseWithoutSides  * (m - minSidesM)).toFixed(2));
 
     function handleAddToCart() {
+      // Validate required template fields before allowing add to cart
+      const needsTemplate =
+        product.customizationMode === "template" || product.customizationMode === "both";
+      if (needsTemplate && product.templateFields.length > 0) {
+        const missing = product.templateFields.filter(
+          (f) => f.required && !templateData?.[f.id]?.trim()
+        );
+        if (missing.length > 0) {
+          toast.error("Please fill in your print details", {
+            description: missing.map((f) => f.label).join(", "),
+          });
+          onBlockedByTemplate?.();
+          return;
+        }
+      }
+
       const config: CartItemConfig = {
         sizeId: selectedSize.id,
         sizeLabel: selectedSize.label,
@@ -140,7 +177,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
       };
 
       addItem(
-        { id: product.id, slug: product.slug, name: product.name, images: product.images, categoryName: product.categoryName },
+        { id: product.id, slug: product.slug, name: product.name, images: product.images, categoryName: product.categoryName, categorySlug: product.categorySlug },
         config,
         pricePerUnit
       );
@@ -293,19 +330,32 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
           </div>
         </div>
 
-        {/* Add to Cart button */}
-        <button
-          ref={ref}
-          onClick={handleAddToCart}
-          className={cn(
-            "w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2",
-            "bg-brand-orange hover:bg-brand-orange/90 text-brand-orange-foreground",
-            "transition-all active:scale-[0.98] shadow-md shadow-brand-orange/20"
+        {/* Add to Cart / Update Cart button */}
+        <div className="flex flex-col gap-2">
+          <button
+            ref={ref}
+            onClick={handleAddToCart}
+            className={cn(
+              "w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2",
+              "transition-all active:scale-[0.98] shadow-md",
+              isInCart
+                ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20"
+                : "bg-brand-orange hover:bg-brand-orange/90 text-brand-orange-foreground shadow-brand-orange/20"
+            )}
+          >
+            {isInCart ? <CheckCircle2 size={18} /> : <ShoppingBag size={18} />}
+            {isInCart ? "Update Cart" : "Add to Cart"} · {formatPrice(totalPrice)}
+          </button>
+
+          {isInCart && (
+            <Link
+              href={ROUTES.cart}
+              className="w-full h-10 rounded-xl text-sm font-medium flex items-center justify-center gap-2 border border-border hover:bg-muted transition-colors text-foreground"
+            >
+              View Cart
+            </Link>
           )}
-        >
-          <ShoppingBag size={18} />
-          Add to Cart · {formatPrice(totalPrice)}
-        </button>
+        </div>
       </div>
     );
   }
