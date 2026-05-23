@@ -183,10 +183,11 @@ export interface Address {
 
 export interface AppliedCoupon {
   code: string;
-  discountType: "percentage" | "flat";
+  discountType: "percentage" | "flat";  // "fixed" from backend is mapped to "flat"
   discountValue: number;
   discountAmount: number;   // computed server-side based on subtotal
-  description: string;
+  description: string | null;
+  message: string;          // user-friendly message shown directly in UI
 }
 
 // ─── Order creation ───────────────────────────────────────────────────────────
