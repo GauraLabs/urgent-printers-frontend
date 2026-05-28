@@ -225,7 +225,7 @@ export interface CreateOrderAddress {
 export interface CreateOrderRequest {
   items: CreateOrderItem[];
   shippingAddress: CreateOrderAddress;
-  paymentMethod: "cod" | "upi" | "card" | "netbanking" | "wallet";
+  paymentMethod: "cod" | "online";
   couponCode?: string;
 }
 

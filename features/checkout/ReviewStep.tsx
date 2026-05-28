@@ -3,7 +3,7 @@
 import Image from "next/image";
 import {
   Loader2, ShieldCheck, MapPin, CreditCard, Tag,
-  CheckCircle2, Banknote, PartyPopper, AlertCircle,
+  CheckCircle2, Banknote, PartyPopper, AlertCircle, Lock,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useCartStore } from "@/features/cart/store";
@@ -19,7 +19,6 @@ interface ReviewStepProps {
   items: CartItem[];
   address: Omit<Address, "id" | "userId" | "isDefault">;
   paymentMethod: PaymentMethod;
-  paymentDetail: string;
   preview: OrderPreview | null;
   previewLoading: boolean;
   previewError: string | null;
@@ -29,14 +28,12 @@ interface ReviewStepProps {
 }
 
 const PAYMENT_LABELS: Record<PaymentMethod, string> = {
-  upi: "UPI",
-  card: "Credit / Debit Card",
-  netbanking: "Net Banking",
-  cod: "Cash on Delivery",
+  online: "Pay Online (Razorpay)",
+  cod:    "Cash on Delivery",
 };
 
 export function ReviewStep({
-  items, address, paymentMethod, paymentDetail,
+  items, address, paymentMethod,
   preview, previewLoading, previewError,
   onPlaceOrder, onBack, isPlacing,
 }: ReviewStepProps) {
@@ -119,7 +116,9 @@ export function ReviewStep({
           </div>
           <div className="pl-5">
             <p className="text-sm font-medium">{PAYMENT_LABELS[paymentMethod]}</p>
-            {paymentDetail && <p className="text-xs text-muted-foreground">{paymentDetail}</p>}
+            {paymentMethod === "online" && (
+              <p className="text-xs text-muted-foreground mt-0.5">UPI · Card · Net Banking · QR</p>
+            )}
           </div>
         </div>
       </div>
@@ -249,7 +248,7 @@ export function ReviewStep({
             </div>
           )}
 
-          {/* COD payment instruction */}
+          {/* Payment instruction — COD */}
           {paymentMethod === "cod" && (
             <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
               <Banknote size={18} className="text-primary shrink-0 mt-0.5" />
@@ -260,6 +259,23 @@ export function ReviewStep({
                 <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                   Keep the exact amount ready when our delivery partner arrives.
                   No online payment needed right now.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Payment instruction — online (Razorpay) */}
+          {paymentMethod !== "cod" && (
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
+              <Lock size={16} className="text-primary shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-primary">
+                  Razorpay secure checkout will open
+                </p>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  Clicking &quot;Pay&quot; creates your order and opens a secure Razorpay window.
+                  Your card / UPI / bank details are entered there — never on this page.
+                  If payment fails, your order is saved and you can retry from My Orders.
                 </p>
               </div>
             </div>
@@ -287,6 +303,14 @@ export function ReviewStep({
         }
       </div>
 
+      {/* Razorpay security note — only for online payments */}
+      {paymentMethod !== "cod" && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Lock size={13} className="text-primary shrink-0" />
+          <span>Payments processed by <span className="font-semibold text-foreground">Razorpay</span> · PCI DSS Level 1 · 256-bit SSL encryption</span>
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex gap-3">
         <button
@@ -306,9 +330,14 @@ export function ReviewStep({
           )}
         >
           {isPlacing ? (
-            <><Loader2 size={16} className="animate-spin" /> Placing Order…</>
-          ) : (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              {paymentMethod === "cod" ? "Placing Order…" : "Opening Razorpay…"}
+            </>
+          ) : paymentMethod === "cod" ? (
             <>Place Order · {formatPrice(total)}</>
+          ) : (
+            <><Lock size={14} /> Pay {formatPrice(total)} securely</>
           )}
         </button>
       </div>

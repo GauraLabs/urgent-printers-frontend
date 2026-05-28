@@ -1,160 +1,179 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Smartphone, CreditCard, Building2, Truck } from "lucide-react";
+import { ArrowRight, Truck, Lock, ShieldCheck, QrCode, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type PaymentMethod = "upi" | "card" | "netbanking" | "cod";
+export type PaymentMethod = "online" | "cod";
 
 interface PaymentStepProps {
-  onNext: (method: PaymentMethod, detail: string) => void;
+  onNext: (method: PaymentMethod) => void;
   onBack: () => void;
 }
 
-const PAYMENT_OPTIONS: { id: PaymentMethod; label: string; icon: React.ElementType; description: string }[] = [
-  { id: "upi",        label: "UPI",            icon: Smartphone,  description: "Pay via any UPI app — GPay, PhonePe, Paytm"  },
-  { id: "card",       label: "Credit / Debit Card", icon: CreditCard,  description: "Visa, Mastercard, RuPay accepted"         },
-  { id: "netbanking", label: "Net Banking",     icon: Building2,   description: "All major Indian banks supported"            },
-  { id: "cod",        label: "Cash on Delivery",icon: Truck,       description: "Pay in cash when your order arrives"         },
+// ─── Icon components — all SVGs are self-hosted in /public/images/payment/ ───
+
+function AppIcon({ src, name }: { src: string; name: string }) {
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center overflow-hidden shadow-sm">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt={name} width={24} height={24} className="object-contain" />
+      </div>
+      <span className="text-[9px] text-muted-foreground font-medium">{name}</span>
+    </div>
+  );
+}
+
+function CardNetworkIcon({ src, name }: { src: string; name: string }) {
+  return (
+    <div
+      title={name}
+      className="w-9 h-[22px] rounded-[4px] bg-white border border-border flex items-center justify-center overflow-hidden shadow-sm"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt={name} width={28} height={16} className="object-contain" />
+    </div>
+  );
+}
+
+const UPI_APPS = [
+  { src: "/images/payment/gpay.svg",     name: "GPay"     },
+  { src: "/images/payment/phonepe.svg",  name: "PhonePe"  },
+  { src: "/images/payment/paytm.svg",    name: "Paytm"    },
+  { src: "/images/payment/bhim.svg",     name: "BHIM"     },
+  { src: "/images/payment/amazon.svg",   name: "Amazon"   },
 ];
 
-const BANKS = ["SBI", "HDFC Bank", "ICICI Bank", "Axis Bank", "Kotak Mahindra", "Punjab National Bank"];
+const CARD_NETWORKS = [
+  { src: "/images/payment/visa.svg",       name: "Visa"       },
+  { src: "/images/payment/mastercard.svg", name: "Mastercard" },
+  { src: "/images/payment/rupay.svg",      name: "RuPay"      },
+  { src: "/images/payment/amex.svg",       name: "Amex"       },
+];
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function PaymentStep({ onNext, onBack }: PaymentStepProps) {
-  const [selected, setSelected] = useState<PaymentMethod>("upi");
-  const [upiId, setUpiId]       = useState("");
-  const [cardNum, setCardNum]   = useState("");
-  const [cardExp, setCardExp]   = useState("");
-  const [cardCvv, setCardCvv]   = useState("");
-  const [bank, setBank]         = useState(BANKS[0]);
-
-  function buildDetail(): string {
-    if (selected === "upi")        return upiId || "UPI";
-    if (selected === "card")       return `Card ending ${cardNum.slice(-4) || "****"}`;
-    if (selected === "netbanking") return bank;
-    return "Cash on Delivery";
-  }
-
-  function isValid(): boolean {
-    if (selected === "upi")        return upiId.includes("@");
-    if (selected === "card")       return cardNum.replace(/\s/g,"").length >= 16 && cardExp.length === 5 && cardCvv.length >= 3;
-    return true;
-  }
-
-  function formatCard(val: string) {
-    return val.replace(/\D/g,"").slice(0,16).replace(/(.{4})/g,"$1 ").trim();
-  }
-  function formatExp(val: string) {
-    return val.replace(/\D/g,"").slice(0,4).replace(/^(\d{2})(\d)/, "$1/$2");
-  }
+  const [selected, setSelected] = useState<PaymentMethod>("online");
 
   return (
     <div className="space-y-5">
       <div>
         <h2 className="font-heading font-bold text-lg">Payment Method</h2>
-        <p className="text-muted-foreground text-sm mt-1">All transactions are secured and encrypted</p>
+        <p className="text-muted-foreground text-sm mt-1">Choose how you want to pay</p>
       </div>
 
-      {/* Method selector */}
-      <div className="space-y-2">
-        {PAYMENT_OPTIONS.map((opt) => {
-          const Icon = opt.icon;
-          return (
-            <button
-              key={opt.id}
-              onClick={() => setSelected(opt.id)}
-              className={cn(
-                "w-full flex items-center gap-4 p-4 rounded-2xl border text-left transition-all",
-                selected === opt.id
-                  ? "border-primary bg-primary/5 ring-1 ring-primary"
-                  : "border-border hover:border-primary/40 hover:bg-muted/30"
-              )}
-            >
-              <div className={cn(
-                "w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center",
-                selected === opt.id ? "border-primary" : "border-muted-foreground"
-              )}>
-                {selected === opt.id && <div className="w-2 h-2 rounded-full bg-primary" />}
-              </div>
-              <div className={cn(
-                "w-9 h-9 rounded-xl flex items-center justify-center shrink-0",
-                selected === opt.id ? "bg-primary/10" : "bg-muted"
-              )}>
-                <Icon size={18} className={selected === opt.id ? "text-primary" : "text-muted-foreground"} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm">{opt.label}</p>
-                <p className="text-xs text-muted-foreground">{opt.description}</p>
-              </div>
-            </button>
-          );
-        })}
-      </div>
+      <div className="space-y-3">
 
-      {/* Detail inputs */}
-      <div className="rounded-2xl border border-border p-5 bg-muted/20 space-y-4">
-        {selected === "upi" && (
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium">UPI ID</label>
-            <input
-              type="text"
-              value={upiId}
-              onChange={(e) => setUpiId(e.target.value)}
-              placeholder="yourname@upi"
-              className={cn(
-                "h-10 w-full rounded-lg border border-border bg-background px-3 text-sm",
-                "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
-              )}
-            />
-            <p className="text-xs text-muted-foreground">e.g., arjun@okaxis · 9876543210@paytm</p>
-          </div>
-        )}
-
-        {selected === "card" && (
-          <div className="space-y-3">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium">Card Number</label>
-              <input
-                type="text"
-                value={cardNum}
-                onChange={(e) => setCardNum(formatCard(e.target.value))}
-                placeholder="1234 5678 9012 3456"
-                maxLength={19}
-                className={cn("h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-mono", "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors")}
-              />
+        {/* ── Pay Online ── */}
+        <button
+          onClick={() => setSelected("online")}
+          className={cn(
+            "w-full text-left rounded-2xl border p-4 transition-all space-y-4",
+            selected === "online"
+              ? "border-primary bg-primary/5 ring-1 ring-primary"
+              : "border-border hover:border-primary/40 hover:bg-muted/30"
+          )}
+        >
+          {/* Header */}
+          <div className="flex items-center gap-3">
+            <div className={cn(
+              "w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center",
+              selected === "online" ? "border-primary" : "border-muted-foreground"
+            )}>
+              {selected === "online" && <div className="w-2 h-2 rounded-full bg-primary" />}
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium">Expiry</label>
-                <input type="text" value={cardExp} onChange={(e) => setCardExp(formatExp(e.target.value))} placeholder="MM/YY" maxLength={5} className={cn("h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-mono", "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary")} />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium">CVV</label>
-                <input type="password" value={cardCvv} onChange={(e) => setCardCvv(e.target.value.replace(/\D/g,"").slice(0,4))} placeholder="•••" maxLength={4} className={cn("h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-mono", "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary")} />
+            <div className="flex-1">
+              <p className="font-semibold text-sm">Pay Online</p>
+              <p className="text-xs text-muted-foreground">UPI · Cards · Net Banking · QR</p>
+            </div>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-success/15 text-success shrink-0">
+              Recommended
+            </span>
+          </div>
+
+          {/* UPI apps */}
+          <div className="pl-7 space-y-2">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">UPI Apps</p>
+            <div className="flex items-end gap-3 flex-wrap">
+              {UPI_APPS.map((app) => (
+                <AppIcon key={app.name} src={app.src} name={app.name} />
+              ))}
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-8 h-8 rounded-lg bg-muted border border-border flex items-center justify-center">
+                  <span className="text-xs text-muted-foreground font-bold">+</span>
+                </div>
+                <span className="text-[9px] text-muted-foreground font-medium">more</span>
               </div>
             </div>
           </div>
-        )}
 
-        {selected === "netbanking" && (
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium">Select Bank</label>
-            <select
-              value={bank}
-              onChange={(e) => setBank(e.target.value)}
-              className={cn("h-10 w-full rounded-lg border border-border bg-background px-3 text-sm", "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors")}
-            >
-              {BANKS.map((b) => <option key={b}>{b}</option>)}
-            </select>
+          {/* Card networks */}
+          <div className="pl-7 space-y-2">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Cards</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              {CARD_NETWORKS.map((card) => (
+                <CardNetworkIcon key={card.name} src={card.src} name={card.name} />
+              ))}
+            </div>
           </div>
-        )}
 
-        {selected === "cod" && (
-          <p className="text-sm text-muted-foreground">
-            Pay in cash when your order is delivered. Available for orders up to ₹50,000.
-            A nominal convenience fee of ₹49 applies.
-          </p>
-        )}
+          {/* Other methods */}
+          <div className="pl-7 flex flex-wrap gap-2">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted border border-border">
+              <Building2 size={12} className="text-muted-foreground" />
+              <span className="text-[11px] font-medium text-muted-foreground">Net Banking</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted border border-border">
+              <QrCode size={12} className="text-muted-foreground" />
+              <span className="text-[11px] font-medium text-muted-foreground">QR Code</span>
+            </div>
+          </div>
+
+          {/* Razorpay security note */}
+          <div className="pl-7 flex items-center gap-1.5">
+            <Lock size={11} className="text-primary shrink-0" />
+            <p className="text-[11px] text-muted-foreground">
+              Select your method inside Razorpay&apos;s secure checkout
+            </p>
+          </div>
+        </button>
+
+        {/* ── Cash on Delivery ── */}
+        <button
+          onClick={() => setSelected("cod")}
+          className={cn(
+            "w-full text-left rounded-2xl border p-4 transition-all",
+            selected === "cod"
+              ? "border-primary bg-primary/5 ring-1 ring-primary"
+              : "border-border hover:border-primary/40 hover:bg-muted/30"
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <div className={cn(
+              "w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center",
+              selected === "cod" ? "border-primary" : "border-muted-foreground"
+            )}>
+              {selected === "cod" && <div className="w-2 h-2 rounded-full bg-primary" />}
+            </div>
+            <div className={cn(
+              "w-9 h-9 rounded-xl flex items-center justify-center shrink-0",
+              selected === "cod" ? "bg-primary/10" : "bg-muted"
+            )}>
+              <Truck size={18} className={selected === "cod" ? "text-primary" : "text-muted-foreground"} />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Cash on Delivery</p>
+              <p className="text-xs text-muted-foreground">Pay in cash when your order arrives</p>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <ShieldCheck size={13} className="text-success shrink-0" />
+        Online payments processed by Razorpay · PCI DSS Level 1 · 256-bit SSL
       </div>
 
       <div className="flex gap-3">
@@ -165,12 +184,10 @@ export function PaymentStep({ onNext, onBack }: PaymentStepProps) {
           ← Back
         </button>
         <button
-          onClick={() => isValid() && onNext(selected, buildDetail())}
-          disabled={!isValid()}
+          onClick={() => onNext(selected)}
           className={cn(
             "flex-1 h-11 rounded-xl font-semibold text-sm flex items-center justify-center gap-2",
-            "bg-brand-orange hover:bg-brand-orange/90 text-brand-orange-foreground",
-            "disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            "bg-brand-orange hover:bg-brand-orange/90 text-brand-orange-foreground transition-all"
           )}
         >
           Review Order <ArrowRight size={16} />

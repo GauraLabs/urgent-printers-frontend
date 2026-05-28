@@ -61,9 +61,15 @@ interface BackendOrderDetail {
   id: string;
   orderNumber: string;
   status: string;
-  paymentMethod: string;
-  paymentStatus?: string;
-  payment?: { method: string; status: string; amount: string | number };
+  paymentMethod?: string;   // absent on detail/create — read from payment.method instead
+  paymentStatus?: string;   // absent on detail/create — read from payment.status instead
+  payment?: {
+    method: string;
+    status: string;
+    amount: string | number;
+    razorpayOrderId?: string | null;
+    razorpayKeyId?: string | null;
+  };
   items: BackendOrderItem[];
   shippingAddress: OrderShippingAddress;
   pricing: BackendPricing;
@@ -140,12 +146,23 @@ function mapOrderDetail(b: BackendOrderDetail): Order {
     createdBy: s.createdBy,
   }));
 
+  const payment: import("@/types").OrderPayment | undefined = b.payment
+    ? {
+        method:          b.payment.method,
+        status:          b.payment.status,
+        amount:          n(b.payment.amount),
+        razorpayOrderId: b.payment.razorpayOrderId ?? null,
+        razorpayKeyId:   b.payment.razorpayKeyId   ?? null,
+      }
+    : undefined;
+
   return {
     id:            b.id,
     orderNumber:   b.orderNumber,
     status:        b.status as OrderStatus,
-    paymentMethod: b.payment?.method ?? b.paymentMethod,
+    paymentMethod: b.payment?.method ?? b.paymentMethod ?? "cod",
     paymentStatus: b.payment?.status ?? b.paymentStatus ?? "pending",
+    payment,
     items,
     shippingAddress: b.shippingAddress,
     pricing,
@@ -306,6 +323,38 @@ export async function verifyPayment(
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
   });
+}
+
+export async function downloadReceipt(orderId: string, token: string): Promise<void> {
+  // REAL API: GET /api/v1/orders/{id}/receipt → PDF attachment
+  const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+  const res = await fetch(`${API_URL}/api/v1/orders/${orderId}/receipt`, {
+    credentials: "include",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    let detail = "";
+    try {
+      const errJson = await res.json() as { message?: string; detail?: string };
+      detail = errJson.message ?? errJson.detail ?? "";
+    } catch { /* non-JSON */ }
+    throw new Error(detail || `Could not download receipt (${res.status})`);
+  }
+
+  const blob = await res.blob();
+  const url  = URL.createObjectURL(blob);
+
+  // Derive filename from Content-Disposition if present
+  const cd       = res.headers.get("Content-Disposition") ?? "";
+  const match    = cd.match(/filename="?([^";\n]+)"?/i);
+  const filename = match?.[1] ?? `receipt-${orderId}.pdf`;
+
+  const a = document.createElement("a");
+  a.href     = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // Legacy stub — not wired

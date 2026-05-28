@@ -4,8 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, ExternalLink, Loader2, XCircle } from "lucide-react";
-import { getOrderById, cancelOrder } from "@/lib/api";
+import { ArrowLeft, ExternalLink, Loader2, XCircle, Lock, CreditCard, Download } from "lucide-react";
+import { getOrderById, cancelOrder, verifyPayment, downloadReceipt } from "@/lib/api";
 import { useAuthStore } from "@/features/auth/store";
 import { OrderStatusTracker } from "@/features/account/OrderStatusTracker";
 import { Separator } from "@/components/ui/separator";
@@ -18,13 +18,16 @@ import type { Order } from "@/types";
 const CANCELLABLE = new Set(["placed", "confirmed"]);
 
 export default function OrderDetailPage() {
-  const { id }   = useParams<{ id: string }>();
-  const router   = useRouter();
-  const token    = useAuthStore((s) => s.token);
+  const { id }  = useParams<{ id: string }>();
+  const router  = useRouter();
+  const token   = useAuthStore((s) => s.token);
+  const user    = useAuthStore((s) => s.user);
 
-  const [order,      setOrder]      = useState<Order | null>(null);
-  const [loading,    setLoading]    = useState(true);
-  const [cancelling, setCancelling] = useState(false);
+  const [order,       setOrder]       = useState<Order | null>(null);
+  const [loading,     setLoading]     = useState(true);
+  const [cancelling,  setCancelling]  = useState(false);
+  const [retrying,    setRetrying]    = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     if (!token || !id) return;
@@ -48,6 +51,107 @@ export default function OrderDetailPage() {
     }
   }, [order, token]);
 
+  const handleDownload = useCallback(async () => {
+    if (!order || !token) return;
+    setDownloading(true);
+    try {
+      await downloadReceipt(order.id, token);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not download receipt.");
+    } finally {
+      setDownloading(false);
+    }
+  }, [order, token]);
+
+  const handleRetryPayment = useCallback(() => {
+    if (!order || !token) return;
+    const { razorpayOrderId, razorpayKeyId, amount } = order.payment ?? {};
+    if (!razorpayOrderId || !razorpayKeyId) {
+      toast.error("Payment details not available. Please contact support.");
+      return;
+    }
+    if (!window.Razorpay) {
+      toast.error("Payment gateway failed to load. Please refresh and try again.");
+      return;
+    }
+
+    setRetrying(true);
+    let paymentHandled = false;
+
+    const rzp = new window.Razorpay({
+      key:         razorpayKeyId,
+      amount:      Math.round((amount ?? order.totalAmount) * 100), // rupees → paise
+      currency:    "INR",
+      order_id:    razorpayOrderId,
+      name:        "Urgent Printers",
+      description: `Order ${order.orderNumber}`,
+
+      prefill: {
+        name:    user ? `${user.firstName} ${user.lastName}`.trim() : undefined,
+        email:   user?.email,
+        contact: user?.phone?.replace(/\D/g, "").slice(-10),
+      },
+
+      retry: { enabled: true, max_count: 3 },
+      theme: { color: "#3730a3" },
+      notes: { order_number: order.orderNumber },
+
+      handler: async (response) => {
+        paymentHandled = true;
+        try {
+          await verifyPayment(order.id, {
+            razorpay_order_id:   response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature:  response.razorpay_signature,
+          }, token);
+          toast.success("Payment successful! Order confirmed.");
+          router.replace(ROUTES.checkoutConfirmation(order.id));
+        } catch {
+          toast.error(
+            `Payment received but confirmation failed. Contact support with order #${order.orderNumber}.`,
+            { duration: 12000 }
+          );
+          setRetrying(false);
+        }
+      },
+
+      modal: {
+        confirm_close: true,
+        ondismiss: () => {
+          paymentHandled = true;
+          toast("Payment not completed. You can retry anytime from this page.", { duration: 6000 });
+          setRetrying(false);
+        },
+      },
+    });
+
+    rzp.on("payment.failed", (response) => {
+      paymentHandled = true;
+      const msg = response.error.description || "Payment failed.";
+      toast.error(`${msg} Please try again.`, { duration: 8000 });
+      setRetrying(false);
+    });
+
+    const handleFocus = () => {
+      window.removeEventListener("focus", handleFocus);
+      setTimeout(() => {
+        if (!paymentHandled) {
+          setRetrying(false);
+          toast.error("Payment window closed unexpectedly. Please try again.", { duration: 7000 });
+        }
+      }, 400);
+    };
+    window.addEventListener("focus", handleFocus);
+
+    try {
+      rzp.open();
+    } catch {
+      window.removeEventListener("focus", handleFocus);
+      toast.error("Could not open payment window. Please refresh and try again.");
+      setRetrying(false);
+    }
+  }, [order, token, user, router]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -67,8 +171,9 @@ export default function OrderDetailPage() {
     );
   }
 
-  const addr = order.shippingAddress;
-  const p    = order.pricing;
+  const addr              = order.shippingAddress;
+  const p                 = order.pricing;
+  const isAwaitingPayment = order.paymentStatus === "awaiting_payment" && !!order.payment?.razorpayOrderId;
 
   return (
     <div className="space-y-8">
@@ -77,6 +182,32 @@ export default function OrderDetailPage() {
         <ArrowLeft size={14} /> Back to Orders
       </Link>
 
+      {/* ── Pending payment banner ── */}
+      {isAwaitingPayment && (
+        <div className="rounded-2xl border border-brand-orange/40 bg-brand-orange/5 p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex items-start gap-3 flex-1">
+            <CreditCard size={20} className="text-brand-orange shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-sm text-brand-orange">Payment pending</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Your order is saved but payment was not completed.
+                Complete payment now to confirm your order.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleRetryPayment}
+            disabled={retrying}
+            className="shrink-0 flex items-center gap-2 h-10 px-5 rounded-xl text-sm font-bold bg-brand-orange text-brand-orange-foreground hover:bg-brand-orange/90 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+          >
+            {retrying
+              ? <><Loader2 size={14} className="animate-spin" /> Opening…</>
+              : <><Lock size={14} /> Complete Payment</>
+            }
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="font-heading font-bold text-2xl">{order.orderNumber}</h1>
@@ -84,7 +215,7 @@ export default function OrderDetailPage() {
             Placed on {new Date(order.placedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {order.trackingNumber && (
             <a
               href={`https://www.delhivery.com/track/package/${order.trackingNumber}`}
@@ -94,7 +225,15 @@ export default function OrderDetailPage() {
               Track Shipment <ExternalLink size={12} />
             </a>
           )}
-          {CANCELLABLE.has(order.status) && (
+          <button
+            onClick={handleDownload}
+            disabled={downloading}
+            className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition-colors disabled:opacity-60"
+          >
+            {downloading ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
+            {downloading ? "Downloading…" : "Receipt PDF"}
+          </button>
+          {CANCELLABLE.has(order.status) && !isAwaitingPayment && (
             <button
               onClick={handleCancel}
               disabled={cancelling}
@@ -222,8 +361,11 @@ export default function OrderDetailPage() {
               <span>{formatPrice(p.totalAmount)}</span>
             </div>
             <p className="text-xs text-muted-foreground pt-1">
-              Paid via {order.paymentMethod === "cod" ? "Cash on Delivery" : order.paymentMethod}
-              {order.paymentStatus === "paid" && <span className="text-success ml-1">· Paid</span>}
+              {order.paymentMethod === "cod"
+                ? "Cash on Delivery"
+                : "Online payment via Razorpay"}
+              {order.paymentStatus === "paid" && <span className="text-success ml-1.5 font-medium">· Paid</span>}
+              {order.paymentStatus === "awaiting_payment" && <span className="text-brand-orange ml-1.5 font-medium">· Payment pending</span>}
             </p>
           </div>
         </div>

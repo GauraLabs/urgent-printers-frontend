@@ -25,8 +25,7 @@ export default function CheckoutPage() {
 
   const [step,           setStep]           = useState<CheckoutStep>(1);
   const [address,        setAddress]        = useState<PartialAddress | null>(null);
-  const [paymentMethod,  setPaymentMethod]  = useState<PaymentMethod>("cod");
-  const [paymentDetail,  setPaymentDetail]  = useState("");
+  const [paymentMethod,  setPaymentMethod]  = useState<PaymentMethod>("online");
   const [isPlacing,      setIsPlacing]      = useState(false);
   const [preview,        setPreview]        = useState<OrderPreview | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -51,7 +50,7 @@ export default function CheckoutPage() {
       templateData:    item.config.templateData,
     })),
     shippingAddress: addr,
-    paymentMethod:   paymentMethod === "cod" ? "cod" : paymentMethod as "cod",
+    paymentMethod:   paymentMethod,
     couponCode:      appliedCoupon?.code || undefined,
   }), [items, appliedCoupon, paymentMethod]);
 
@@ -60,9 +59,8 @@ export default function CheckoutPage() {
     setStep(2);
   }
 
-  function handlePaymentNext(method: PaymentMethod, detail: string) {
+  function handlePaymentNext(method: PaymentMethod) {
     setPaymentMethod(method);
-    setPaymentDetail(detail);
     setStep(3);
 
     const token = useAuthStore.getState().token;
@@ -99,36 +97,48 @@ export default function CheckoutPage() {
     try {
       const order = await createOrder(buildRequest(address), token);
 
-      // ── COD: order is immediately placed ────────────────────────────────
+      // ── COD: no payment gateway needed ──────────────────────────────────────
       if (paymentMethod === "cod" || !order.payment?.razorpayOrderId) {
         finishOrder(order.id);
         return;
       }
 
-      // ── Non-COD: open Razorpay checkout ─────────────────────────────────
+      // ── Online payment: open Razorpay Standard Checkout ─────────────────────
       if (!window.Razorpay) {
-        toast.error("Payment gateway is not loaded. Please refresh and try again.");
+        toast.error("Payment gateway failed to load. Please refresh the page and try again.");
         setIsPlacing(false);
         return;
       }
 
       const user = useAuthStore.getState().user;
 
+      // Tracks whether a terminal callback (handler / ondismiss / payment.failed) already ran.
+      // Used by the window-focus safety net below to avoid double-resetting.
+      let paymentHandled = false;
+
       const rzp = new window.Razorpay({
         key:         order.payment.razorpayKeyId!,
-        amount:      Math.round(order.payment.amount * 100), // paise
+        amount:      Math.round(order.payment.amount * 100),  // rupees → paise
         currency:    "INR",
         order_id:    order.payment.razorpayOrderId,
         name:        "Urgent Printers",
         description: `Order ${order.orderNumber}`,
+
         prefill: {
           name:    user ? `${user.firstName} ${user.lastName}`.trim() : undefined,
           email:   user?.email,
           contact: user?.phone?.replace(/\D/g, "").slice(-10),
         },
-        theme: { color: "oklch(0.38 0.16 271)" },
+
+        retry: { enabled: true, max_count: 3 },
+
+        // Must be a hex value — Razorpay's SDK does not parse oklch()
+        theme: { color: "#3730a3" },
+
+        notes: { order_number: order.orderNumber },
 
         handler: async (response) => {
+          paymentHandled = true;
           try {
             await verifyPayment(order.id, {
               razorpay_order_id:   response.razorpay_order_id,
@@ -137,7 +147,11 @@ export default function CheckoutPage() {
             }, token);
             finishOrder(order.id);
           } catch {
-            toast.error("Payment verification failed. Please contact support with your order number: " + order.orderNumber);
+            // Payment captured by Razorpay but verify failed — money may be deducted, don't retry
+            toast.error(
+              `Payment received but confirmation failed. Contact support with order #${order.orderNumber}.`,
+              { duration: 12000 }
+            );
             setIsPlacing(false);
           }
         },
@@ -145,16 +159,47 @@ export default function CheckoutPage() {
         modal: {
           confirm_close: true,
           ondismiss: () => {
-            // Order exists in "awaiting_payment" — user can go back and try again
-            toast("Payment cancelled. Your order is saved — you can retry payment from My Orders.", {
-              duration: 6000,
+            paymentHandled = true;
+            toast("Payment not completed. Your order is saved — retry from My Orders.", {
+              duration: 7000,
             });
             setIsPlacing(false);
           },
         },
       });
 
-      rzp.open();
+      rzp.on("payment.failed", (response) => {
+        paymentHandled = true;
+        const msg = response.error.description || "Payment failed.";
+        toast.error(`${msg} You can retry from My Orders.`, { duration: 8000 });
+        setIsPlacing(false);
+      });
+
+      // Safety net: Razorpay does NOT call ondismiss when their own API returns an error
+      // (e.g. invalid order_id → 400 on /preferences). The modal closes silently.
+      // Window regaining focus is the only reliable signal the modal is gone.
+      const handleFocus = () => {
+        window.removeEventListener("focus", handleFocus);
+        // Small delay so ondismiss/payment.failed can fire first if they're going to
+        setTimeout(() => {
+          if (!paymentHandled) {
+            setIsPlacing(false);
+            toast.error(
+              "Payment window closed unexpectedly. Your order is saved — retry from My Orders.",
+              { duration: 8000 }
+            );
+          }
+        }, 400);
+      };
+      window.addEventListener("focus", handleFocus);
+
+      try {
+        rzp.open();
+      } catch {
+        window.removeEventListener("focus", handleFocus);
+        toast.error("Could not open payment window. Please refresh and try again.");
+        setIsPlacing(false);
+      }
 
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to place order. Please try again.");
@@ -176,12 +221,12 @@ export default function CheckoutPage() {
         <PaymentStep onNext={handlePaymentNext} onBack={() => setStep(1)} />
       )}
 
+
       {step === 3 && address && (
         <ReviewStep
           items={items}
           address={address}
           paymentMethod={paymentMethod}
-          paymentDetail={paymentDetail}
           preview={preview}
           previewLoading={previewLoading}
           previewError={previewError}
