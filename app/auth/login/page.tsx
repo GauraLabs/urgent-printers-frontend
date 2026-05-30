@@ -1,17 +1,19 @@
 "use client";
 
-import { Suspense, useState, useCallback } from "react";
+import { Suspense, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from "firebase/auth";
+import { firebaseAuth } from "@/lib/firebase";
 import { Eye, EyeOff, Loader2, Smartphone, Mail, Globe, ArrowLeft, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { FormField } from "@/components/common/FormField";
 import { OTPInputs } from "@/features/auth/OTPInputs";
 import { useAuthStore } from "@/features/auth/store";
-import { login, sendOtp, verifyPhoneOtp, loginWithGoogle, completeProfile, linkPhone } from "@/lib/api";
+import { login, firebaseVerifyPhone, firebaseVerifyPhoneLink, loginWithGoogle, completeProfile } from "@/lib/api";
 import { ROUTES } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils";
 
@@ -53,9 +55,23 @@ function PhoneFlow({ onDone }: { onDone: () => void }) {
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
 
+  const recaptchaRef    = useRef<RecaptchaVerifier | null>(null);
+  const confirmationRef = useRef<ConfirmationResult | null>(null);
+
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
   });
+
+  function getVerifier(): RecaptchaVerifier {
+    if (!recaptchaRef.current) {
+      recaptchaRef.current = new RecaptchaVerifier(
+        firebaseAuth,
+        "recaptcha-container",
+        { size: "invisible" }
+      );
+    }
+    return recaptchaRef.current;
+  }
 
   async function handleSendOtp(e: React.FormEvent) {
     e.preventDefault();
@@ -67,11 +83,14 @@ function PhoneFlow({ onDone }: { onDone: () => void }) {
     setPhoneError("");
     setSending(true);
     try {
-      await sendOtp(digits);
+      const confirmation = await signInWithPhoneNumber(firebaseAuth, `+91${digits}`, getVerifier());
+      confirmationRef.current = confirmation;
       setStep("enter_otp");
       toast.success(`OTP sent to +91 ${digits}`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to send OTP");
+      recaptchaRef.current?.clear();
+      recaptchaRef.current = null;
+      toast.error(err instanceof Error ? err.message : "Failed to send OTP. Please try again.");
     } finally {
       setSending(false);
     }
@@ -80,19 +99,31 @@ function PhoneFlow({ onDone }: { onDone: () => void }) {
   async function handleResend() {
     setResending(true);
     try {
-      await sendOtp(phone.replace(/\D/g, ""));
+      recaptchaRef.current?.clear();
+      recaptchaRef.current = null;
+      const confirmation = await signInWithPhoneNumber(firebaseAuth, `+91${phone}`, getVerifier());
+      confirmationRef.current = confirmation;
       toast.success("OTP resent");
     } catch {
-      toast.error("Failed to resend OTP");
+      recaptchaRef.current?.clear();
+      recaptchaRef.current = null;
+      toast.error("Failed to resend OTP. Please try again.");
     } finally {
       setResending(false);
     }
   }
 
   const handleOtpComplete = useCallback(async (otp: string) => {
+    if (!confirmationRef.current) {
+      toast.error("Session expired. Please request a new OTP.");
+      setStep("enter_phone");
+      return;
+    }
     setVerifying(true);
     try {
-      const { user, token, isNewUser } = await verifyPhoneOtp(phone.replace(/\D/g, ""), otp);
+      const result       = await confirmationRef.current.confirm(otp);
+      const firebaseToken = await result.user.getIdToken();
+      const { user, token, isNewUser } = await firebaseVerifyPhone(firebaseToken);
       if (isNewUser) {
         setPendingToken(token);
         setStep("complete_profile");
@@ -102,11 +133,11 @@ function PhoneFlow({ onDone }: { onDone: () => void }) {
         onDone();
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Verification failed");
+      toast.error(err instanceof Error ? err.message : "Verification failed. Check the OTP and try again.");
     } finally {
       setVerifying(false);
     }
-  }, [phone, setUser, onDone]);
+  }, [setUser, onDone]);
 
   async function handleCompleteProfile(data: ProfileValues) {
     try {
@@ -127,6 +158,9 @@ function PhoneFlow({ onDone }: { onDone: () => void }) {
   if (step === "enter_phone") {
     return (
       <form onSubmit={handleSendOtp} className="flex flex-col gap-4">
+        {/* Invisible reCAPTCHA mount point — Firebase requires a DOM element */}
+        <div id="recaptcha-container" />
+
         <div>
           <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
             Mobile number <span className="text-destructive">*</span>
@@ -162,7 +196,7 @@ function PhoneFlow({ onDone }: { onDone: () => void }) {
         </button>
 
         <p className="text-xs text-muted-foreground text-center">
-          A 6-digit OTP will be sent via SMS
+          A 6-digit OTP will be sent to your number via SMS
         </p>
       </form>
     );
@@ -202,7 +236,6 @@ function PhoneFlow({ onDone }: { onDone: () => void }) {
             {resending ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
             Resend OTP
           </button>
-          <p className="text-[11px] text-muted-foreground mt-2">Demo hint: use <span className="font-mono font-bold">123456</span></p>
         </div>
       </div>
     );
@@ -271,6 +304,20 @@ function GoogleButton({ onDone }: { onDone: () => void }) {
   const [resending, setResending] = useState(false);
   const [pendingToken, setPendingToken] = useState("");
 
+  const recaptchaRef    = useRef<RecaptchaVerifier | null>(null);
+  const confirmationRef = useRef<ConfirmationResult | null>(null);
+
+  function getVerifier(): RecaptchaVerifier {
+    if (!recaptchaRef.current) {
+      recaptchaRef.current = new RecaptchaVerifier(
+        firebaseAuth,
+        "recaptcha-container-google",
+        { size: "invisible" }
+      );
+    }
+    return recaptchaRef.current;
+  }
+
   function handleGoogle() {
     if (!window.google) {
       toast.error("Google sign-in is not ready. Please refresh and try again.");
@@ -320,35 +367,55 @@ function GoogleButton({ onDone }: { onDone: () => void }) {
     setPhoneError("");
     setSending(true);
     try {
-      await sendOtp(digits);
+      const confirmation = await signInWithPhoneNumber(firebaseAuth, `+91${digits}`, getVerifier());
+      confirmationRef.current = confirmation;
       setGStep("enter_otp");
       toast.success(`OTP sent to +91 ${digits}`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to send OTP");
+      recaptchaRef.current?.clear();
+      recaptchaRef.current = null;
+      toast.error(err instanceof Error ? err.message : "Failed to send OTP. Please try again.");
     } finally {
       setSending(false);
     }
   }
 
   const handleOtpComplete = useCallback(async (otp: string) => {
+    if (!confirmationRef.current) {
+      toast.error("Session expired. Please request a new OTP.");
+      setGStep("enter_phone");
+      return;
+    }
     setVerifying(true);
     try {
-      const updatedUser = await linkPhone(phone.replace(/\D/g, ""), otp, pendingToken);
+      const result        = await confirmationRef.current.confirm(otp);
+      const firebaseToken = await result.user.getIdToken();
+      const updatedUser   = await firebaseVerifyPhoneLink(firebaseToken, pendingToken);
       setUser(updatedUser, pendingToken);
       toast.success(`Welcome to Urgent Printers, ${updatedUser.firstName}!`);
       onDone();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Verification failed");
+      toast.error(err instanceof Error ? err.message : "Verification failed. Check the OTP and try again.");
     } finally {
       setVerifying(false);
     }
-  }, [phone, pendingToken, setUser, onDone]);
+  }, [pendingToken, setUser, onDone]);
 
   async function handleResend() {
     setResending(true);
-    try { await sendOtp(phone.replace(/\D/g, "")); toast.success("OTP resent"); }
-    catch { toast.error("Failed to resend OTP"); }
-    finally { setResending(false); }
+    try {
+      recaptchaRef.current?.clear();
+      recaptchaRef.current = null;
+      const confirmation = await signInWithPhoneNumber(firebaseAuth, `+91${phone}`, getVerifier());
+      confirmationRef.current = confirmation;
+      toast.success("OTP resent");
+    } catch {
+      recaptchaRef.current?.clear();
+      recaptchaRef.current = null;
+      toast.error("Failed to resend OTP. Please try again.");
+    } finally {
+      setResending(false);
+    }
   }
 
   // Google sign-in button
@@ -388,6 +455,9 @@ function GoogleButton({ onDone }: { onDone: () => void }) {
   if (gStep === "enter_phone") {
     return (
       <form onSubmit={handleSendOtp} className="flex flex-col gap-4">
+        {/* Invisible reCAPTCHA mount point for Google flow */}
+        <div id="recaptcha-container-google" />
+
         <p className="text-sm text-center text-muted-foreground">
           Add your mobile number to complete sign-up
         </p>
@@ -402,6 +472,7 @@ function GoogleButton({ onDone }: { onDone: () => void }) {
               value={phone}
               onChange={(e) => { setPhone(e.target.value.replace(/\D/g, "")); setPhoneError(""); }}
               placeholder="98765 43210"
+              autoComplete="tel-national"
               className="flex-1 px-3 py-2.5 text-sm bg-background focus:outline-none"
             />
           </div>
@@ -440,7 +511,6 @@ function GoogleButton({ onDone }: { onDone: () => void }) {
           {resending ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
           Resend OTP
         </button>
-        <p className="text-[11px] text-muted-foreground mt-2">Demo hint: use <span className="font-mono font-bold">123456</span></p>
       </div>
     </div>
   );

@@ -43,3 +43,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Google OAuth client secret files
+client_secret*.json
+
+# Windows Zone.Identifier metadata files (WSL artifact)
+*:Zone.Identifier

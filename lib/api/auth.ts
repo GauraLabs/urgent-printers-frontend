@@ -34,7 +34,35 @@ function mapUser(u: BackendUser): User {
   };
 }
 
-// ─── Phone OTP ────────────────────────────────────────────────────────────────
+// ─── Phone OTP (Firebase) ─────────────────────────────────────────────────────
+
+export async function firebaseVerifyPhone(
+  firebaseToken: string
+): Promise<{ user: User; token: string; isNewUser: boolean }> {
+  // REAL API: POST /api/v1/auth/firebase-phone-verify
+  // No account yet — phone is the login credential. firebaseToken from result.user.getIdToken()
+  const res = await apiFetch<AuthData>(`${AUTH}/firebase-phone-verify`, {
+    method: "POST",
+    body: JSON.stringify({ firebase_token: firebaseToken }),
+  });
+  return { user: mapUser(res.user), token: res.token, isNewUser: res.isNewUser };
+}
+
+export async function firebaseVerifyPhoneLink(
+  firebaseToken: string,
+  accessToken: string
+): Promise<User> {
+  // REAL API: POST /api/v1/auth/me/verify-phone-firebase
+  // Already logged in via Google/email — adding phone to existing account
+  const res = await apiFetch<BackendUser>(`${AUTH}/me/verify-phone-firebase`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ firebase_token: firebaseToken }),
+  });
+  return mapUser(res);
+}
+
+// ─── Phone OTP (legacy — kept for Google account phone-linking flow) ──────────
 
 export async function sendOtp(phone: string): Promise<{ success: boolean }> {
   // REAL API: POST /api/v1/auth/send-otp
