@@ -25,7 +25,7 @@ export async function validateCoupon(
   // REAL API: POST /api/v1/coupons/validate
   // Always returns 200. Check is_valid to determine success or failure.
   // message is always user-friendly and can be shown directly.
-  const data = await apiFetch<BackendCouponResponse>("/api/v1/coupons/validate", {
+  const data = await apiFetch<BackendCouponResponse>("/coupons/validate", {
     method: "POST",
     ...(token && { headers: { Authorization: `Bearer ${token}` } }),
     body: JSON.stringify({ code: code.trim().toUpperCase(), subtotal }),

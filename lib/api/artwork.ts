@@ -1,4 +1,4 @@
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+import { API_URL } from "./client";
 
 async function artworkFetch<T>(
   path: string,
@@ -52,7 +52,7 @@ export async function presignArtwork(
   body: PresignRequest,
   token?: string
 ): Promise<PresignResponse> {
-  return artworkFetch<PresignResponse>("/api/v1/artwork/presign", {
+  return artworkFetch<PresignResponse>(`/artwork/presign`, {
     method: "POST",
     body: JSON.stringify(body),
     token,
@@ -60,11 +60,11 @@ export async function presignArtwork(
 }
 
 export async function getSavedArtworks(token: string): Promise<SavedArtwork[]> {
-  return artworkFetch<SavedArtwork[]>("/api/v1/artworks", { token });
+  return artworkFetch<SavedArtwork[]>(`/artworks`, { token });
 }
 
 export async function deleteArtwork(id: number, token: string): Promise<void> {
-  return artworkFetch<void>(`/api/v1/artworks/${id}`, {
+  return artworkFetch<void>(`/artworks/${id}`, {
     method: "DELETE",
     token,
   });

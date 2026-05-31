@@ -50,7 +50,7 @@ export async function getCategories(): Promise<Category[]> {
     return mockCategories;
   }
   try {
-    const data = await apiFetch<BackendCategory[]>("/api/v1/categories");
+    const data = await apiFetch<BackendCategory[]>("/categories");
     return data.map(mapCategory);
   } catch {
     return mockCategories;
@@ -64,7 +64,7 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
     return mockCategories.find((c) => c.slug === slug) ?? null;
   }
   try {
-    const data = await apiFetch<BackendCategory>(`/api/v1/categories/${slug}`);
+    const data = await apiFetch<BackendCategory>(`/categories/${slug}`);
     return mapCategory(data);
   } catch {
     return null;

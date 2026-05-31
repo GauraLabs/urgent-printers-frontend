@@ -1,7 +1,7 @@
 import type { User } from "@/types";
 import { apiFetch } from "./client";
 
-const AUTH = "/api/v1/auth";
+const AUTH = "/auth";
 
 // ─── Backend shape ────────────────────────────────────────────────────────────
 // Backend returns camelCase fields per API spec

@@ -206,7 +206,7 @@ const SORT_MAP: Record<NonNullable<ProductFilters["sort"]>, string> = {
 export async function getProducts(
   filters: ProductFilters = {}
 ): Promise<PaginatedResponse<Product>> {
-  // REAL API: GET /api/v1/products
+  // REAL API: GET /products
   if (!process.env.NEXT_PUBLIC_API_URL) {
     await delay(500);
     let results = [...mockProducts];
@@ -242,7 +242,7 @@ export async function getProducts(
     params.set("page", String(filters.page ?? 1));
     params.set("page_size", String(filters.pageSize ?? 12));
 
-    const res = await apiFetchPage<BackendProductCard>(`/api/v1/products?${params}`);
+    const res = await apiFetchPage<BackendProductCard>(`/products?${params}`);
     return {
       data: res.data.map(mapCard),
       total: res.meta.total,
@@ -256,13 +256,13 @@ export async function getProducts(
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  // REAL API: GET /api/v1/products/{slug}
+  // REAL API: GET /products/{slug}
   if (!process.env.NEXT_PUBLIC_API_URL) {
     await delay(400);
     return mockProducts.find((p) => p.slug === slug) ?? null;
   }
   try {
-    const data = await apiFetch<BackendProductDetail>(`/api/v1/products/${slug}`);
+    const data = await apiFetch<BackendProductDetail>(`/products/${slug}`);
     return mapDetail(data);
   } catch {
     return null;
@@ -270,13 +270,13 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 }
 
 export async function getFeaturedProducts(): Promise<Product[]> {
-  // REAL API: GET /api/v1/products/featured
+  // REAL API: GET /products/featured
   if (!process.env.NEXT_PUBLIC_API_URL) {
     await delay(400);
     return mockProducts.filter((p) => p.isFeatured);
   }
   try {
-    const data = await apiFetch<BackendProductCard[]>("/api/v1/products/featured?limit=8");
+    const data = await apiFetch<BackendProductCard[]>("/products/featured?limit=8");
     return data.map(mapCard);
   } catch {
     return mockProducts.filter((p) => p.isFeatured);
@@ -288,7 +288,7 @@ export async function getRelatedProducts(
   categorySlug: string,
   limit = 4
 ): Promise<Product[]> {
-  // REAL API: GET /api/v1/products?category_slug=X&page_size=5 then exclude current
+  // REAL API: GET /products?category_slug=X&page_size=5 then exclude current
   if (!process.env.NEXT_PUBLIC_API_URL) {
     await delay(300);
     return mockProducts
@@ -297,7 +297,7 @@ export async function getRelatedProducts(
   }
   try {
     const params = new URLSearchParams({ category_slug: categorySlug, page_size: "8" });
-    const res = await apiFetchPage<BackendProductCard>(`/api/v1/products?${params}`);
+    const res = await apiFetchPage<BackendProductCard>(`/products?${params}`);
     return res.data
       .map(mapCard)
       .filter((p) => p.id !== productId)
@@ -308,7 +308,7 @@ export async function getRelatedProducts(
 }
 
 export async function searchProducts(query: string): Promise<Product[]> {
-  // REAL API: GET /api/v1/products?search=query
+  // REAL API: GET /products?search=query
   if (!process.env.NEXT_PUBLIC_API_URL) {
     await delay(300);
     const q = query.toLowerCase();
@@ -324,7 +324,7 @@ export async function searchProducts(query: string): Promise<Product[]> {
   }
   try {
     const params = new URLSearchParams({ search: query, page_size: "8" });
-    const res = await apiFetchPage<BackendProductCard>(`/api/v1/products?${params}`);
+    const res = await apiFetchPage<BackendProductCard>(`/products?${params}`);
     return res.data.map(mapCard);
   } catch {
     return [];

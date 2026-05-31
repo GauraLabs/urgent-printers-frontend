@@ -1,4 +1,4 @@
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
+export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
 
 export interface BackendMeta {
   page: number;
@@ -29,7 +29,7 @@ async function handleUnauthorized<T>(
   if (!hasAuthHeader || typeof window === "undefined" || !API_URL) return null;
 
   try {
-    const refreshRes = await fetch(`${API_URL}/api/v1/auth/refresh`, {
+    const refreshRes = await fetch(`${API_URL}/auth/refresh`, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },

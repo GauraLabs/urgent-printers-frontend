@@ -2,7 +2,7 @@ import type { CartItem } from "@/types";
 import { apiFetch } from "./client";
 import { makeCartItemId } from "@/features/cart/cartItemId";
 
-const BASE = "/api/v1/cart";
+const BASE = "/cart";
 
 // ─── Backend shape (camelCase per API spec) ───────────────────────────────────
 

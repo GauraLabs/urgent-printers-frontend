@@ -1,7 +1,7 @@
 import type { Address } from "@/types";
 import { apiFetch } from "./client";
 
-const BASE = "/api/v1/addresses";
+const BASE = "/addresses";
 
 // ─── Backend shape (snake_case) ───────────────────────────────────────────────
 

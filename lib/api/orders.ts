@@ -4,7 +4,7 @@ import type {
   OrderStatus, CreateOrderRequest, CreatedOrder,
   OrderPreview, OrderPreviewItem,
 } from "@/types";
-import { apiFetch, apiFetchPage } from "./client";
+import { apiFetch, apiFetchPage, API_URL } from "./client";
 
 // ─── Backend shapes (camelCase from server, totalAmount as string) ────────────
 
@@ -185,7 +185,7 @@ export async function getOrders(
 ): Promise<{ orders: OrderCard[]; total: number }> {
   // REAL API: GET /api/v1/orders
   try {
-    const res = await apiFetchPage<BackendOrderCard>(`/api/v1/orders?page=${page}&page_size=20`, {
+    const res = await apiFetchPage<BackendOrderCard>(`/orders?page=${page}&page_size=20`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return { orders: res.data.map(mapOrderCard), total: res.meta.total };
@@ -197,7 +197,7 @@ export async function getOrders(
 export async function getOrderById(orderId: string, token: string): Promise<Order | null> {
   // REAL API: GET /api/v1/orders/{id}
   try {
-    const data = await apiFetch<BackendOrderDetail>(`/api/v1/orders/${orderId}`, {
+    const data = await apiFetch<BackendOrderDetail>(`/orders/${orderId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return mapOrderDetail(data);
@@ -208,7 +208,7 @@ export async function getOrderById(orderId: string, token: string): Promise<Orde
 
 export async function cancelOrder(orderId: string, token: string): Promise<void> {
   // REAL API: POST /api/v1/orders/{id}/cancel
-  await apiFetch(`/api/v1/orders/${orderId}/cancel`, {
+  await apiFetch(`/orders/${orderId}/cancel`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify({ reason: "Cancelled by customer" }),
@@ -227,7 +227,7 @@ export async function previewOrder(
     estimatedDelivery?: string;
   }
 
-  const raw = await apiFetch<BackendPreview>("/api/v1/orders/preview", {
+  const raw = await apiFetch<BackendPreview>(`/orders/preview`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify(buildOrderBody(data)),
@@ -299,7 +299,7 @@ export async function createOrder(
 ): Promise<CreatedOrder> {
   // REAL API: POST /api/v1/orders
   // Backend recomputes all prices — never trusts client prices.
-  const raw = await apiFetch<BackendOrderDetail>("/api/v1/orders", {
+  const raw = await apiFetch<BackendOrderDetail>(`/orders`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify(buildOrderBody(data)),
@@ -318,7 +318,7 @@ export async function verifyPayment(
 ): Promise<void> {
   // REAL API: POST /api/v1/orders/{id}/payment/verify
   // Backend verifies HMAC-SHA256 signature; on success marks order as "confirmed" + "paid"
-  await apiFetch(`/api/v1/orders/${orderId}/payment/verify`, {
+  await apiFetch(`/orders/${orderId}/payment/verify`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
@@ -327,8 +327,7 @@ export async function verifyPayment(
 
 export async function downloadReceipt(orderId: string, token: string): Promise<void> {
   // REAL API: GET /api/v1/orders/{id}/receipt → PDF attachment
-  const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
-  const res = await fetch(`${API_URL}/api/v1/orders/${orderId}/receipt`, {
+  const res = await fetch(`${API_URL}/orders/${orderId}/receipt`, {
     credentials: "include",
     headers: { Authorization: `Bearer ${token}` },
   });
