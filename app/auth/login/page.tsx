@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from "firebase/auth";
-import { firebaseAuth } from "@/lib/firebase";
+import { getFirebaseAuth } from "@/lib/firebase";
 import { Eye, EyeOff, Loader2, Smartphone, Mail, Globe, ArrowLeft, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { FormField } from "@/components/common/FormField";
@@ -65,7 +65,7 @@ function PhoneFlow({ onDone }: { onDone: () => void }) {
   function getVerifier(): RecaptchaVerifier {
     if (!recaptchaRef.current) {
       recaptchaRef.current = new RecaptchaVerifier(
-        firebaseAuth,
+        getFirebaseAuth(),
         "recaptcha-container",
         { size: "invisible" }
       );
@@ -83,7 +83,7 @@ function PhoneFlow({ onDone }: { onDone: () => void }) {
     setPhoneError("");
     setSending(true);
     try {
-      const confirmation = await signInWithPhoneNumber(firebaseAuth, `+91${digits}`, getVerifier());
+      const confirmation = await signInWithPhoneNumber(getFirebaseAuth(), `+91${digits}`, getVerifier());
       confirmationRef.current = confirmation;
       setStep("enter_otp");
       toast.success(`OTP sent to +91 ${digits}`);
@@ -101,7 +101,7 @@ function PhoneFlow({ onDone }: { onDone: () => void }) {
     try {
       recaptchaRef.current?.clear();
       recaptchaRef.current = null;
-      const confirmation = await signInWithPhoneNumber(firebaseAuth, `+91${phone}`, getVerifier());
+      const confirmation = await signInWithPhoneNumber(getFirebaseAuth(), `+91${phone}`, getVerifier());
       confirmationRef.current = confirmation;
       toast.success("OTP resent");
     } catch {
@@ -310,7 +310,7 @@ function GoogleButton({ onDone }: { onDone: () => void }) {
   function getVerifier(): RecaptchaVerifier {
     if (!recaptchaRef.current) {
       recaptchaRef.current = new RecaptchaVerifier(
-        firebaseAuth,
+        getFirebaseAuth(),
         "recaptcha-container-google",
         { size: "invisible" }
       );
@@ -367,7 +367,7 @@ function GoogleButton({ onDone }: { onDone: () => void }) {
     setPhoneError("");
     setSending(true);
     try {
-      const confirmation = await signInWithPhoneNumber(firebaseAuth, `+91${digits}`, getVerifier());
+      const confirmation = await signInWithPhoneNumber(getFirebaseAuth(), `+91${digits}`, getVerifier());
       confirmationRef.current = confirmation;
       setGStep("enter_otp");
       toast.success(`OTP sent to +91 ${digits}`);
@@ -406,7 +406,7 @@ function GoogleButton({ onDone }: { onDone: () => void }) {
     try {
       recaptchaRef.current?.clear();
       recaptchaRef.current = null;
-      const confirmation = await signInWithPhoneNumber(firebaseAuth, `+91${phone}`, getVerifier());
+      const confirmation = await signInWithPhoneNumber(getFirebaseAuth(), `+91${phone}`, getVerifier());
       confirmationRef.current = confirmation;
       toast.success("OTP resent");
     } catch {

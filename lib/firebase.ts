@@ -1,5 +1,5 @@
-import { initializeApp, getApps } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
+import { getAuth, type Auth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
@@ -10,5 +10,14 @@ const firebaseConfig = {
   appId:             process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
 };
 
-const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-export const firebaseAuth = getAuth(app);
+let _auth: Auth | undefined;
+
+// Lazy getter — only initializes when called, never during SSR.
+// Firebase Auth is a browser-only SDK; calling it server-side throws.
+export function getFirebaseAuth(): Auth {
+  if (!_auth) {
+    const app: FirebaseApp = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    _auth = getAuth(app);
+  }
+  return _auth;
+}
