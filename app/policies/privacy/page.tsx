@@ -27,7 +27,7 @@ export default function PrivacyPage() {
       <h2>Your Rights</h2>
       <p>You may access, correct, or request deletion of your personal data by emailing <a href="mailto:privacy@urgentprinters.in">privacy@urgentprinters.in</a>.</p>
       <h2>Contact</h2>
-      <p>Data Protection Officer: <a href="mailto:privacy@urgentprinters.in">privacy@urgentprinters.in</a> | Urgent Printers Pvt. Ltd., Mumbai, Maharashtra, India.</p>
+      <p>Data Protection Officer: <a href="mailto:privacy@urgentprinters.in">privacy@urgentprinters.in</a> | Urgent Printers Pvt. Ltd., Kotwali Rd, Tilak Dwar, Mathura, Uttar Pradesh 281001, India.</p>
     </article>
   );
 }

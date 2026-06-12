@@ -62,7 +62,14 @@ export function Footer() {
               </li>
               <li className="flex items-start gap-2">
                 <MapPin size={13} className="shrink-0 mt-0.5" />
-                <span>Mumbai, Maharashtra, India</span>
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=Kotwali+Rd%2C+opposite+Punjab+National+Bank%2C+Tilak+Dwar%2C+Mathura%2C+Uttar+Pradesh+281001"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground transition-colors"
+                >
+                  Kotwali Rd, Tilak Dwar, Mathura, UP 281001
+                </a>
               </li>
             </ul>
           </div>

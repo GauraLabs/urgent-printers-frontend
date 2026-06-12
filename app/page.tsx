@@ -28,9 +28,10 @@ const organizationJsonLd = {
     "India's fast online printing service — business cards, flyers, banners, packaging, brochures, and custom merchandise.",
   address: {
     "@type": "PostalAddress",
-    addressLocality: "Mumbai",
-    addressRegion: "Maharashtra",
-    postalCode: "400050",
+    streetAddress: "Kotwali Rd, opposite Punjab National Bank, Tilak Dwar",
+    addressLocality: "Mathura",
+    addressRegion: "Uttar Pradesh",
+    postalCode: "281001",
     addressCountry: "IN",
   },
   contactPoint: {
