@@ -7,12 +7,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from "firebase/auth";
-import { getFirebaseAuth } from "@/lib/firebase";
+import { getFirebaseAuth, getAuthErrorMessage } from "@/lib/firebase";
 import { Eye, EyeOff, Loader2, Smartphone, Mail, Globe, ArrowLeft, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { FormField } from "@/components/common/FormField";
 import { OTPInputs } from "@/features/auth/OTPInputs";
 import { useAuthStore } from "@/features/auth/store";
+import { useCountdown } from "@/hooks/useCountdown";
 import { login, firebaseVerifyPhone, firebaseVerifyPhoneLink, loginWithGoogle, completeProfile } from "@/lib/api";
 import { ROUTES } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,8 @@ import { cn } from "@/lib/utils";
 
 type AuthMethod = "phone" | "google" | "email";
 type PhoneStep = "enter_phone" | "enter_otp" | "complete_profile";
+
+const RESEND_COOLDOWN_SECONDS = 30;
 
 const METHODS: { id: AuthMethod; label: string; icon: React.ElementType }[] = [
   { id: "phone", label: "Mobile", icon: Smartphone },
@@ -54,6 +57,8 @@ function PhoneFlow({ onDone }: { onDone: () => void }) {
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
+  const [otpError, setOtpError] = useState(false);
+  const [resendCooldown, setResendCooldown] = useCountdown();
 
   const recaptchaRef    = useRef<RecaptchaVerifier | null>(null);
   const confirmationRef = useRef<ConfirmationResult | null>(null);
@@ -86,11 +91,13 @@ function PhoneFlow({ onDone }: { onDone: () => void }) {
       const confirmation = await signInWithPhoneNumber(getFirebaseAuth(), `+91${digits}`, getVerifier());
       confirmationRef.current = confirmation;
       setStep("enter_otp");
+      setResendCooldown(RESEND_COOLDOWN_SECONDS);
       toast.success(`OTP sent to +91 ${digits}`);
     } catch (err) {
+      console.error("Send OTP failed:", err);
       recaptchaRef.current?.clear();
       recaptchaRef.current = null;
-      toast.error(err instanceof Error ? err.message : "Failed to send OTP. Please try again.");
+      toast.error(getAuthErrorMessage(err, "Failed to send OTP. Please try again."));
     } finally {
       setSending(false);
     }
@@ -103,11 +110,14 @@ function PhoneFlow({ onDone }: { onDone: () => void }) {
       recaptchaRef.current = null;
       const confirmation = await signInWithPhoneNumber(getFirebaseAuth(), `+91${phone}`, getVerifier());
       confirmationRef.current = confirmation;
+      setOtpError(false);
+      setResendCooldown(RESEND_COOLDOWN_SECONDS);
       toast.success("OTP resent");
-    } catch {
+    } catch (err) {
+      console.error("Resend OTP failed:", err);
       recaptchaRef.current?.clear();
       recaptchaRef.current = null;
-      toast.error("Failed to resend OTP. Please try again.");
+      toast.error(getAuthErrorMessage(err, "Failed to resend OTP. Please try again."));
     } finally {
       setResending(false);
     }
@@ -119,6 +129,7 @@ function PhoneFlow({ onDone }: { onDone: () => void }) {
       setStep("enter_phone");
       return;
     }
+    setOtpError(false);
     setVerifying(true);
     try {
       const result       = await confirmationRef.current.confirm(otp);
@@ -133,7 +144,8 @@ function PhoneFlow({ onDone }: { onDone: () => void }) {
         onDone();
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Verification failed. Check the OTP and try again.");
+      setOtpError(true);
+      toast.error(getAuthErrorMessage(err, "Incorrect OTP. Please check and try again."));
     } finally {
       setVerifying(false);
     }
@@ -206,12 +218,15 @@ function PhoneFlow({ onDone }: { onDone: () => void }) {
   if (step === "enter_otp") {
     return (
       <div className="flex flex-col gap-5">
+        {/* Invisible reCAPTCHA mount point — needed here too so Resend OTP works */}
+        <div id="recaptcha-container" />
+
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
             OTP sent to <span className="font-semibold text-foreground">+91 {phone}</span>
           </p>
           <button
-            onClick={() => setStep("enter_phone")}
+            onClick={() => { setStep("enter_phone"); setOtpError(false); }}
             className="text-xs text-primary hover:underline mt-0.5 flex items-center gap-1 mx-auto"
           >
             <ArrowLeft size={11} /> Change number
@@ -223,18 +238,23 @@ function PhoneFlow({ onDone }: { onDone: () => void }) {
             <Loader2 size={26} className="animate-spin text-primary" />
           </div>
         ) : (
-          <OTPInputs onComplete={handleOtpComplete} disabled={verifying} />
+          <OTPInputs onComplete={handleOtpComplete} disabled={verifying} error={otpError} />
+        )}
+        {otpError && (
+          <p className="text-destructive text-xs text-center -mt-2">
+            Incorrect or expired OTP. Please try again.
+          </p>
         )}
 
         <div className="text-center">
           <p className="text-xs text-muted-foreground mb-1.5">Didn&apos;t receive it?</p>
           <button
             onClick={handleResend}
-            disabled={resending}
-            className="flex items-center gap-1.5 text-xs text-primary hover:underline mx-auto disabled:opacity-60"
+            disabled={resending || resendCooldown > 0}
+            className="flex items-center gap-1.5 text-xs text-primary hover:underline mx-auto disabled:opacity-60 disabled:no-underline"
           >
             {resending ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
-            Resend OTP
+            {resendCooldown > 0 ? `Resend OTP in ${resendCooldown}s` : "Resend OTP"}
           </button>
         </div>
       </div>
@@ -302,6 +322,8 @@ function GoogleButton({ onDone }: { onDone: () => void }) {
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
+  const [otpError, setOtpError] = useState(false);
+  const [resendCooldown, setResendCooldown] = useCountdown();
   const [pendingToken, setPendingToken] = useState("");
 
   const recaptchaRef    = useRef<RecaptchaVerifier | null>(null);
@@ -370,11 +392,13 @@ function GoogleButton({ onDone }: { onDone: () => void }) {
       const confirmation = await signInWithPhoneNumber(getFirebaseAuth(), `+91${digits}`, getVerifier());
       confirmationRef.current = confirmation;
       setGStep("enter_otp");
+      setResendCooldown(RESEND_COOLDOWN_SECONDS);
       toast.success(`OTP sent to +91 ${digits}`);
     } catch (err) {
+      console.error("Send OTP failed:", err);
       recaptchaRef.current?.clear();
       recaptchaRef.current = null;
-      toast.error(err instanceof Error ? err.message : "Failed to send OTP. Please try again.");
+      toast.error(getAuthErrorMessage(err, "Failed to send OTP. Please try again."));
     } finally {
       setSending(false);
     }
@@ -386,6 +410,7 @@ function GoogleButton({ onDone }: { onDone: () => void }) {
       setGStep("enter_phone");
       return;
     }
+    setOtpError(false);
     setVerifying(true);
     try {
       const result        = await confirmationRef.current.confirm(otp);
@@ -395,7 +420,8 @@ function GoogleButton({ onDone }: { onDone: () => void }) {
       toast.success(`Welcome to Urgent Printers, ${updatedUser.firstName}!`);
       onDone();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Verification failed. Check the OTP and try again.");
+      setOtpError(true);
+      toast.error(getAuthErrorMessage(err, "Incorrect OTP. Please check and try again."));
     } finally {
       setVerifying(false);
     }
@@ -408,11 +434,14 @@ function GoogleButton({ onDone }: { onDone: () => void }) {
       recaptchaRef.current = null;
       const confirmation = await signInWithPhoneNumber(getFirebaseAuth(), `+91${phone}`, getVerifier());
       confirmationRef.current = confirmation;
+      setOtpError(false);
+      setResendCooldown(RESEND_COOLDOWN_SECONDS);
       toast.success("OTP resent");
-    } catch {
+    } catch (err) {
+      console.error("Resend OTP failed:", err);
       recaptchaRef.current?.clear();
       recaptchaRef.current = null;
-      toast.error("Failed to resend OTP. Please try again.");
+      toast.error(getAuthErrorMessage(err, "Failed to resend OTP. Please try again."));
     } finally {
       setResending(false);
     }
@@ -491,25 +520,33 @@ function GoogleButton({ onDone }: { onDone: () => void }) {
   // OTP verification (new Google user)
   return (
     <div className="flex flex-col gap-5">
+      {/* Invisible reCAPTCHA mount point — needed here too so Resend OTP works */}
+      <div id="recaptcha-container-google" />
+
       <div className="text-center">
         <p className="text-sm text-muted-foreground">
           OTP sent to <span className="font-semibold text-foreground">+91 {phone}</span>
         </p>
-        <button onClick={() => setGStep("enter_phone")}
+        <button onClick={() => { setGStep("enter_phone"); setOtpError(false); }}
           className="text-xs text-primary hover:underline mt-0.5 flex items-center gap-1 mx-auto">
           <ArrowLeft size={11} /> Change number
         </button>
       </div>
       {verifying
         ? <div className="flex justify-center py-4"><Loader2 size={26} className="animate-spin text-primary" /></div>
-        : <OTPInputs onComplete={handleOtpComplete} disabled={verifying} />
+        : <OTPInputs onComplete={handleOtpComplete} disabled={verifying} error={otpError} />
       }
+      {otpError && (
+        <p className="text-destructive text-xs text-center -mt-2">
+          Incorrect or expired OTP. Please try again.
+        </p>
+      )}
       <div className="text-center">
         <p className="text-xs text-muted-foreground mb-1.5">Didn&apos;t receive it?</p>
-        <button onClick={handleResend} disabled={resending}
-          className="flex items-center gap-1.5 text-xs text-primary hover:underline mx-auto disabled:opacity-60">
+        <button onClick={handleResend} disabled={resending || resendCooldown > 0}
+          className="flex items-center gap-1.5 text-xs text-primary hover:underline mx-auto disabled:opacity-60 disabled:no-underline">
           {resending ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
-          Resend OTP
+          {resendCooldown > 0 ? `Resend OTP in ${resendCooldown}s` : "Resend OTP"}
         </button>
       </div>
     </div>
