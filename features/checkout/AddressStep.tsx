@@ -12,6 +12,7 @@ import Link from "next/link";
 import { ROUTES } from "@/lib/constants/routes";
 import { toast } from "sonner";
 import { FormField } from "@/components/common/FormField";
+import { SelectableCard } from "@/components/ui/selectable-card";
 import { useAuthStore } from "@/features/auth/store";
 import { getAddresses, createAddress } from "@/lib/api";
 import { lookupPincode } from "@/lib/pincode";
@@ -88,7 +89,7 @@ function NewAddressForm({
   );
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-4 rounded-2xl border border-border bg-card">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-4 rounded-2xl border border-border bg-card shadow-sm">
       <div className="grid grid-cols-2 gap-3">
         <FormField label="Label" placeholder="Home / Office" error={errors.label?.message} {...register("label")} />
         <FormField label="Full name" required error={errors.fullName?.message} {...register("fullName")} />
@@ -219,15 +220,11 @@ export function AddressStep({ onNext }: AddressStepProps) {
       {!showNew && (
         <div className="space-y-3">
           {addresses.map((addr) => (
-            <button
+            <SelectableCard
               key={addr.id}
+              selected={selectedId === addr.id}
               onClick={() => setSelectedId(addr.id)}
-              className={cn(
-                "w-full flex gap-4 p-4 rounded-2xl border text-left transition-all",
-                selectedId === addr.id
-                  ? "border-primary bg-primary/5 ring-1 ring-primary"
-                  : "border-border hover:border-primary/40 hover:bg-muted/30"
-              )}
+              className="w-full flex gap-4 p-4"
             >
               <div className={cn(
                 "w-4 h-4 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center",
@@ -251,7 +248,7 @@ export function AddressStep({ onNext }: AddressStepProps) {
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">{addr.phone}</p>
               </div>
-            </button>
+            </SelectableCard>
           ))}
 
           <button

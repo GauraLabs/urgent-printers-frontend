@@ -12,13 +12,13 @@ interface PricingTableProps {
 
 export function PricingTable({ tiers, selectedQuantity, onSelectQuantity }: PricingTableProps) {
   return (
-    <div className="rounded-xl border border-border overflow-hidden">
+    <div className="rounded-xl border border-border overflow-hidden shadow-sm">
       <div className="bg-muted/50 px-4 py-2.5 flex items-center justify-between border-b border-border">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
           Quantity Pricing
         </p>
         <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-          <Star size={10} className="fill-yellow-400 text-yellow-400" />
+          <Star size={10} className="fill-brand-orange text-brand-orange" />
           Best value highlighted
         </p>
       </div>
@@ -36,14 +36,14 @@ export function PricingTable({ tiers, selectedQuantity, onSelectQuantity }: Pric
                 "w-full grid grid-cols-3 px-4 py-3 text-left transition-colors text-sm",
                 "hover:bg-muted/50",
                 isSelected && "bg-primary/5 border-l-2 border-primary",
-                isBest && !isSelected && "bg-yellow-50/50 dark:bg-yellow-900/10"
+                isBest && !isSelected && "bg-brand-orange/5"
               )}
             >
               <span className={cn("font-medium", isSelected && "text-primary")}>
                 {tier.quantity.toLocaleString("en-IN")}
                 {isBest && (
-                  <span className="ml-1.5 inline-flex items-center gap-0.5 text-[9px] font-bold text-yellow-600 bg-yellow-100 dark:bg-yellow-900/40 dark:text-yellow-400 px-1.5 py-0.5 rounded-full">
-                    <Star size={8} className="fill-yellow-500 text-yellow-500" /> BEST
+                  <span className="ml-1.5 inline-flex items-center gap-0.5 text-[9px] font-bold text-brand-orange bg-brand-orange/10 px-1.5 py-0.5 rounded-full">
+                    <Star size={8} className="fill-brand-orange text-brand-orange" /> BEST
                   </span>
                 )}
               </span>

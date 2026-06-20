@@ -58,7 +58,7 @@ export function ReviewStep({
       </div>
 
       {/* Items */}
-      <div className="rounded-2xl border border-border overflow-hidden">
+      <div className="rounded-2xl border border-border overflow-hidden shadow-sm">
         <div className="px-4 py-2.5 bg-muted/30 border-b border-border">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
             {items.length} item{items.length !== 1 ? "s" : ""}
@@ -96,7 +96,7 @@ export function ReviewStep({
 
       {/* Address + Payment */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-border p-4 space-y-2">
+        <div className="rounded-2xl border border-border p-4 space-y-2 shadow-sm">
           <div className="flex items-center gap-2">
             <MapPin size={14} className="text-primary shrink-0" />
             <p className="font-semibold text-sm">{address.label} — Delivery</p>
@@ -109,7 +109,7 @@ export function ReviewStep({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border p-4 space-y-2">
+        <div className="rounded-2xl border border-border p-4 space-y-2 shadow-sm">
           <div className="flex items-center gap-2">
             <CreditCard size={14} className="text-primary shrink-0" />
             <p className="font-semibold text-sm">Payment Method</p>
@@ -124,7 +124,7 @@ export function ReviewStep({
       </div>
 
       {/* ── Price breakdown ── */}
-      <div className="rounded-2xl border border-border overflow-hidden">
+      <div className="rounded-2xl border border-border overflow-hidden shadow-sm">
         <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center justify-between">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Price Breakdown</p>
           {previewLoading ? (

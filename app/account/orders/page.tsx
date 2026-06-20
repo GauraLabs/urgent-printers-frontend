@@ -10,17 +10,8 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { ROUTES } from "@/lib/constants/routes";
 import { formatPrice } from "@/lib/utils";
 import { ORDER_STATUS_LABELS } from "@/lib/constants/print-specs";
+import { ORDER_STATUS_COLORS } from "@/lib/constants/order-status";
 import type { OrderCard } from "@/types";
-
-const STATUS_COLORS: Record<string, string> = {
-  placed:           "bg-muted text-muted-foreground",
-  confirmed:        "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-  artwork_approved: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
-  printing:         "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
-  shipped:          "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
-  delivered:        "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
-  cancelled:        "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
-};
 
 export default function OrdersPage() {
   const user  = useAuthStore((s) => s.user);
@@ -67,12 +58,12 @@ export default function OrdersPage() {
             <Link
               key={order.id}
               href={ROUTES.accountOrder(order.id)}
-              className="block rounded-2xl border border-border bg-card hover:border-primary/30 hover:shadow-sm transition-all overflow-hidden"
+              className="block rounded-2xl border border-border bg-card hover:border-primary/30 shadow-sm hover:shadow-md transition-all overflow-hidden"
             >
               <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30">
                 <div className="flex items-center gap-3 flex-wrap">
                   <p className="font-semibold text-sm">{order.orderNumber}</p>
-                  <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${STATUS_COLORS[order.status] ?? ""}`}>
+                  <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${ORDER_STATUS_COLORS[order.status] ?? ""}`}>
                     {ORDER_STATUS_LABELS[order.status] ?? order.status}
                   </span>
                 </div>

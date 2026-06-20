@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Printer } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { ROUTES } from "@/lib/constants/routes";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -17,9 +18,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </Link>
 
       {/* Card */}
-      <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-sm p-8">
+      <Card className="w-full max-w-md rounded-2xl p-8">
         {children}
-      </div>
+      </Card>
 
       <p className="mt-6 text-xs text-muted-foreground text-center">
         By continuing you agree to our{" "}

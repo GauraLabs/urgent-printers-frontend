@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Quote } from "lucide-react";
+import { SectionHeading } from "@/components/common/SectionHeading";
 import { StarRating } from "@/components/common/StarRating";
 import type { Testimonial } from "@/types";
 
@@ -36,16 +37,17 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
 
 export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) {
   return (
-    <section aria-labelledby="testimonials-heading" className="py-12 lg:py-16 bg-secondary/30">
+    <section aria-labelledby="testimonials-heading" className="relative overflow-hidden py-12 lg:py-16 bg-secondary/30">
+      <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-brand-orange/10 blur-3xl -z-10" aria-hidden="true" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-10">
-          <h2 id="testimonials-heading" className="font-heading font-bold text-2xl lg:text-3xl">
-            Loved by Businesses
-          </h2>
-          <p className="text-muted-foreground mt-2 text-sm">
-            Join thousands of businesses who trust Urgent Printers
-          </p>
-        </div>
+        <SectionHeading
+          id="testimonials-heading"
+          eyebrow="Testimonials"
+          title="Loved by Businesses"
+          description="Join thousands of businesses who trust Urgent Printers"
+          align="center"
+          className="mb-10"
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           {testimonials.map((t) => (

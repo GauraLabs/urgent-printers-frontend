@@ -4,6 +4,7 @@ import { useState, useId, forwardRef, useEffect } from "react";
 import { ShoppingBag, CheckCircle2, Info } from "lucide-react";
 import { toast } from "sonner";
 import { PricingTable } from "./PricingTable";
+import { SelectableCard } from "@/components/ui/selectable-card";
 import { useCartStore } from "@/features/cart/store";
 import { makeCartItemId } from "@/features/cart/cartItemId";
 import { formatPrice, formatPricePerUnit, cn } from "@/lib/utils";
@@ -37,14 +38,10 @@ function OptionButton({
 }) {
   const showDelta = delta !== undefined && Math.abs(delta) >= 0.01;
   return (
-    <button
+    <SelectableCard
+      selected={selected}
       onClick={onClick}
-      className={cn(
-        "flex flex-col items-start px-3 py-2.5 rounded-xl border text-left transition-all",
-        selected
-          ? "border-primary bg-primary/5 ring-1 ring-primary"
-          : "border-border hover:border-primary/40 hover:bg-muted/50"
-      )}
+      className="flex flex-col items-start px-3 py-2.5 rounded-xl"
     >
       <div className="flex items-center justify-between w-full gap-1.5">
         <div className="flex items-center gap-1.5 min-w-0">
@@ -62,7 +59,7 @@ function OptionButton({
             "shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full",
             delta! > 0
               ? "bg-brand-orange/10 text-brand-orange"
-              : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+              : "bg-success/10 text-success"
           )}>
             {delta! > 0 ? "+" : "−"}{formatPrice(Math.abs(delta!))}
           </span>
@@ -71,7 +68,7 @@ function OptionButton({
       {description && (
         <span className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{description}</span>
       )}
-    </button>
+    </SelectableCard>
   );
 }
 
@@ -190,7 +187,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     return (
       <div className="flex flex-col gap-6">
         {/* Live price display */}
-        <div className="rounded-2xl border border-border bg-secondary/30 p-4">
+        <div className="rounded-2xl border border-border bg-secondary/30 p-4 shadow-sm">
           <div className="flex items-end justify-between">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Price per unit</p>
@@ -300,15 +297,11 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
                 ? `+${formatPrice(opt.extraCost)}`
                 : "Included";
               return (
-                <button
+                <SelectableCard
                   key={opt.id}
+                  selected={selectedTurnaround.id === opt.id}
                   onClick={() => setSelectedTurnaround(opt)}
-                  className={cn(
-                    "flex items-center justify-between px-4 py-3 rounded-xl border text-left transition-all",
-                    selectedTurnaround.id === opt.id
-                      ? "border-primary bg-primary/5 ring-1 ring-primary"
-                      : "border-border hover:border-primary/40 hover:bg-muted/50"
-                  )}
+                  className="flex items-center justify-between px-4 py-3 rounded-xl"
                 >
                   <div>
                     <p className={cn("text-sm font-medium", selectedTurnaround.id === opt.id && "text-primary")}>
@@ -324,7 +317,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
                   )}>
                     {costLabel}
                   </span>
-                </button>
+                </SelectableCard>
               );
             })}
           </div>

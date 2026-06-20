@@ -5,6 +5,7 @@ import { Trash2, ImageIcon, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/features/auth/store";
 import { getSavedArtworks, deleteArtwork, type SavedArtwork } from "@/lib/api/artwork";
 import { formatFileSize, cn } from "@/lib/utils";
+import { selectableCardVariants } from "@/components/ui/selectable-card";
 
 interface SavedArtworksProps {
   onSelect: (fileKey: string, fileName: string) => void;
@@ -69,10 +70,8 @@ export function SavedArtworks({ onSelect }: SavedArtworksProps) {
               <div
                 key={artwork.id}
                 className={cn(
-                  "flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all",
-                  isSelected
-                    ? "border-primary bg-primary/5 ring-1 ring-primary"
-                    : "border-border hover:border-primary/40 hover:bg-muted/50"
+                  selectableCardVariants({ selected: isSelected }),
+                  "flex items-center gap-3 p-3 rounded-xl cursor-pointer"
                 )}
                 onClick={() => handleSelect(artwork)}
               >

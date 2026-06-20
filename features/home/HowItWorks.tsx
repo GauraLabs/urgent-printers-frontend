@@ -2,6 +2,7 @@
 
 import { UploadCloud, Settings2, Printer, PackageCheck } from "lucide-react";
 import { motion } from "motion/react";
+import { SectionHeading } from "@/components/common/SectionHeading";
 
 const STEPS = [
   { icon: Settings2,   title: "Configure Your Product", description: "Choose size, paper, finish, quantity, and turnaround. The price updates live as you build your order." },
@@ -19,12 +20,15 @@ export function HowItWorks() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-10"
+          className="mb-10"
         >
-          <h2 id="how-heading" className="font-heading font-bold text-2xl lg:text-3xl">How It Works</h2>
-          <p className="text-muted-foreground mt-2 text-sm max-w-md mx-auto">
-            From upload to doorstep in as little as one business day
-          </p>
+          <SectionHeading
+            id="how-heading"
+            eyebrow="The Process"
+            title="How It Works"
+            description="From upload to doorstep in as little as one business day"
+            align="center"
+          />
         </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">

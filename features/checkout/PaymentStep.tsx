@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ArrowRight, Truck, Lock, ShieldCheck, QrCode, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SelectableCard } from "@/components/ui/selectable-card";
 
 export type PaymentMethod = "online" | "cod";
 
@@ -67,14 +68,10 @@ export function PaymentStep({ onNext, onBack }: PaymentStepProps) {
       <div className="space-y-3">
 
         {/* ── Pay Online ── */}
-        <button
+        <SelectableCard
+          selected={selected === "online"}
           onClick={() => setSelected("online")}
-          className={cn(
-            "w-full text-left rounded-2xl border p-4 transition-all space-y-4",
-            selected === "online"
-              ? "border-primary bg-primary/5 ring-1 ring-primary"
-              : "border-border hover:border-primary/40 hover:bg-muted/30"
-          )}
+          className="w-full p-4 space-y-4"
         >
           {/* Header */}
           <div className="flex items-center gap-3">
@@ -138,17 +135,13 @@ export function PaymentStep({ onNext, onBack }: PaymentStepProps) {
               Select your method inside Razorpay&apos;s secure checkout
             </p>
           </div>
-        </button>
+        </SelectableCard>
 
         {/* ── Cash on Delivery ── */}
-        <button
+        <SelectableCard
+          selected={selected === "cod"}
           onClick={() => setSelected("cod")}
-          className={cn(
-            "w-full text-left rounded-2xl border p-4 transition-all",
-            selected === "cod"
-              ? "border-primary bg-primary/5 ring-1 ring-primary"
-              : "border-border hover:border-primary/40 hover:bg-muted/30"
-          )}
+          className="w-full p-4"
         >
           <div className="flex items-center gap-3">
             <div className={cn(
@@ -168,7 +161,7 @@ export function PaymentStep({ onNext, onBack }: PaymentStepProps) {
               <p className="text-xs text-muted-foreground">Pay in cash when your order arrives</p>
             </div>
           </div>
-        </button>
+        </SelectableCard>
       </div>
 
       <div className="flex items-center gap-2 text-xs text-muted-foreground">

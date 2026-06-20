@@ -1,23 +1,39 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import dynamic from "next/dynamic";
+import { ArrowRight, Star } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, A11y } from "swiper/modules";
 import { motion } from "motion/react";
 import { buttonVariants } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { HeroBanner } from "@/types";
 
 import "swiper/css";
 import "swiper/css/pagination";
 
+const HeroSparkles = dynamic(() => import("./HeroSparkles").then((m) => m.HeroSparkles), { ssr: false });
+
 interface HeroBannerSectionProps {
   banners: HeroBanner[];
 }
 
 export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
+  const [showSparkles, setShowSparkles] = useState(false);
+
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+    if (prefersReducedMotion || !isDesktop) return;
+
+    const timer = window.setTimeout(() => setShowSparkles(true), 1500);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   return (
     <section aria-label="Featured promotions" className="relative w-full overflow-hidden">
       <Swiper
@@ -32,7 +48,7 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
             <div className="relative w-full h-[340px] sm:h-[420px] lg:h-[520px]">
               <Image src={banner.imageUrl} alt="" fill priority loading="eager" className="object-cover" sizes="100vw" />
               <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/40 to-transparent" />
-              <div className="absolute inset-0 flex items-center">
+              <div className="absolute inset-0 z-10 flex items-center">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
                   <div className="max-w-xl">
                     {banner.badgeText && (
@@ -84,6 +100,26 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
           </SwiperSlide>
         ))}
       </Swiper>
+
+      {showSparkles && (
+        <div className="absolute inset-0 z-[1] pointer-events-none">
+          <HeroSparkles />
+        </div>
+      )}
+
+      <div className="hidden sm:block absolute bottom-4 right-4 lg:bottom-6 lg:right-6 z-10">
+        <Card className="flex-row items-center gap-3 px-4 py-3 rounded-2xl shadow-lg">
+          <div className="flex items-center gap-1 text-brand-orange">
+            <Star size={16} className="fill-brand-orange" />
+            <span className="font-heading font-bold text-foreground text-base">4.8</span>
+          </div>
+          <div className="h-8 w-px bg-border" />
+          <div className="text-xs text-muted-foreground leading-tight">
+            <p className="font-semibold text-foreground">10,000+ orders</p>
+            <p>delivered across India</p>
+          </div>
+        </Card>
+      </div>
     </section>
   );
 }

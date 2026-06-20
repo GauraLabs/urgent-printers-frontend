@@ -5,11 +5,12 @@ import {
   Truck,
   PackageCheck,
   XCircle,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { OrderStatus, OrderStatusEvent } from "@/types";
 
-const STEPS: { status: OrderStatus; label: string; icon: React.ElementType }[] = [
+const STEPS: { status: OrderStatus; label: string; icon: LucideIcon }[] = [
   { status: "placed",    label: "Order Placed",  icon: ShoppingCart  },
   { status: "confirmed", label: "Confirmed",     icon: CheckCircle   },
   { status: "printing",  label: "Printing",      icon: Printer       },

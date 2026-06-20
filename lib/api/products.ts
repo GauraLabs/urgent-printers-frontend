@@ -307,6 +307,23 @@ export async function getRelatedProducts(
   }
 }
 
+export async function getRecommendedProducts(
+  excludeIds: string[] = [],
+  limit = 10
+): Promise<Product[]> {
+  // REAL API: GET /products/recommended?limit=X
+  if (!process.env.NEXT_PUBLIC_API_URL) {
+    await delay(300);
+    return mockProducts.filter((p) => !excludeIds.includes(p.id)).slice(0, limit);
+  }
+  try {
+    const data = await apiFetch<BackendProductCard[]>(`/products/recommended?limit=${limit}`);
+    return data.map(mapCard).filter((p) => !excludeIds.includes(p.id));
+  } catch {
+    return mockProducts.filter((p) => !excludeIds.includes(p.id)).slice(0, limit);
+  }
+}
+
 export async function searchProducts(query: string): Promise<Product[]> {
   // REAL API: GET /products?search=query
   if (!process.env.NEXT_PUBLIC_API_URL) {

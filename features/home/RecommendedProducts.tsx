@@ -5,34 +5,37 @@ import { ProductCard } from "@/features/products/ProductCard";
 import { ROUTES } from "@/lib/constants/routes";
 import type { Product } from "@/types";
 
-interface FeaturedProductsProps {
+interface RecommendedProductsProps {
   products: Product[];
 }
 
-export function FeaturedProducts({ products }: FeaturedProductsProps) {
+export function RecommendedProducts({ products }: RecommendedProductsProps) {
+  if (products.length === 0) return null;
+
   return (
-    <section aria-labelledby="featured-heading" className="relative overflow-hidden py-12 lg:py-16 bg-secondary/30">
-      <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-primary/10 blur-3xl -z-10" aria-hidden="true" />
+    <section aria-labelledby="recommended-heading" className="py-12 lg:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between mb-8">
           <SectionHeading
-            id="featured-heading"
-            eyebrow="Bestsellers"
-            title="Popular Products"
-            description="Our customers' most-ordered print products"
+            id="recommended-heading"
+            eyebrow="Just for You"
+            title="Recommended for You"
+            description="Picked based on what businesses like yours order most"
             align="left"
           />
           <Link
             href={ROUTES.products}
             className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
           >
-            Browse all <ArrowRight size={14} />
+            View all <ArrowRight size={14} />
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        <div className="flex sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6 overflow-x-auto sm:overflow-visible snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 pb-2">
           {products.map((p) => (
-            <ProductCard key={p.id} product={p} />
+            <div key={p.id} className="w-[62%] sm:w-auto shrink-0 snap-start">
+              <ProductCard product={p} />
+            </div>
           ))}
         </div>
       </div>

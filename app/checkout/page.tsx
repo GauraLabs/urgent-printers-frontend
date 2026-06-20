@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Card } from "@/components/ui/card";
 import { CheckoutStepper, type CheckoutStep } from "@/features/checkout/CheckoutStepper";
 import { AddressStep } from "@/features/checkout/AddressStep";
 import { PaymentStep, type PaymentMethod } from "@/features/checkout/PaymentStep";
@@ -11,6 +12,7 @@ import { useCartStore } from "@/features/cart/store";
 import { useAuthStore } from "@/features/auth/store";
 import { createOrder, previewOrder, verifyPayment } from "@/lib/api";
 import { ROUTES } from "@/lib/constants/routes";
+import { RAZORPAY_THEME_COLOR } from "@/lib/constants/payment";
 import type { Address, OrderPreview, CreateOrderRequest } from "@/types";
 
 type PartialAddress = Omit<Address, "id" | "userId" | "isDefault">;
@@ -132,8 +134,7 @@ export default function CheckoutPage() {
 
         retry: { enabled: true, max_count: 3 },
 
-        // Must be a hex value — Razorpay's SDK does not parse oklch()
-        theme: { color: "#3730a3" },
+        theme: { color: RAZORPAY_THEME_COLOR },
 
         notes: { order_number: order.orderNumber },
 
@@ -211,9 +212,9 @@ export default function CheckoutPage() {
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="font-heading font-bold text-2xl mb-6">Checkout</h1>
 
-      <div className="mb-8 p-4 rounded-2xl border border-border bg-card">
+      <Card className="mb-8 rounded-2xl p-4">
         <CheckoutStepper currentStep={step} />
-      </div>
+      </Card>
 
       {step === 1 && <AddressStep onNext={handleAddressNext} />}
 

@@ -23,7 +23,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
 
   return (
     <motion.article
-      whileHover={{ y: -4, boxShadow: "0 12px 32px -4px rgba(0,0,0,0.12)" }}
+      whileHover={{ y: -4, boxShadow: "0 12px 32px -4px rgba(159,66,43,0.18)" }}
       transition={{ type: "spring", stiffness: 300, damping: 24 }}
       className={cn(
         "group relative flex flex-col rounded-2xl overflow-hidden border border-border bg-card",
@@ -42,15 +42,16 @@ export function ProductCard({ product, className }: ProductCardProps) {
         />
         {product.badge && product.badge !== "none" && (
           <Badge
+            variant={
+              product.badge === "new"
+                ? "success"
+                : product.badge === "sale"
+                  ? "sale"
+                  : "default"
+            }
             className={cn(
               "absolute top-2.5 left-2.5 border-0 text-[10px] px-2 capitalize",
-              product.badge === "bestseller"
-                ? "bg-brand-orange text-brand-orange-foreground"
-                : product.badge === "new"
-                  ? "bg-emerald-500 text-white"
-                  : product.badge === "sale"
-                    ? "bg-red-500 text-white font-bold"
-                    : "bg-primary text-primary-foreground"
+              product.badge === "bestseller" && "bg-brand-orange text-brand-orange-foreground"
             )}
           >
             {product.badge}
@@ -82,7 +83,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
 
         <StarRating rating={product.averageRating} reviewCount={product.reviewCount} size="sm" showCount className="mt-0.5" />
 
-        <div className="mt-auto pt-3 border-t border-border flex items-end justify-between gap-2">
+        <div className="mt-auto pt-3 border-t border-border flex flex-wrap items-end justify-between gap-2">
           <div>
             <p className="text-[10px] text-muted-foreground mb-0.5">From</p>
             <div className="flex items-baseline gap-1.5">

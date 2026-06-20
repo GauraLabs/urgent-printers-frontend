@@ -70,7 +70,7 @@ export default function OrderConfirmationPage() {
       ) : order ? (
         <>
           {/* ── Receipt card ── */}
-          <div className="rounded-2xl border border-border bg-card overflow-hidden mb-6">
+          <div className="rounded-2xl border border-border bg-card overflow-hidden mb-6 shadow-sm">
 
             {/* Header strip */}
             <div className="px-5 py-4 bg-muted/30 border-b border-border flex items-center justify-between">
@@ -262,7 +262,7 @@ export default function OrderConfirmationPage() {
         </>
       ) : (
         /* Fallback */
-        <div className="rounded-2xl border border-border bg-card p-6 mb-8 text-left">
+        <div className="rounded-2xl border border-border bg-card p-6 mb-8 text-left shadow-sm">
           <div className="rounded-xl bg-secondary/50 p-3 text-xs text-muted-foreground">
             Your order has been placed. Check{" "}
             <Link href={ROUTES.accountOrders} className="text-primary underline">My Orders</Link>{" "}

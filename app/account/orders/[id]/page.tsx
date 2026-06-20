@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { ROUTES } from "@/lib/constants/routes";
 import { formatPrice, formatPricePerUnit, slugify } from "@/lib/utils";
 import { ORDER_STATUS_LABELS } from "@/lib/constants/print-specs";
+import { RAZORPAY_THEME_COLOR } from "@/lib/constants/payment";
 import { toast } from "sonner";
 import type { Order } from "@/types";
 
@@ -93,7 +94,7 @@ export default function OrderDetailPage() {
       },
 
       retry: { enabled: true, max_count: 3 },
-      theme: { color: "#3730a3" },
+      theme: { color: RAZORPAY_THEME_COLOR },
       notes: { order_number: order.orderNumber },
 
       handler: async (response) => {
@@ -247,7 +248,7 @@ export default function OrderDetailPage() {
       </div>
 
       {/* Status tracker */}
-      <div className="p-5 rounded-2xl border border-border bg-card">
+      <div className="p-5 rounded-2xl border border-border bg-card shadow-sm">
         <p className="font-heading font-semibold text-sm mb-5">
           Status: <span className="text-brand-orange">{ORDER_STATUS_LABELS[order.status] ?? order.status}</span>
         </p>
@@ -263,7 +264,7 @@ export default function OrderDetailPage() {
       </div>
 
       {/* Items */}
-      <div className="rounded-2xl border border-border overflow-hidden">
+      <div className="rounded-2xl border border-border overflow-hidden shadow-sm">
         <div className="px-5 py-3 bg-muted/30 border-b border-border">
           <p className="font-heading font-semibold text-sm">
             {order.items.length} item{order.items.length !== 1 ? "s" : ""}
@@ -328,7 +329,7 @@ export default function OrderDetailPage() {
       {/* Pricing + address + payment */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Price breakdown */}
-        <div className="rounded-2xl border border-border overflow-hidden">
+        <div className="rounded-2xl border border-border overflow-hidden shadow-sm">
           <div className="px-5 py-3 bg-muted/30 border-b border-border">
             <p className="font-heading font-semibold text-sm">Price Breakdown</p>
           </div>
@@ -371,7 +372,7 @@ export default function OrderDetailPage() {
         </div>
 
         {/* Shipping address */}
-        <div className="rounded-2xl border border-border overflow-hidden">
+        <div className="rounded-2xl border border-border overflow-hidden shadow-sm">
           <div className="px-5 py-3 bg-muted/30 border-b border-border">
             <p className="font-heading font-semibold text-sm">Shipping Address</p>
           </div>

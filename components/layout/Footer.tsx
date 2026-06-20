@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { Printer, Mail, Phone, MapPin } from "lucide-react";
+import { InstagramIcon, FacebookIcon, XIcon } from "@/components/common/SocialIcons";
 import { Separator } from "@/components/ui/separator";
 import { ROUTES } from "@/lib/constants/routes";
+
+const SOCIAL_LINKS = [
+  { label: "Instagram", href: "https://www.instagram.com/urgentprinters", icon: InstagramIcon },
+  { label: "Facebook", href: "https://www.facebook.com/urgentprinters", icon: FacebookIcon },
+  { label: "Twitter", href: "https://twitter.com/urgentprinters", icon: XIcon },
+];
 
 const PRODUCT_LINKS = [
   { label: "Business Cards", href: ROUTES.category("business-cards") },
@@ -30,7 +37,9 @@ const SUPPORT_LINKS = [
 
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-border bg-secondary/30">
+    <footer className="relative mt-auto overflow-hidden border-t border-border bg-secondary/30">
+      <div className="h-1 bg-gradient-to-r from-primary via-brand-orange to-primary" />
+      <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-primary/10 blur-3xl -z-10" aria-hidden="true" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
           {/* Brand */}
@@ -65,6 +74,21 @@ export function Footer() {
                 <span>Mumbai, Maharashtra, India</span>
               </li>
             </ul>
+
+            <div className="flex items-center gap-3 mt-5">
+              {SOCIAL_LINKS.map(({ label, href, icon: Icon }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+                >
+                  <Icon size={14} />
+                </a>
+              ))}
+            </div>
           </div>
 
           {/* Products */}

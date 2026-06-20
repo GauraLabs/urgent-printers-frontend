@@ -1,4 +1,4 @@
-export type ThemeId = "indigo" | "emerald" | "rose" | "violet" | "slate";
+export type ThemeId = "roseGold" | "gold" | "emerald" | "slate" | "pink" | "plum";
 export type ColorMode = "light" | "dark";
 
 export interface Theme {
@@ -10,35 +10,41 @@ export interface Theme {
 
 export const THEMES: Theme[] = [
   {
-    id: "indigo",
-    label: "Indigo",
-    primarySwatch: "#4338ca",
-    accentSwatch: "#f97316",
+    id: "roseGold",
+    label: "Rose Gold",
+    primarySwatch: "#A1654B",
+    accentSwatch: "#D9A35E",
+  },
+  {
+    id: "gold",
+    label: "Royal Gold",
+    primarySwatch: "#AD8A3C",
+    accentSwatch: "#7A352D",
   },
   {
     id: "emerald",
-    label: "Emerald",
-    primarySwatch: "#059669",
-    accentSwatch: "#d97706",
-  },
-  {
-    id: "rose",
-    label: "Rose",
-    primarySwatch: "#e11d48",
-    accentSwatch: "#ea580c",
-  },
-  {
-    id: "violet",
-    label: "Violet",
-    primarySwatch: "#7c3aed",
-    accentSwatch: "#db2777",
+    label: "Emerald Heritage",
+    primarySwatch: "#2F6E54",
+    accentSwatch: "#9C7530",
   },
   {
     id: "slate",
-    label: "Slate",
-    primarySwatch: "#334155",
-    accentSwatch: "#0284c7",
+    label: "Slate Luxury",
+    primarySwatch: "#3A332E",
+    accentSwatch: "#C9A052",
+  },
+  {
+    id: "pink",
+    label: "Blush Pink",
+    primarySwatch: "#D9477E",
+    accentSwatch: "#D9A35E",
+  },
+  {
+    id: "plum",
+    label: "Orchid Plum",
+    primarySwatch: "#8C3D7B",
+    accentSwatch: "#E25C8C",
   },
 ];
 
-export const DEFAULT_THEME: ThemeId = "indigo";
+export const DEFAULT_THEME: ThemeId = "roseGold";

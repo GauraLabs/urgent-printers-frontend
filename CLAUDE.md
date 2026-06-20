@@ -52,12 +52,16 @@ The auth store also has `_isHydrated` / `_setHydrated` via `onRehydrateStorage` 
 
 ## Design system
 
-- **Primary:** Deep Indigo `oklch(0.38 0.16 271)` → `bg-primary`
-- **CTA:** Vivid Orange `oklch(0.68 0.21 37)` → `bg-brand-orange text-brand-orange-foreground`
-- **5 themes:** `indigo` (default) · `emerald` · `rose` · `violet` · `slate` — applied as `.theme-*` class on `<html>`
-- **Headings:** `font-heading` (Sora via `--font-sora`)
+- **"Rose Gold Boutique"** premium palette — blush/ivory backgrounds, rose-gold/copper primary, warm gold accents
+- **Primary:** Rose Gold / Copper `oklch(0.50 0.13 35)` → `bg-primary`
+- **CTA:** Warm Gold `oklch(0.72 0.16 55)` → `bg-brand-orange text-brand-orange-foreground`
+- **4 themes:** `roseGold` (default, rootless `:root`) · `gold` ("Royal Gold & Ivory") · `emerald` ("Emerald & Gold Heritage") · `slate` ("Slate Luxury") — non-default variants applied as `.theme-*` class on `<html>`; defined in `lib/themes.ts`
+- **Headings:** `font-heading` (Cormorant Garamond via `--font-display`)
 - **Body:** `font-sans` (DM Sans via `--font-dm-sans`)
 - **Border radius base:** `0.75rem` (modern, rounded)
+- **Status badges:** use `lib/constants/order-status.ts` (`ORDER_STATUS_COLORS`) and `Badge` `success`/`sale` variants — both token-based, never raw Tailwind colors (e.g. `bg-blue-100`)
+- **Razorpay theme color:** `lib/constants/payment.ts` → `RAZORPAY_THEME_COLOR` (hex, kept in sync with `--primary`; Razorpay SDK can't parse `oklch()`)
+- **Hero sparkles:** `features/home/HeroSparkles.tsx` — `@react-three/fiber`/`drei` `<Sparkles>`, lazy-loaded via `next/dynamic(..., { ssr: false })`, desktop-only + `prefers-reduced-motion`-gated, mounted 1.5s after initial paint (227KB gzip chunk, never in initial HTML)
 
 ## API layer pattern
 

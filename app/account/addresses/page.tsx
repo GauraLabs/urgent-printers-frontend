@@ -95,7 +95,7 @@ function AddressForm({ initial, onSave, onCancel }: {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSave)} className="space-y-4 p-5 rounded-2xl border border-border bg-card">
+    <form onSubmit={handleSubmit(onSave)} className="space-y-4 p-5 rounded-2xl border border-border bg-card shadow-sm">
 
       {/* Detect location */}
       <button
@@ -354,7 +354,7 @@ export default function AddressesPage() {
                 onCancel={() => setEditingId(null)}
               />
             ) : (
-              <div className={cn("p-5 rounded-2xl border bg-card", addr.isDefault ? "border-primary/40 ring-1 ring-primary/20" : "border-border")}>
+              <div className={cn("p-5 rounded-2xl border bg-card shadow-sm", addr.isDefault ? "border-primary/40 ring-1 ring-primary/20" : "border-border")}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2 flex-wrap">
                     <MapPin size={15} className="text-primary shrink-0 mt-0.5" />

@@ -65,7 +65,7 @@ export default function ContactPage() {
             </div>
           ))}
 
-          <div className="rounded-2xl border border-border bg-secondary/30 p-5 mt-6">
+          <div className="rounded-2xl border border-border bg-secondary/30 p-5 mt-6 shadow-sm">
             <p className="font-heading font-semibold text-sm mb-2">Common Questions</p>
             <ul className="text-xs text-muted-foreground space-y-1.5">
               <li>→ <a href="/policies/artwork-guidelines" className="hover:text-primary transition-colors">Artwork file requirements</a></li>

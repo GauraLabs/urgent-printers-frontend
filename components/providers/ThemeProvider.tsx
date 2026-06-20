@@ -17,14 +17,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     // Remove all theme classes
     html.classList.remove(
-      "theme-indigo",
+      "theme-gold",
       "theme-emerald",
-      "theme-rose",
-      "theme-violet",
-      "theme-slate"
+      "theme-slate",
+      "theme-pink",
+      "theme-plum"
     );
 
-    // Apply selected theme (no class needed for default indigo)
+    // Apply selected theme (no class needed for default roseGold)
     if (theme !== DEFAULT_THEME) {
       html.classList.add(`theme-${theme}`);
     }

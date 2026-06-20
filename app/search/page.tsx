@@ -130,7 +130,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
               <Link
                 key={cat.id}
                 href={ROUTES.category(cat.slug)}
-                className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-sm transition-all text-center group"
+                className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 shadow-sm hover:shadow-md transition-all text-center group"
               >
                 <span className="text-2xl">
                   {cat.slug === "business-cards" ? "🪪"

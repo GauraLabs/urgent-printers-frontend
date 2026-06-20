@@ -125,7 +125,7 @@ export default function CartPage() {
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Items list */}
         <div className="flex-1 min-w-0">
-          <div className="rounded-2xl border border-border overflow-hidden">
+          <div className="rounded-2xl border border-border overflow-hidden shadow-sm">
             <div className="px-5 py-3 bg-muted/30 border-b border-border">
               <p className="text-sm font-semibold">
                 {items.length} item{items.length !== 1 ? "s" : ""}
@@ -233,7 +233,7 @@ export default function CartPage() {
 
         {/* Order summary */}
         <div className="lg:w-80 shrink-0">
-          <div className="rounded-2xl border border-border bg-card sticky top-20 overflow-hidden">
+          <div className="rounded-2xl border border-border bg-card sticky top-20 overflow-hidden shadow-sm">
             {/* Header */}
             <div className="px-5 py-3.5 bg-muted/30 border-b border-border">
               <h2 className="font-heading font-bold text-sm">Order Summary</h2>

@@ -92,7 +92,7 @@ export function ArtworkUpload({ onChange }: ArtworkUploadProps) {
         <div
           {...getRootProps()}
           className={cn(
-            "flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-8 cursor-pointer",
+            "flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-8 cursor-pointer shadow-sm",
             "transition-all text-center",
             uploading && "pointer-events-none opacity-70",
             isDragActive
@@ -125,7 +125,7 @@ export function ArtworkUpload({ onChange }: ArtworkUploadProps) {
           )}
         </div>
       ) : (
-        <div className="flex items-center gap-3 p-4 rounded-2xl border border-success/40 bg-success/5">
+        <div className="flex items-center gap-3 p-4 rounded-2xl border border-success/40 bg-success/5 shadow-sm">
           <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center shrink-0">
             <FileCheck2 size={18} className="text-success" />
           </div>
@@ -152,7 +152,7 @@ export function ArtworkUpload({ onChange }: ArtworkUploadProps) {
       )}
 
       {/* Spec requirements */}
-      <div className="flex items-start gap-2 text-xs text-muted-foreground p-3 rounded-xl bg-muted/50 border border-border">
+      <div className="flex items-start gap-2 text-xs text-muted-foreground p-3 rounded-xl bg-muted/50 border border-border shadow-sm">
         <Info size={13} className="shrink-0 mt-0.5 text-primary" />
         <div className="space-y-0.5">
           <p>
@@ -166,7 +166,7 @@ export function ArtworkUpload({ onChange }: ArtworkUploadProps) {
       </div>
 
       {/* Canva CTA */}
-      <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-card">
+      <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-card shadow-sm">
         <div>
           <p className="text-xs font-semibold">No design ready?</p>
           <p className="text-[11px] text-muted-foreground">Create one free on Canva</p>

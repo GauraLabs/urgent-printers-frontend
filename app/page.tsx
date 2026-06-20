@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
-import { getHeroBanners, getTestimonials, getCategories, getFeaturedProducts } from "@/lib/api";
+import {
+  getHeroBanners,
+  getTestimonials,
+  getCategories,
+  getFeaturedProducts,
+  getRecommendedProducts,
+} from "@/lib/api";
 import { HeroBannerSection } from "@/features/home/HeroBannerSection";
 import { CategoryGrid } from "@/features/home/CategoryGrid";
 import { FeaturedProducts } from "@/features/home/FeaturedProducts";
+import { RecommendedProducts } from "@/features/home/RecommendedProducts";
 import { HowItWorks } from "@/features/home/HowItWorks";
 import { PromoBanner } from "@/features/home/PromoBanner";
 import { TrustBadges } from "@/features/home/TrustBadges";
@@ -54,6 +61,7 @@ export default async function HomePage() {
     getFeaturedProducts(),
     getTestimonials(),
   ]);
+  const recommended = await getRecommendedProducts(featured.map((p) => p.id), 10);
 
   return (
     <>
@@ -65,6 +73,7 @@ export default async function HomePage() {
       <TrustBadges />
       <CategoryGrid categories={categories} />
       <FeaturedProducts products={featured} />
+      <RecommendedProducts products={recommended} />
       <HowItWorks />
       <PromoBanner />
       <TestimonialsSection testimonials={testimonials} />

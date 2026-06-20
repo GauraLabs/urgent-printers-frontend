@@ -7,8 +7,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from "firebase/auth";
+<<<<<<< Updated upstream
 import { firebaseAuth } from "@/lib/firebase";
 import { Eye, EyeOff, Loader2, Smartphone, Mail, Globe, ArrowLeft, RefreshCw } from "lucide-react";
+=======
+import { getFirebaseAuth, getAuthErrorMessage } from "@/lib/firebase";
+import { Eye, EyeOff, Loader2, Smartphone, Mail, Globe, ArrowLeft, RefreshCw, type LucideIcon } from "lucide-react";
+>>>>>>> Stashed changes
 import { toast } from "sonner";
 import { FormField } from "@/components/common/FormField";
 import { OTPInputs } from "@/features/auth/OTPInputs";
@@ -22,7 +27,13 @@ import { cn } from "@/lib/utils";
 type AuthMethod = "phone" | "google" | "email";
 type PhoneStep = "enter_phone" | "enter_otp" | "complete_profile";
 
+<<<<<<< Updated upstream
 const METHODS: { id: AuthMethod; label: string; icon: React.ElementType }[] = [
+=======
+const RESEND_COOLDOWN_SECONDS = 30;
+
+const METHODS: { id: AuthMethod; label: string; icon: LucideIcon }[] = [
+>>>>>>> Stashed changes
   { id: "phone", label: "Mobile", icon: Smartphone },
   { id: "google", label: "Google", icon: Globe },
   { id: "email", label: "Email", icon: Mail },
