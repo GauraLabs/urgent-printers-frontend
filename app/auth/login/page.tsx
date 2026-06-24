@@ -24,7 +24,7 @@ type AuthMethod = "phone" | "google" | "email";
 type PhoneStep = "enter_phone" | "enter_otp" | "complete_profile";
 
 const RESEND_COOLDOWN_SECONDS = 30;
-const METHODS: { id: AuthMethod; label: string; icon: React.ElementType }[] = [
+const METHODS: { id: AuthMethod; label: string; icon: LucideIcon }[] = [
   { id: "phone", label: "Mobile", icon: Smartphone },
   { id: "google", label: "Google", icon: Globe },
   { id: "email", label: "Email", icon: Mail },
