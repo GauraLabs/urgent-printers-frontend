@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const OTP_LENGTH = 6;
@@ -8,11 +8,20 @@ const OTP_LENGTH = 6;
 interface OTPInputsProps {
   onComplete: (otp: string) => void;
   disabled?: boolean;
+  error?: boolean;
 }
 
-export function OTPInputs({ onComplete, disabled }: OTPInputsProps) {
+export function OTPInputs({ onComplete, disabled, error }: OTPInputsProps) {
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // On a failed attempt, clear the boxes (shown in red) so the user can retype.
+  useEffect(() => {
+    if (error) {
+      setDigits(Array(OTP_LENGTH).fill(""));
+      inputRefs.current[0]?.focus();
+    }
+  }, [error]);
 
   function handleChange(index: number, value: string) {
     const digit = value.replace(/\D/g, "").slice(-1);
@@ -53,11 +62,16 @@ export function OTPInputs({ onComplete, disabled }: OTPInputsProps) {
           onChange={(e) => handleChange(i, e.target.value)}
           onKeyDown={(e) => handleKeyDown(i, e)}
           aria-label={`OTP digit ${i + 1}`}
+          aria-invalid={error || undefined}
           className={cn(
             "w-11 h-13 text-center text-xl font-bold rounded-xl border-2 transition-colors",
             "focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/30",
             "disabled:opacity-50 disabled:cursor-not-allowed",
-            digit ? "border-primary bg-primary/5" : "border-border bg-background"
+            digit
+              ? "border-primary bg-primary/5"
+              : error
+                ? "border-destructive bg-destructive/5"
+                : "border-border bg-background"
           )}
         />
       ))}

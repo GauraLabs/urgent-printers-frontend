@@ -24,7 +24,7 @@ export default function TermsPage() {
       <h2>Limitation of Liability</h2>
       <p>Our liability is limited to the value of the order in question. We are not liable for indirect or consequential loss.</p>
       <h2>Dispute Resolution</h2>
-      <p>Disputes will be resolved under the jurisdiction of courts in Mumbai, Maharashtra, India.</p>
+      <p>Disputes will be resolved under the jurisdiction of courts in Mathura, Uttar Pradesh, India.</p>
     </article>
   );
 }

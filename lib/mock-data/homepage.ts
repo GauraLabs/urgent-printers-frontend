@@ -24,7 +24,7 @@ export const mockHeroBanners: HeroBanner[] = [
 export const mockTestimonials: Testimonial[] = [
   {
     id: "test-1",
-    authorName: "Priya Mehta",
+    authorName: "Vasu ji",
     company: "Bloom Collective, Mumbai",
     avatarUrl: "https://picsum.photos/seed/test1/100/100",
     rating: 5,
@@ -32,7 +32,7 @@ export const mockTestimonials: Testimonial[] = [
   },
   {
     id: "test-2",
-    authorName: "Rahul Verma",
+    authorName: "Chaitanya Sharma",
     company: "Verma & Associates, Delhi",
     avatarUrl: "https://picsum.photos/seed/test2/100/100",
     rating: 5,
@@ -40,7 +40,7 @@ export const mockTestimonials: Testimonial[] = [
   },
   {
     id: "test-3",
-    authorName: "Ananya Krishnan",
+    authorName: "Vanya Sharma",
     company: "Spice Route Café, Bengaluru",
     avatarUrl: "https://picsum.photos/seed/test3/100/100",
     rating: 5,
@@ -48,7 +48,7 @@ export const mockTestimonials: Testimonial[] = [
   },
   {
     id: "test-4",
-    authorName: "Kunal Singh",
+    authorName: "Kunal Kaushik",
     company: "IronCore Fitness, Pune",
     avatarUrl: "https://picsum.photos/seed/test4/100/100",
     rating: 5,
