@@ -11,7 +11,7 @@ const ADDR_HOME = {
 const mkPricing = (sub: number, disc: number, ship: number) => ({
   subtotal: sub, discountAmount: disc, shippingCost: ship,
   gstRate: 18, gstAmount: parseFloat(((sub - disc) * 0.18).toFixed(2)),
-  totalAmount: parseFloat((sub - disc + ship + (sub - disc) * 0.18).toFixed(2)),
+  totalAmount: parseFloat((sub - disc + ship).toFixed(2)),
 });
 
 export const mockOrders: Order[] = [

@@ -54,7 +54,6 @@ function CartSkeleton() {
   );
 }
 
-const GST_RATE = 0.18;
 const SHIPPING_THRESHOLD = 999;
 const SHIPPING_COST = 99;
 
@@ -76,8 +75,8 @@ export default function CartPage() {
   const discount          = appliedCoupon?.discountAmount ?? 0;
   const discountedSub     = parseFloat((subtotal - discount).toFixed(2));
   const shipping          = discountedSub >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
-  const gst               = parseFloat((discountedSub * GST_RATE).toFixed(2));
-  const total             = discountedSub + shipping + gst;
+  const total             = discountedSub + shipping;
+  const gst               = parseFloat((discountedSub - discountedSub / 1.18).toFixed(2));
 
   async function handleApplyPromo() {
     const code = promoInput.trim().toUpperCase();
@@ -280,14 +279,6 @@ export default function CartPage() {
                     {shipping === 0 ? "Free" : formatPrice(shipping)}
                   </span>
                 </div>
-
-                <div className="flex justify-between">
-                  <div>
-                    <span className="text-muted-foreground">GST</span>
-                    <p className="text-[10px] text-muted-foreground">18% on {formatPrice(discountedSub)}</p>
-                  </div>
-                  <span className="font-medium">{formatPrice(gst)}</span>
-                </div>
               </div>
 
               <Separator />
@@ -296,7 +287,7 @@ export default function CartPage() {
               <div className="flex justify-between items-baseline">
                 <div>
                   <p className="font-heading font-bold text-base">Total</p>
-                  <p className="text-[10px] text-muted-foreground">Incl. GST</p>
+                  <p className="text-[10px] text-muted-foreground">Incl. GST: {formatPrice(gst)}</p>
                 </div>
                 <p className="font-heading font-bold text-xl text-primary">{formatPrice(total)}</p>
               </div>

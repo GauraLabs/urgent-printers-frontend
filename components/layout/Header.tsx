@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Printer } from "lucide-react";
+import { Logo } from "@/components/common/Logo";
 import { HeaderSearch } from "./HeaderSearch";
 import { HeaderActions } from "./HeaderActions";
 import { ThemeSelector } from "./ThemeSelector";
@@ -20,15 +20,8 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center gap-4">
           {/* Logo */}
-          <Link
-            href={ROUTES.home}
-            className="flex items-center gap-2 shrink-0 font-heading font-bold text-primary"
-            aria-label="Urgent Printers — home"
-          >
-            <Printer size={22} className="text-brand-orange" />
-            <span className="text-base leading-none">
-              Urgent<span className="text-brand-orange">Printers</span>
-            </span>
+          <Link href={ROUTES.home} className="flex items-center shrink-0" aria-label="Urgent Printers — home">
+            <Logo style={{ height: 28 }} />
           </Link>
 
           {/* Desktop nav */}

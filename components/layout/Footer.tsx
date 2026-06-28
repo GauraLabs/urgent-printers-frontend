@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Printer, Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin } from "lucide-react";
+import { Logo } from "@/components/common/Logo";
 import { InstagramIcon, FacebookIcon, XIcon } from "@/components/common/SocialIcons";
 import { Separator } from "@/components/ui/separator";
 import { ROUTES } from "@/lib/constants/routes";
@@ -44,14 +45,8 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <Link
-              href={ROUTES.home}
-              className="inline-flex items-center gap-2 font-heading font-bold text-primary mb-4"
-            >
-              <Printer size={20} className="text-brand-orange" />
-              <span>
-                Urgent<span className="text-brand-orange">Printers</span>
-              </span>
+            <Link href={ROUTES.home} className="inline-flex items-center mb-4">
+              <Logo style={{ height: 26 }} />
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed mb-4">
               Premium print solutions delivered fast. Quality that speaks before you do.

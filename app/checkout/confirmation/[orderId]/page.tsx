@@ -151,15 +151,14 @@ export default function OrderConfirmationPage() {
                   {order.pricing.shippingCost === 0 ? "Free" : formatPrice(order.pricing.shippingCost)}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">GST ({order.pricing.gstRate}%)</span>
-                <span className="font-medium">{formatPrice(order.pricing.gstAmount)}</span>
-              </div>
               <Separator />
               <div className="flex justify-between font-heading font-bold text-base">
                 <span>Total Paid</span>
                 <span className="text-primary">{formatPrice(order.pricing.totalAmount)}</span>
               </div>
+              <p className="text-[11px] text-muted-foreground text-right">
+                Inclusive of GST: {formatPrice(order.pricing.gstAmount)}
+              </p>
             </div>
 
             <Separator />

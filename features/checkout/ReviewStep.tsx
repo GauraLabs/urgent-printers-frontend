@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import {
-  Loader2, ShieldCheck, MapPin, CreditCard, Tag,
-  CheckCircle2, Banknote, PartyPopper, AlertCircle, Lock,
+  Loader2, MapPin, CreditCard, Tag,
+  Banknote, PartyPopper, AlertCircle, Lock,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useCartStore } from "@/features/cart/store";
@@ -11,7 +11,6 @@ import { formatPrice, formatPricePerUnit, cn } from "@/lib/utils";
 import type { CartItem, Address, OrderPreview } from "@/types";
 import type { PaymentMethod } from "./PaymentStep";
 
-const GST_RATE = 0.18;
 const SHIPPING_THRESHOLD = 999;
 const SHIPPING_COST = 99;
 
@@ -44,10 +43,9 @@ export function ReviewStep({
   const discount      = preview?.pricing.discountAmount ?? (appliedCoupon?.discountAmount ?? 0);
   const discountedSub = preview ? (preview.pricing.subtotal - preview.pricing.discountAmount) : parseFloat((subtotal - discount).toFixed(2));
   const shipping      = preview?.pricing.shippingCost ?? (discountedSub >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST);
-  const gst           = preview?.pricing.gstAmount ?? parseFloat((discountedSub * GST_RATE).toFixed(2));
-  const total         = preview?.pricing.totalAmount ?? (discountedSub + shipping + gst);
+  const total         = preview?.pricing.totalAmount ?? (discountedSub + shipping);
+  const gst           = preview?.pricing.gstAmount ?? parseFloat((discountedSub - discountedSub / 1.18).toFixed(2));
   const totalSavings  = discount;
-  const isConfirmed   = !!preview && !previewLoading;
 
   return (
     <div className="space-y-5">
@@ -131,10 +129,6 @@ export function ReviewStep({
             <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
               <Loader2 size={10} className="animate-spin" /> Confirming prices…
             </span>
-          ) : isConfirmed ? (
-            <span className="flex items-center gap-1 text-[10px] font-semibold text-success">
-              <CheckCircle2 size={11} /> Server confirmed
-            </span>
           ) : (
             <p className="text-[10px] text-muted-foreground">All amounts in INR</p>
           )}
@@ -213,18 +207,6 @@ export function ReviewStep({
                 {shipping === 0 ? "Free" : formatPrice(shipping)}
               </span>
             </div>
-
-            {/* GST */}
-            <div className="flex justify-between">
-              <div>
-                <span className="text-muted-foreground">GST</span>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                  18% on {formatPrice(discountedSub)}
-                  {appliedCoupon && <span className="text-success"> (post-coupon amount)</span>}
-                </p>
-              </div>
-              <span className="font-medium">{formatPrice(gst)}</span>
-            </div>
           </div>
 
           <Separator />
@@ -233,7 +215,7 @@ export function ReviewStep({
           <div className="flex justify-between items-baseline">
             <div>
               <p className="font-heading font-bold text-lg">Total Payable</p>
-              <p className="text-[11px] text-muted-foreground">Inclusive of GST</p>
+              <p className="text-[11px] text-muted-foreground">Inclusive of GST: {formatPrice(gst)}</p>
             </div>
             <p className="font-heading font-bold text-2xl text-primary">{formatPrice(total)}</p>
           </div>
@@ -283,7 +265,6 @@ export function ReviewStep({
         </div>
       </div>
 
-      {/* Trust note */}
       {/* Preview error — shown if server couldn't compute pricing */}
       {previewError && (
         <div className="flex items-start gap-2 p-3 rounded-xl bg-destructive/5 border border-destructive/20 text-xs">
@@ -294,14 +275,6 @@ export function ReviewStep({
           </div>
         </div>
       )}
-
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <ShieldCheck size={14} className="text-success shrink-0" />
-        {isConfirmed
-          ? "Pricing confirmed by our server. The total below is exact."
-          : "Prices, GST, and discounts are verified by our server before your order is confirmed."
-        }
-      </div>
 
       {/* Razorpay security note — only for online payments */}
       {paymentMethod !== "cod" && (

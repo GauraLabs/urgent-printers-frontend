@@ -352,15 +352,14 @@ export default function OrderDetailPage() {
                 {p.shippingCost === 0 ? "Free" : formatPrice(p.shippingCost)}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">GST ({p.gstRate}%)</span>
-              <span className="font-medium">{formatPrice(p.gstAmount)}</span>
-            </div>
             <Separator />
             <div className="flex justify-between font-heading font-bold text-base">
               <span>Total</span>
               <span>{formatPrice(p.totalAmount)}</span>
             </div>
+            <p className="text-[11px] text-muted-foreground text-right">
+              Inclusive of GST: {formatPrice(p.gstAmount)}
+            </p>
             <p className="text-xs text-muted-foreground pt-1">
               {order.paymentMethod === "cod"
                 ? "Cash on Delivery"
