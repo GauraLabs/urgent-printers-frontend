@@ -20,6 +20,10 @@ export function CartDrawerItem({ item }: CartDrawerItemProps) {
   const categorySlug = item.product.categorySlug || slugify(item.product.categoryName) || "products";
   const productHref = ROUTES.product(categorySlug, item.product.slug);
 
+  const specLine = [item.config.sizeLabel, item.config.paperLabel, item.config.finishLabel].filter(
+    (v): v is string => Boolean(v)
+  );
+
   return (
     <div className="flex gap-3 py-4">
       {/* Product image */}
@@ -52,11 +56,16 @@ export function CartDrawerItem({ item }: CartDrawerItemProps) {
         >
           {item.product.name}
         </Link>
-        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-          {item.config.sizeLabel} · {item.config.paperLabel} · {item.config.finishLabel}
-        </p>
+        {specLine.length > 0 && (
+          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+            {specLine.join(" · ")}
+          </p>
+        )}
         <p className="text-xs text-muted-foreground">
-          {item.config.sides.toLowerCase().includes("double") ? "Double-sided" : "Single-sided"} · {item.config.turnaroundLabel.split(" ")[0]}
+          {item.config.sides
+            ? `${item.config.sides.toLowerCase().includes("double") ? "Double-sided" : "Single-sided"} · `
+            : ""}
+          {item.config.turnaroundLabel.split(" ")[0]}
         </p>
 
         {/* Quantity + price row */}

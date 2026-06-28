@@ -72,7 +72,7 @@ function OptionButton({
   );
 }
 
-function getDefault<T extends { isDefault: boolean }>(options: T[]): T {
+function getDefault<T extends { isDefault: boolean }>(options: T[]): T | undefined {
   return options.find((o) => o.isDefault) ?? options[0];
 }
 
@@ -93,7 +93,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     const [selectedSize, setSelectedSize] = useState(() => getDefault(printSpec.sizes));
     const [selectedPaper, setSelectedPaper] = useState(() => getDefault(printSpec.papers));
     const [selectedFinish, setSelectedFinish] = useState(() => getDefault(printSpec.finishes));
-    const [selectedSides, setSelectedSides] = useState<SidesOption>(() => getDefault(printSpec.sides));
+    const [selectedSides, setSelectedSides] = useState<SidesOption | undefined>(() => getDefault(printSpec.sides));
     const [selectedQuantity, setSelectedQuantity] = useState(defaultTier.quantity);
     const [selectedTurnaround, setSelectedTurnaround] = useState(turnaroundOptions[0]);
 
@@ -126,10 +126,12 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     }, [isInCart, totalPrice, onStateChange]);
 
     // Delta helpers — show cost impact vs cheapest option in each category
-    const minSizeM   = Math.min(...printSpec.sizes.map((s) => s.priceMultiplier));
-    const minPaperM  = Math.min(...printSpec.papers.map((p) => p.priceMultiplier));
-    const minFinishM = Math.min(...printSpec.finishes.map((f) => f.priceMultiplier));
-    const minSidesM  = Math.min(...printSpec.sides.map((s) => s.priceMultiplier));
+    // (Math.min(...[]) is -Infinity, but these are only read while mapping a
+    // non-empty options array, so the empty case never actually multiplies through)
+    const minSizeM   = printSpec.sizes.length   ? Math.min(...printSpec.sizes.map((s) => s.priceMultiplier))   : 1;
+    const minPaperM  = printSpec.papers.length  ? Math.min(...printSpec.papers.map((p) => p.priceMultiplier))  : 1;
+    const minFinishM = printSpec.finishes.length ? Math.min(...printSpec.finishes.map((f) => f.priceMultiplier)) : 1;
+    const minSidesM  = printSpec.sides.length   ? Math.min(...printSpec.sides.map((s) => s.priceMultiplier))   : 1;
     // "base without this category" = what the per-unit price would be using the cheapest option there
     const baseWithoutSize   = baseTier.pricePerUnit * paperM  * finishM * sidesM;
     const baseWithoutPaper  = baseTier.pricePerUnit * sizeM   * finishM * sidesM;
@@ -141,6 +143,21 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     const sidesDelta  = (m: number) => parseFloat((baseWithoutSides  * (m - minSidesM)).toFixed(2));
 
     function handleAddToCart() {
+      // An empty options array for a category (size/paper/finish) means that
+      // category doesn't apply to this product — not an error. Only guard
+      // against the case where options exist but getDefault() still failed
+      // to pick one (shouldn't normally happen given its fallback to [0]).
+      if (
+        (printSpec.sizes.length > 0 && !selectedSize) ||
+        (printSpec.papers.length > 0 && !selectedPaper) ||
+        (printSpec.finishes.length > 0 && !selectedFinish)
+      ) {
+        toast.error("Please select all required options", {
+          description: "Some print options are missing a selection. Please try again.",
+        });
+        return;
+      }
+
       // Validate required template fields before allowing add to cart
       const needsTemplate =
         product.customizationMode === "template" || product.customizationMode === "both";
@@ -158,13 +175,13 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
       }
 
       const config: CartItemConfig = {
-        sizeId: selectedSize.id,
-        sizeLabel: selectedSize.label,
-        paperId: selectedPaper.id,
-        paperLabel: selectedPaper.label,
-        finishId: selectedFinish.id,
-        finishLabel: selectedFinish.label,
-        sides: selectedSides?.label ?? "",
+        sizeId: selectedSize?.id,
+        sizeLabel: selectedSize?.label,
+        paperId: selectedPaper?.id,
+        paperLabel: selectedPaper?.label,
+        finishId: selectedFinish?.id,
+        finishLabel: selectedFinish?.label,
+        sides: selectedSides?.label,
         quantity: selectedQuantity,
         turnaroundId: selectedTurnaround.id,
         turnaroundLabel: selectedTurnaround.label,
@@ -206,60 +223,66 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
           </p>
         </div>
 
-        {/* Size */}
-        <div>
-          <SectionLabel>Size</SectionLabel>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {printSpec.sizes.map((size) => (
-              <OptionButton
-                key={size.id}
-                label={size.label}
-                selected={selectedSize.id === size.id}
-                onClick={() => setSelectedSize(size)}
-                delta={sizeDelta(size.priceMultiplier)}
-                isDefault={size.isDefault}
-              />
-            ))}
+        {/* Size — category omitted entirely when not applicable to this product */}
+        {printSpec.sizes.length > 0 && (
+          <div>
+            <SectionLabel>Size</SectionLabel>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {printSpec.sizes.map((size) => (
+                <OptionButton
+                  key={size.id}
+                  label={size.label}
+                  selected={selectedSize?.id === size.id}
+                  onClick={() => setSelectedSize(size)}
+                  delta={sizeDelta(size.priceMultiplier)}
+                  isDefault={size.isDefault}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Paper */}
-        <div>
-          <SectionLabel>Paper / Material</SectionLabel>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {printSpec.papers.map((paper) => (
-              <OptionButton
-                key={paper.id}
-                label={paper.label}
-                description={paper.description}
-                selected={selectedPaper.id === paper.id}
-                onClick={() => setSelectedPaper(paper)}
-                delta={paperDelta(paper.priceMultiplier)}
-                isDefault={paper.isDefault}
-              />
-            ))}
+        {printSpec.papers.length > 0 && (
+          <div>
+            <SectionLabel>Paper / Material</SectionLabel>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {printSpec.papers.map((paper) => (
+                <OptionButton
+                  key={paper.id}
+                  label={paper.label}
+                  description={paper.description}
+                  selected={selectedPaper?.id === paper.id}
+                  onClick={() => setSelectedPaper(paper)}
+                  delta={paperDelta(paper.priceMultiplier)}
+                  isDefault={paper.isDefault}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Finish */}
-        <div>
-          <SectionLabel>Finish</SectionLabel>
-          <div className="grid grid-cols-2 gap-2">
-            {printSpec.finishes.map((finish) => (
-              <OptionButton
-                key={finish.id}
-                label={finish.label}
-                description={finish.description}
-                selected={selectedFinish.id === finish.id}
-                onClick={() => setSelectedFinish(finish)}
-                delta={finishDelta(finish.priceMultiplier)}
-                isDefault={finish.isDefault}
-              />
-            ))}
+        {printSpec.finishes.length > 0 && (
+          <div>
+            <SectionLabel>Finish</SectionLabel>
+            <div className="grid grid-cols-2 gap-2">
+              {printSpec.finishes.map((finish) => (
+                <OptionButton
+                  key={finish.id}
+                  label={finish.label}
+                  description={finish.description}
+                  selected={selectedFinish?.id === finish.id}
+                  onClick={() => setSelectedFinish(finish)}
+                  delta={finishDelta(finish.priceMultiplier)}
+                  isDefault={finish.isDefault}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Sides */}
+        {/* Sides — only worth showing a picker when there's more than one option */}
         {printSpec.sides.length > 1 && (
           <div>
             <SectionLabel>Printing Sides</SectionLabel>

@@ -35,8 +35,8 @@ export const useCartStore = create<CartStore>()(
 
       addItem: (product, config, pricePerUnit) => {
         const cartItemId = makeCartItemId(
-          product.id, config.sizeId, config.paperId, config.finishId,
-          config.sides, config.turnaroundId, config.artworkFileKey, config.templateData
+          product.id, config.sizeId ?? "", config.paperId ?? "", config.finishId ?? "",
+          config.sides ?? "", config.turnaroundId, config.artworkFileKey, config.templateData
         );
         const totalPrice = parseFloat((pricePerUnit * config.quantity).toFixed(2));
 

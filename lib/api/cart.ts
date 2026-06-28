@@ -13,13 +13,14 @@ interface BackendCartItem {
   thumbnailUrl: string | null;   // stored on sync, returned on GET — preserves image across devices
   categoryName: string | null;
   categorySlug: string | null;
-  sizeId: string;
-  sizeLabel: string;
-  paperId: string;
-  paperLabel: string;
-  finishId: string;
-  finishLabel: string;
-  sides: string;
+  // Null means the product has no options in that category — not an error.
+  sizeId: string | null;
+  sizeLabel: string | null;
+  paperId: string | null;
+  paperLabel: string | null;
+  finishId: string | null;
+  finishLabel: string | null;
+  sides: string | null;
   quantity: number;
   turnaroundId: string;
   turnaroundLabel: string;
@@ -33,7 +34,7 @@ interface BackendCartItem {
 
 function mapCartItem(b: BackendCartItem): CartItem {
   const cartItemId = makeCartItemId(
-    b.productId, b.sizeId, b.paperId, b.finishId, b.sides, b.turnaroundId,
+    b.productId, b.sizeId ?? "", b.paperId ?? "", b.finishId ?? "", b.sides ?? "", b.turnaroundId,
     b.artworkFileKey ?? undefined, b.templateData ?? undefined
   );
   return {
@@ -47,13 +48,13 @@ function mapCartItem(b: BackendCartItem): CartItem {
       categorySlug: b.categorySlug ?? "",
     },
     config: {
-      sizeId: b.sizeId,
-      sizeLabel: b.sizeLabel,
-      paperId: b.paperId,
-      paperLabel: b.paperLabel,
-      finishId: b.finishId,
-      finishLabel: b.finishLabel,
-      sides: b.sides,
+      sizeId: b.sizeId ?? undefined,
+      sizeLabel: b.sizeLabel ?? undefined,
+      paperId: b.paperId ?? undefined,
+      paperLabel: b.paperLabel ?? undefined,
+      finishId: b.finishId ?? undefined,
+      finishLabel: b.finishLabel ?? undefined,
+      sides: b.sides ?? undefined,
       quantity: b.quantity,
       turnaroundId: b.turnaroundId,
       turnaroundLabel: b.turnaroundLabel,
@@ -74,13 +75,13 @@ function toSyncItem(item: CartItem): BackendCartItem {
     thumbnailUrl: item.product.images[0] ?? null,
     categoryName: item.product.categoryName || null,
     categorySlug: item.product.categorySlug || null,
-    sizeId: item.config.sizeId,
-    sizeLabel: item.config.sizeLabel,
-    paperId: item.config.paperId,
-    paperLabel: item.config.paperLabel,
-    finishId: item.config.finishId,
-    finishLabel: item.config.finishLabel,
-    sides: item.config.sides,
+    sizeId: item.config.sizeId ?? null,
+    sizeLabel: item.config.sizeLabel ?? null,
+    paperId: item.config.paperId ?? null,
+    paperLabel: item.config.paperLabel ?? null,
+    finishId: item.config.finishId ?? null,
+    finishLabel: item.config.finishLabel ?? null,
+    sides: item.config.sides ?? null,
     quantity: item.config.quantity,
     turnaroundId: item.config.turnaroundId,
     turnaroundLabel: item.config.turnaroundLabel,

@@ -279,7 +279,7 @@ export async function getFeaturedProducts(): Promise<Product[]> {
     const data = await apiFetch<BackendProductCard[]>("/products/featured?limit=8");
     return data.map(mapCard);
   } catch {
-    return mockProducts.filter((p) => p.isFeatured);
+    return [];
   }
 }
 
@@ -320,7 +320,7 @@ export async function getRecommendedProducts(
     const data = await apiFetch<BackendProductCard[]>(`/products/recommended?limit=${limit}`);
     return data.map(mapCard).filter((p) => !excludeIds.includes(p.id));
   } catch {
-    return mockProducts.filter((p) => !excludeIds.includes(p.id)).slice(0, limit);
+    return [];
   }
 }
 

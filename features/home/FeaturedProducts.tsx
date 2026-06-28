@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, PackageSearch } from "lucide-react";
+import { EmptyState } from "@/components/common/EmptyState";
 import { SectionHeading } from "@/components/common/SectionHeading";
 import { ProductCard } from "@/features/products/ProductCard";
 import { ROUTES } from "@/lib/constants/routes";
@@ -30,11 +31,19 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-          {products.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
+        {products.length === 0 ? (
+          <EmptyState
+            icon={PackageSearch}
+            title="Nothing to show right now"
+            description="We couldn't load these products. Please check back shortly."
+          />
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+            {products.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

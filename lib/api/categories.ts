@@ -53,7 +53,7 @@ export async function getCategories(): Promise<Category[]> {
     const data = await apiFetch<BackendCategory[]>("/categories");
     return data.map(mapCategory);
   } catch {
-    return mockCategories;
+    return [];
   }
 }
 

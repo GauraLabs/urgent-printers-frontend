@@ -292,10 +292,17 @@ export default function OrderDetailPage() {
                     {item.productName}
                   </Link>
                   <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
-                    <p>{item.sizeLabel} · {item.paperLabel} · {item.finishLabel}</p>
+                    {(() => {
+                      const specLine = [item.sizeLabel, item.paperLabel, item.finishLabel].filter(
+                        (v): v is string => Boolean(v)
+                      );
+                      return specLine.length > 0 ? <p>{specLine.join(" · ")}</p> : null;
+                    })()}
                     <p>
-                      {item.sides.toLowerCase().includes("double") ? "Double-sided" : "Single-sided"}
-                      {" · "}{item.quantity.toLocaleString("en-IN")} units
+                      {item.sides
+                        ? `${item.sides.toLowerCase().includes("double") ? "Double-sided" : "Single-sided"} · `
+                        : ""}
+                      {item.quantity.toLocaleString("en-IN")} units
                     </p>
                     <p>{item.turnaroundLabel}</p>
                     {item.artworkFileKey && (

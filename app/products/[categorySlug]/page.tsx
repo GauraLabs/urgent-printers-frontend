@@ -15,6 +15,8 @@ function getString(val: string | string[] | undefined): string {
   return Array.isArray(val) ? val[0] : val ?? "";
 }
 
+export const revalidate = 60;
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { categorySlug } = await params;
   const category = await getCategoryBySlug(categorySlug);

@@ -15,6 +15,8 @@ import { PromoBanner } from "@/features/home/PromoBanner";
 import { TrustBadges } from "@/features/home/TrustBadges";
 import { TestimonialsSection } from "@/features/home/TestimonialsSection";
 
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "Urgent Printers — Premium Print Solutions, Fast",
   description:

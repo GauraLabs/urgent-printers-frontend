@@ -113,9 +113,14 @@ export default function OrderConfirmationPage() {
                       >
                         {item.productName}
                       </Link>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {item.sizeLabel} · {item.paperLabel} · {item.finishLabel}
-                      </p>
+                      {(() => {
+                        const specLine = [item.sizeLabel, item.paperLabel, item.finishLabel].filter(
+                          (v): v is string => Boolean(v)
+                        );
+                        return specLine.length > 0 ? (
+                          <p className="text-xs text-muted-foreground mt-0.5">{specLine.join(" · ")}</p>
+                        ) : null;
+                      })()}
                       <p className="text-xs text-muted-foreground">
                         {item.quantity.toLocaleString("en-IN")} units · {item.turnaroundLabel}
                       </p>

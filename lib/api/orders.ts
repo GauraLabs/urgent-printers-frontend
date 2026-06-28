@@ -32,10 +32,11 @@ interface BackendOrderItem {
   productSlug: string;
   thumbnailUrl: string | null;
   categoryName?: string;
-  sizeLabel: string;
-  paperLabel: string;
-  finishLabel: string;
-  sides: string;
+  // Null means the product has no options in that category — not an error.
+  sizeLabel: string | null;
+  paperLabel: string | null;
+  finishLabel: string | null;
+  sides: string | null;
   quantity: number;
   turnaroundLabel: string;
   pricePerUnit: string | number;
@@ -125,10 +126,10 @@ function mapOrderDetail(b: BackendOrderDetail): Order {
     productSlug:    i.productSlug,
     thumbnailUrl:   i.thumbnailUrl,
     categoryName:   i.categoryName,
-    sizeLabel:      i.sizeLabel,
-    paperLabel:     i.paperLabel,
-    finishLabel:    i.finishLabel,
-    sides:          i.sides,
+    sizeLabel:      i.sizeLabel ?? undefined,
+    paperLabel:     i.paperLabel ?? undefined,
+    finishLabel:    i.finishLabel ?? undefined,
+    sides:          i.sides ?? undefined,
     quantity:       i.quantity,
     turnaroundLabel: i.turnaroundLabel,
     pricePerUnit:   n(i.pricePerUnit),

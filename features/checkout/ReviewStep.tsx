@@ -77,10 +77,13 @@ export function ReviewStep({
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm line-clamp-1">{item.product.name}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {item.config.quantity.toLocaleString("en-IN")} units · {item.config.sizeLabel}
+                  {item.config.quantity.toLocaleString("en-IN")} units
+                  {item.config.sizeLabel ? ` · ${item.config.sizeLabel}` : ""}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {item.config.paperLabel} · {item.config.finishLabel} · {item.config.turnaroundLabel}
+                  {[item.config.paperLabel, item.config.finishLabel, item.config.turnaroundLabel]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </p>
               </div>
               <div className="text-right shrink-0">

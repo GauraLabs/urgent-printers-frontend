@@ -119,13 +119,14 @@ export interface Product {
 // ─── Cart ─────────────────────────────────────────────────────────────────────
 
 export interface CartItemConfig {
-  sizeId: string;
-  sizeLabel: string;
-  paperId: string;
-  paperLabel: string;
-  finishId: string;
-  finishLabel: string;
-  sides: string;
+  // Absent when the corresponding option category doesn't apply to this product
+  sizeId?: string;
+  sizeLabel?: string;
+  paperId?: string;
+  paperLabel?: string;
+  finishId?: string;
+  finishLabel?: string;
+  sides?: string;
   quantity: number;
   turnaroundId: string;
   turnaroundLabel: string;
@@ -196,13 +197,13 @@ export interface CreateOrderItem {
   productId: string;
   productSlug: string;
   productName: string;
-  sizeId: string;
-  sizeLabel: string;
-  paperId: string;
-  paperLabel: string;
-  finishId: string;
-  finishLabel: string;
-  sides: string;
+  sizeId?: string;
+  sizeLabel?: string;
+  paperId?: string;
+  paperLabel?: string;
+  finishId?: string;
+  finishLabel?: string;
+  sides?: string;
   quantity: number;
   turnaroundId: string;
   turnaroundLabel: string;
@@ -275,10 +276,10 @@ export interface OrderItem {
   productSlug: string;
   thumbnailUrl: string | null;
   categoryName?: string;
-  sizeLabel: string;
-  paperLabel: string;
-  finishLabel: string;
-  sides: string;
+  sizeLabel?: string;
+  paperLabel?: string;
+  finishLabel?: string;
+  sides?: string;
   quantity: number;
   turnaroundLabel: string;
   pricePerUnit: number;
