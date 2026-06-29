@@ -255,11 +255,14 @@ export interface OrderPreview {
 export type OrderStatus =
   | "placed"
   | "confirmed"
+  | "artwork_pending"
   | "artwork_approved"
   | "printing"
   | "shipped"
   | "delivered"
-  | "cancelled";
+  | "cancelled"
+  | "refund_initiated"
+  | "refunded";
 
 export interface OrderStatusEvent {
   status: OrderStatus;

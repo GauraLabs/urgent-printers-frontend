@@ -17,8 +17,12 @@ export const PRINT_SPECS = {
 export const ORDER_STATUS_LABELS: Record<string, string> = {
   placed: "Order Placed",
   confirmed: "Confirmed",
+  artwork_pending: "Reviewing Your Artwork",
+  artwork_approved: "Artwork Approved",
   printing: "Printing",
   shipped: "Shipped",
   delivered: "Delivered",
   cancelled: "Cancelled",
+  refund_initiated: "Refund Initiated",
+  refunded: "Refunded",
 };

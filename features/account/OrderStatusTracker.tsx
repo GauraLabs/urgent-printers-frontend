@@ -1,6 +1,8 @@
 import {
   ShoppingCart,
   CheckCircle,
+  FileSearch,
+  FileCheck,
   Printer,
   Truck,
   PackageCheck,
@@ -11,12 +13,20 @@ import { cn } from "@/lib/utils";
 import type { OrderStatus, OrderStatusEvent } from "@/types";
 
 const STEPS: { status: OrderStatus; label: string; icon: LucideIcon }[] = [
-  { status: "placed",    label: "Order Placed",  icon: ShoppingCart  },
-  { status: "confirmed", label: "Confirmed",     icon: CheckCircle   },
-  { status: "printing",  label: "Printing",      icon: Printer       },
-  { status: "shipped",   label: "Shipped",       icon: Truck         },
-  { status: "delivered", label: "Delivered",     icon: PackageCheck  },
+  { status: "placed",           label: "Order Placed",           icon: ShoppingCart },
+  { status: "confirmed",        label: "Confirmed",               icon: CheckCircle  },
+  { status: "artwork_pending",  label: "Reviewing Your Artwork",  icon: FileSearch   },
+  { status: "artwork_approved", label: "Artwork Approved",        icon: FileCheck    },
+  { status: "printing",         label: "Printing",                icon: Printer      },
+  { status: "shipped",          label: "Shipped",                 icon: Truck        },
+  { status: "delivered",        label: "Delivered",               icon: PackageCheck },
 ];
+
+const TERMINAL_STATES: Record<string, { label: string; defaultNote: string }> = {
+  cancelled:         { label: "Order Cancelled",   defaultNote: "This order has been cancelled." },
+  refund_initiated:  { label: "Refund Initiated",  defaultNote: "A refund has been initiated for this order." },
+  refunded:          { label: "Order Refunded",    defaultNote: "This order has been refunded." },
+};
 
 interface OrderStatusTrackerProps {
   currentStatus: OrderStatus;
@@ -24,14 +34,15 @@ interface OrderStatusTrackerProps {
 }
 
 export function OrderStatusTracker({ currentStatus, statusHistory }: OrderStatusTrackerProps) {
-  if (currentStatus === "cancelled") {
+  const terminal = TERMINAL_STATES[currentStatus];
+  if (terminal) {
     return (
       <div className="flex items-center gap-3 p-4 rounded-2xl bg-destructive/5 border border-destructive/20">
         <XCircle size={20} className="text-destructive shrink-0" />
         <div>
-          <p className="font-semibold text-sm text-destructive">Order Cancelled</p>
+          <p className="font-semibold text-sm text-destructive">{terminal.label}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {statusHistory.find(e => e.status === "cancelled")?.note ?? "This order has been cancelled."}
+            {statusHistory.find(e => e.status === currentStatus)?.note ?? terminal.defaultNote}
           </p>
         </div>
       </div>
