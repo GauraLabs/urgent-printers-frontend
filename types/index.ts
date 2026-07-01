@@ -420,3 +420,20 @@ export interface ProductFilters {
   page?: number;
   pageSize?: number;
 }
+
+// ─── Proof approval ───────────────────────────────────────────────────────────
+
+export interface ProofInfo {
+  file_key: string;
+  original_filename: string;
+  version: number;
+  order_number: string;
+  product_name: string;
+  quantity: number;
+}
+
+export interface ProofApprovalResult {
+  message: string;
+  order_number: string;
+  status: "approved" | "rejected";
+}

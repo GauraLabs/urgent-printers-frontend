@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, ExternalLink, Loader2, XCircle, Lock, CreditCard, Download } from "lucide-react";
+import { ArrowLeft, ExternalLink, Loader2, XCircle, Lock, CreditCard, Download, FileSearch } from "lucide-react";
 import { getOrderById, cancelOrder, verifyPayment, downloadReceipt } from "@/lib/api";
 import { useAuthStore } from "@/features/auth/store";
 import { OrderStatusTracker } from "@/features/account/OrderStatusTracker";
@@ -17,6 +17,18 @@ import { toast } from "sonner";
 import type { Order } from "@/types";
 
 const CANCELLABLE = new Set(["placed", "confirmed"]);
+
+function ArtworkStatusChip({ status }: { status: string }) {
+  const map: Record<string, { label: string; className: string }> = {
+    sent_for_approval: { label: "Awaiting Your Approval", className: "text-brand-orange" },
+    approved:          { label: "Artwork Approved",        className: "text-success" },
+    needs_revision:    { label: "Needs Revision",          className: "text-destructive" },
+    none:              { label: "",                        className: "" },
+  };
+  const entry = map[status];
+  if (!entry || !entry.label) return null;
+  return <p className={`text-xs font-medium ${entry.className}`}>Artwork: {entry.label}</p>;
+}
 
 export default function OrderDetailPage() {
   const { id }  = useParams<{ id: string }>();
@@ -263,6 +275,20 @@ export default function OrderDetailPage() {
         )}
       </div>
 
+      {/* Artwork pending action banner */}
+      {order.status === "artwork_pending" && (
+        <div className="rounded-2xl border border-brand-orange/40 bg-brand-orange/5 p-4 flex items-start gap-3">
+          <FileSearch size={20} className="text-brand-orange shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-sm text-brand-orange">Action required: Review your artwork proof</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              We&apos;ve prepared artwork proofs for your order. Check your email or WhatsApp for the approval link.
+              Printing will begin once you approve.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Items */}
       <div className="rounded-2xl border border-border overflow-hidden shadow-sm">
         <div className="px-5 py-3 bg-muted/30 border-b border-border">
@@ -305,10 +331,8 @@ export default function OrderDetailPage() {
                       {item.quantity.toLocaleString("en-IN")} units
                     </p>
                     <p>{item.turnaroundLabel}</p>
-                    {item.artworkFileKey && (
-                      <p className={item.artworkStatus === "approved" ? "text-success" : "text-muted-foreground"}>
-                        Artwork: {item.artworkStatus ?? "uploaded"}
-                      </p>
+                    {item.artworkStatus && item.artworkStatus !== "none" && (
+                      <ArtworkStatusChip status={item.artworkStatus} />
                     )}
                     {item.templateData && Object.keys(item.templateData).length > 0 && (
                       <p>Personalised print</p>

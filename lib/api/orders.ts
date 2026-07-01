@@ -3,6 +3,7 @@ import type {
   OrderPricing, OrderShippingAddress, OrderStatusEvent,
   OrderStatus, CreateOrderRequest, CreatedOrder,
   OrderPreview, OrderPreviewItem,
+  ProofInfo, ProofApprovalResult,
 } from "@/types";
 import { apiFetch, apiFetchPage, API_URL } from "./client";
 
@@ -360,4 +361,26 @@ export async function downloadReceipt(orderId: string, token: string): Promise<v
 // Legacy stub — not wired
 export async function getOrderByNumber(_orderNumber: string): Promise<Order | null> {
   return null;
+}
+
+// ─── Proof approval (public — no auth) ────────────────────────────────────────
+
+export async function getProofInfo(token: string): Promise<ProofInfo> {
+  // REAL API: GET /proofs/{token} — peek, does not consume token
+  return apiFetch<ProofInfo>(`/proofs/${token}`);
+}
+
+export async function submitProofDecision(
+  token: string,
+  decision: "approved" | "rejected",
+  rejectionReason?: string
+): Promise<ProofApprovalResult> {
+  // REAL API: POST /proofs/{token}
+  return apiFetch<ProofApprovalResult>(`/proofs/${token}`, {
+    method: "POST",
+    body: JSON.stringify({
+      decision,
+      rejection_reason: rejectionReason ?? null,
+    }),
+  });
 }
