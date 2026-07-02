@@ -14,6 +14,7 @@ function cdnRemotePattern(): { protocol: "https" | "http"; hostname: string; pat
 const cdnPattern = cdnRemotePattern();
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ['192.168.20.120'],
   images: {
     remotePatterns: [
       {
@@ -21,7 +22,7 @@ const nextConfig: NextConfig = {
         hostname: "picsum.photos",
         pathname: "/**",
       },
-      ...(cdnPattern ? [cdnPattern] : []),
+...(cdnPattern ? [cdnPattern] : []),
     ],
   },
 };
