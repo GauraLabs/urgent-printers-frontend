@@ -171,6 +171,19 @@ export async function completeProfile(
   return mapUser(res);
 }
 
+export async function updateProfile(
+  token: string,
+  data: { firstName: string; lastName: string; email?: string; avatarUrl?: string }
+): Promise<User> {
+  // REAL API: PATCH /api/v1/auth/me
+  const res = await apiFetch<BackendUser>(`${AUTH}/me`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+  return mapUser(res);
+}
+
 export async function getMe(token: string): Promise<User | null> {
   // REAL API: GET /api/v1/auth/me
   try {
