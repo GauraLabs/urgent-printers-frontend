@@ -62,7 +62,7 @@ Instant-search dropdown in the header — debounced TanStack Query fetches, prod
 - **47 routes** — 30 static, 6 SSG (18 product pages pre-built at build time), 11 dynamic
 - **Zero TypeScript errors**, clean production build
 - **All data is mock** — baked into the bundle, works identically on Vercel with no configuration
-- **`dev` branch** → Vercel preview URL | **`main` branch** → production (`urgentprinters.in`)
+- **`dev` branch** → Vercel preview URL | **`main` branch** → production (`urgentprinters.com`)
 
 ---
 

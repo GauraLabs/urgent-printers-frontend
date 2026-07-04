@@ -152,7 +152,7 @@ urgent-printers-frontend/
 
 | Variable | Description | Required |
 |---|---|---|
-| `NEXT_PUBLIC_SITE_URL` | Production URL (e.g. `https://urgentprinters.in`) | Yes (for sitemap + OG URLs) |
+| `NEXT_PUBLIC_SITE_URL` | Production URL (e.g. `https://urgentprinters.com`) | Yes (for sitemap + OG URLs) |
 
 Set in `.env.local` for local development:
 ```bash
@@ -186,7 +186,7 @@ Key integrations to add for production:
 ## Deploy on Vercel
 
 1. Push to GitHub and import the repo on [vercel.com](https://vercel.com)
-2. Set environment variable: `NEXT_PUBLIC_SITE_URL=https://urgentprinters.in`
+2. Set environment variable: `NEXT_PUBLIC_SITE_URL=https://urgentprinters.com`
 3. Set production branch to `main` in Vercel project settings
 
 The `build` script (`next build && next-sitemap`) runs automatically on every deploy.
@@ -198,7 +198,7 @@ See [`docs/deployment.md`](docs/deployment.md) for the full guide.
 ## Branch Strategy
 
 ```
-main  → Production (urgentprinters.in)
+main  → Production (urgentprinters.com)
 dev   → Preview / staging (Vercel preview URL)
 ```
 

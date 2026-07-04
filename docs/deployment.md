@@ -25,13 +25,13 @@ Set these in **Vercel Dashboard → Project → Settings → Environment Variabl
 
 | Variable | Example | Required |
 |---|---|---|
-| `NEXT_PUBLIC_SITE_URL` | `https://urgentprinters.in` | Yes (for sitemap + og URLs) |
+| `NEXT_PUBLIC_SITE_URL` | `https://urgentprinters.com` | Yes (for sitemap + og URLs) |
 
-> For preview branches, Vercel sets `VERCEL_URL` automatically. The site falls back to `https://urgentprinters.in` if `NEXT_PUBLIC_SITE_URL` is not set.
+> For preview branches, Vercel sets `VERCEL_URL` automatically. The site falls back to `https://urgentprinters.com` if `NEXT_PUBLIC_SITE_URL` is not set.
 
 ### 4. Custom domain
 1. Vercel Dashboard → Project → **Domains**
-2. Add `urgentprinters.in` and `www.urgentprinters.in`
+2. Add `urgentprinters.com` and `www.urgentprinters.com`
 3. Update your DNS records as shown by Vercel (A record or CNAME)
 
 ## Subsequent deploys

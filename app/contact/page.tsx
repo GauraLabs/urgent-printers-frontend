@@ -23,7 +23,7 @@ const CONTACT_INFO = [
   { icon: Phone,  label: "Toll Free",   value: "1800-123-4567",               sub: "Mon – Sat, 9 AM – 6 PM IST" },
   { icon: Mail,   label: "Email",       value: "hello@urgentprinters.com",      sub: "We reply within 4 business hours" },
   { icon: MapPin, label: "Head Office", value: "Kotwali Rd, Tilak Dwar, Mathura, UP 281001", sub: "Opp. Punjab National Bank" },
-  { icon: Clock,  label: "Order Support",value: "support@urgentprinters.in",  sub: "For order queries and artwork help" },
+  { icon: Clock,  label: "Order Support",value: "support@urgentprinters.com",  sub: "For order queries and artwork help" },
 ];
 
 export default function ContactPage() {
