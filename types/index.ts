@@ -130,6 +130,9 @@ export interface CartItemConfig {
   quantity: number;
   turnaroundId: string;
   turnaroundLabel: string;
+  // Flat surcharge (INR) for the selected turnaround — must be persisted here
+  // since it can't be reconstructed from turnaroundId alone once in the cart.
+  turnaroundExtraCost: number;
   artworkFileName?: string;
   artworkFileSize?: number;
   artworkFileKey?: string;

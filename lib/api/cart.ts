@@ -58,6 +58,10 @@ function mapCartItem(b: BackendCartItem): CartItem {
       quantity: b.quantity,
       turnaroundId: b.turnaroundId,
       turnaroundLabel: b.turnaroundLabel,
+      // Backend doesn't send the flat surcharge separately — it's already baked
+      // into totalPrice, so back it out here to keep client-side recompute
+      // (e.g. updateQuantity) consistent with what the backend charged.
+      turnaroundExtraCost: parseFloat((b.totalPrice - b.pricePerUnit * b.quantity).toFixed(2)),
       artworkFileKey: b.artworkFileKey ?? undefined,
       templateData: b.templateData ?? undefined,
     },

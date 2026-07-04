@@ -185,6 +185,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
         quantity: selectedQuantity,
         turnaroundId: selectedTurnaround.id,
         turnaroundLabel: selectedTurnaround.label,
+        turnaroundExtraCost: selectedTurnaround.extraCost,
         artworkFileKey,
         artworkFileName,
         templateData,
