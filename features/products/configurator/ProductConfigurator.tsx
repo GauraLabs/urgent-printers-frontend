@@ -4,6 +4,7 @@ import { useState, useId, forwardRef, useEffect } from "react";
 import { ShoppingBag, CheckCircle2, Info } from "lucide-react";
 import { toast } from "sonner";
 import { PricingTable } from "./PricingTable";
+import { DeliveryCheck } from "../DeliveryCheck";
 import { SelectableCard } from "@/components/ui/selectable-card";
 import { useCartStore } from "@/features/cart/store";
 import { makeCartItemId } from "@/features/cart/cartItemId";
@@ -223,6 +224,8 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
             GST and shipping calculated at checkout
           </p>
         </div>
+
+        <DeliveryCheck />
 
         {/* Size — category omitted entirely when not applicable to this product */}
         {printSpec.sizes.length > 0 && (

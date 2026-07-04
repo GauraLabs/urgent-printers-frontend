@@ -440,3 +440,13 @@ export interface ProofApprovalResult {
   order_number: string;
   status: "approved" | "rejected";
 }
+
+// ─── Shipping serviceability ───────────────────────────────────────────────────
+
+export interface ServiceabilityResult {
+  pincode: string;
+  isServiceable: boolean;
+  estimatedDeliveryDate: string | null;
+  minDays: number | null;
+  maxDays: number | null;
+}
