@@ -41,7 +41,7 @@ export async function reverseGeocode(lat: number, lng: number): Promise<Detected
   const res = await fetch(url, {
     headers: {
       "Accept-Language": "en",
-      "User-Agent": "UrgentPrinters/1.0 (urgentprinters.in)",
+      "User-Agent": "UrgentPrinters/1.0 (urgentprinters.com)",
     },
   });
   if (!res.ok) throw new Error("Could not fetch address for your location");

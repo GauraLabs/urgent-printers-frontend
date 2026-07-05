@@ -19,7 +19,7 @@ const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans", display
 export const metadata: Metadata = {
   title: { default: "Urgent Printers — Premium Print Solutions, Fast", template: "%s | Urgent Printers" },
   description: "Business cards, flyers, banners, packaging, brochures, and custom merch. Premium quality printing delivered fast across India. Order from 25 units.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://urgentprinters.in"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://urgentprinters.com"),
   openGraph: { siteName: "Urgent Printers", type: "website", locale: "en_IN" },
   twitter: { card: "summary_large_image" },
 };

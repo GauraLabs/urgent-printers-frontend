@@ -87,7 +87,7 @@ export async function getProducts(filters: ProductFilters): Promise<PaginatedRes
 ## Branch strategy
 
 - `dev` → Vercel preview URL — **all development work goes here**
-- `main` → production (`urgentprinters.in`) — merge from `dev` only when shipping
+- `main` → production (`urgentprinters.com`) — merge from `dev` only when shipping
 
 ## Build
 
@@ -96,4 +96,4 @@ npm run dev          # local development
 npm run build        # next build + next-sitemap (generates sitemap.xml + robots.txt)
 ```
 
-One required env var for production: `NEXT_PUBLIC_SITE_URL=https://urgentprinters.in`
+One required env var for production: `NEXT_PUBLIC_SITE_URL=https://urgentprinters.com`

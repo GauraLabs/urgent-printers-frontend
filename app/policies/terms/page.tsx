@@ -5,7 +5,7 @@ export default function TermsPage() {
     <article>
       <h1>Terms of Service</h1>
       <p className="text-sm text-muted-foreground">Last updated: April 2026</p>
-      <p>By using urgentprinters.in you agree to these terms. These terms are governed by the laws of India.</p>
+      <p>By using urgentprinters.com you agree to these terms. These terms are governed by the laws of India.</p>
       <h2>Orders & Payment</h2>
       <ul>
         <li>All prices are in Indian Rupees (₹) and inclusive of applicable taxes unless stated otherwise.</li>

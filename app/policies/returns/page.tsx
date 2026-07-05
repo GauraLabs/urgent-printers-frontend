@@ -16,7 +16,7 @@ export default function ReturnsPage() {
         <li><strong>After printing begins</strong> — No refund (materials and labour already committed).</li>
       </ul>
       <h2>How to Claim</h2>
-      <p>Email <a href="mailto:support@urgentprinters.in">support@urgentprinters.in</a> with your order number and photos. We aim to resolve all quality claims within 2 business days.</p>
+      <p>Email <a href="mailto:support@urgentprinters.com">support@urgentprinters.com</a> with your order number and photos. We aim to resolve all quality claims within 2 business days.</p>
     </article>
   );
 }

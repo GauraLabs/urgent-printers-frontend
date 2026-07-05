@@ -8,12 +8,13 @@ import { toast } from "sonner";
 import { FormField } from "@/components/common/FormField";
 import { Separator } from "@/components/ui/separator";
 import { useAuthStore } from "@/features/auth/store";
+import { updateProfile } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
 
 const schema = z.object({
   firstName: z.string().min(1, "First name required"),
   lastName:  z.string().min(1, "Last name required"),
-  email:     z.string().email("Enter a valid email"),
+  email:     z.string().email("Enter a valid email").optional().or(z.literal("")),
   phone:     z.string().regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number").optional().or(z.literal("")),
 });
 type FormValues = z.infer<typeof schema>;
@@ -34,12 +35,18 @@ export default function ProfilePage() {
   });
 
   async function onSubmit(data: FormValues) {
-    // REAL API: PATCH /api/users/me with data
-    await new Promise((r) => setTimeout(r, 600));
-    if (user) {
-      setUser({ ...user, ...data, phone: data.phone ? `+91 ${data.phone}` : undefined }, token ?? "");
+    if (!token) return;
+    try {
+      const updated = await updateProfile(token, {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email || undefined,
+      });
+      setUser({ ...updated, phone: user?.phone }, token);
+      toast.success("Profile updated.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update profile.");
     }
-    toast.success("Profile updated.");
   }
 
   return (
@@ -70,7 +77,7 @@ export default function ProfilePage() {
           <FormField label="First name" required error={errors.firstName?.message} {...register("firstName")} />
           <FormField label="Last name"  required error={errors.lastName?.message}  {...register("lastName")}  />
         </div>
-        <FormField label="Email address" type="email" required error={errors.email?.message} hint="Changing your email requires re-verification." {...register("email")} />
+        <FormField label="Email address" type="email" error={errors.email?.message} hint="Used for order notifications and receipts." {...register("email")} />
         <FormField label="Mobile number" type="tel" placeholder="9876543210" hint="10-digit Indian mobile number" error={errors.phone?.message} {...register("phone")} />
 
         <button

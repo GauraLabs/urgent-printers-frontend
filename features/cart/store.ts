@@ -38,7 +38,9 @@ export const useCartStore = create<CartStore>()(
           product.id, config.sizeId ?? "", config.paperId ?? "", config.finishId ?? "",
           config.sides ?? "", config.turnaroundId, config.artworkFileKey, config.templateData
         );
-        const totalPrice = parseFloat((pricePerUnit * config.quantity).toFixed(2));
+        const totalPrice = parseFloat(
+          (pricePerUnit * config.quantity + (config.turnaroundExtraCost ?? 0)).toFixed(2)
+        );
 
         set((state) => {
           const existing = state.items.find((i) => i.cartItemId === cartItemId);
@@ -69,7 +71,13 @@ export const useCartStore = create<CartStore>()(
         set((state) => ({
           items: state.items.map((i) =>
             i.cartItemId === cartItemId
-              ? { ...i, config: { ...i.config, quantity }, totalPrice: parseFloat((i.pricePerUnit * quantity).toFixed(2)) }
+              ? {
+                  ...i,
+                  config: { ...i.config, quantity },
+                  totalPrice: parseFloat(
+                    (i.pricePerUnit * quantity + (i.config.turnaroundExtraCost ?? 0)).toFixed(2)
+                  ),
+                }
               : i
           ),
         })),

@@ -31,8 +31,8 @@ const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "Urgent Printers",
-  url: "https://urgentprinters.in",
-  logo: "https://urgentprinters.in/logo.png",
+  url: "https://urgentprinters.com",
+  logo: "https://urgentprinters.com/logo.png",
   description:
     "India's fast online printing service — business cards, flyers, banners, packaging, brochures, and custom merchandise.",
   address: {

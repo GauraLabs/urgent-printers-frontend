@@ -25,9 +25,9 @@ export default function PrivacyPage() {
       <h2>Data Retention</h2>
       <p>Account data is retained for the duration of your account. Order data is retained for 7 years as required by Indian tax law. Artwork files are deleted 30 days after delivery.</p>
       <h2>Your Rights</h2>
-      <p>You may access, correct, or request deletion of your personal data by emailing <a href="mailto:privacy@urgentprinters.in">privacy@urgentprinters.in</a>.</p>
+      <p>You may access, correct, or request deletion of your personal data by emailing <a href="mailto:privacy@urgentprinters.com">privacy@urgentprinters.com</a>.</p>
       <h2>Contact</h2>
-      <p>Data Protection Officer: <a href="mailto:privacy@urgentprinters.in">privacy@urgentprinters.in</a> | Urgent Printers Pvt. Ltd., Kotwali Rd, Tilak Dwar, Mathura, Uttar Pradesh 281001, India.</p>
+      <p>Data Protection Officer: <a href="mailto:privacy@urgentprinters.com">privacy@urgentprinters.com</a> | Urgent Printers Pvt. Ltd., Kotwali Rd, Tilak Dwar, Mathura, Uttar Pradesh 281001, India.</p>
     </article>
   );
 }

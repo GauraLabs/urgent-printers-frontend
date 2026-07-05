@@ -130,6 +130,9 @@ export interface CartItemConfig {
   quantity: number;
   turnaroundId: string;
   turnaroundLabel: string;
+  // Flat surcharge (INR) for the selected turnaround — must be persisted here
+  // since it can't be reconstructed from turnaroundId alone once in the cart.
+  turnaroundExtraCost: number;
   artworkFileName?: string;
   artworkFileSize?: number;
   artworkFileKey?: string;
@@ -255,11 +258,14 @@ export interface OrderPreview {
 export type OrderStatus =
   | "placed"
   | "confirmed"
+  | "artwork_pending"
   | "artwork_approved"
   | "printing"
   | "shipped"
   | "delivered"
-  | "cancelled";
+  | "cancelled"
+  | "refund_initiated"
+  | "refunded";
 
 export interface OrderStatusEvent {
   status: OrderStatus;
@@ -416,4 +422,31 @@ export interface ProductFilters {
   sort?: "price-asc" | "price-desc" | "rating" | "newest" | "popular";
   page?: number;
   pageSize?: number;
+}
+
+// ─── Proof approval ───────────────────────────────────────────────────────────
+
+export interface ProofInfo {
+  file_key: string;
+  original_filename: string;
+  version: number;
+  order_number: string;
+  product_name: string;
+  quantity: number;
+}
+
+export interface ProofApprovalResult {
+  message: string;
+  order_number: string;
+  status: "approved" | "rejected";
+}
+
+// ─── Shipping serviceability ───────────────────────────────────────────────────
+
+export interface ServiceabilityResult {
+  pincode: string;
+  isServiceable: boolean;
+  estimatedDeliveryDate: string | null;
+  minDays: number | null;
+  maxDays: number | null;
 }
