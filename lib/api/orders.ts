@@ -3,7 +3,7 @@ import type {
   OrderPricing, OrderShippingAddress, OrderStatusEvent,
   OrderStatus, CreateOrderRequest, CreatedOrder,
   OrderPreview, OrderPreviewItem,
-  ProofInfo, ProofApprovalResult,
+  ProofInfo, ProofApprovalResult, ItemProofInfo,
 } from "@/types";
 import { apiFetch, apiFetchPage, API_URL } from "./client";
 
@@ -378,6 +378,43 @@ export async function submitProofDecision(
   // REAL API: POST /proofs/{token}
   return apiFetch<ProofApprovalResult>(`/proofs/${token}`, {
     method: "POST",
+    body: JSON.stringify({
+      decision,
+      rejection_reason: rejectionReason ?? null,
+    }),
+  });
+}
+
+// ─── Inline proof approval (authenticated — order detail page) ────────────────
+
+export async function getOrderItemProof(
+  orderId: string,
+  itemId: string,
+  token: string
+): Promise<ItemProofInfo | null> {
+  // REAL API: GET /api/v1/orders/{order_id}/items/{item_id}/current-proof
+  try {
+    return await apiFetch<ItemProofInfo>(`/orders/${orderId}/items/${itemId}/current-proof`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch {
+    // 404 = proof not sent yet; any other error = don't surface to customer
+    return null;
+  }
+}
+
+export async function submitOrderItemProofDecision(
+  orderId: string,
+  itemId: string,
+  decision: "approved" | "rejected",
+  rejectionReason: string | undefined,
+  token: string
+): Promise<void> {
+  // REAL API: POST /api/v1/orders/{order_id}/items/{item_id}/current-proof/decision
+  // 409 = proof not in approvable state — let caller handle
+  await apiFetch<{ message: string }>(`/orders/${orderId}/items/${itemId}/current-proof/decision`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify({
       decision,
       rejection_reason: rejectionReason ?? null,
