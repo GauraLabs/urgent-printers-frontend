@@ -6,6 +6,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, ExternalLink, Loader2, XCircle, Lock, CreditCard, Download, FileSearch } from "lucide-react";
 import { getOrderById, cancelOrder, verifyPayment, downloadReceipt } from "@/lib/api";
+import ItemProofPanel from "./ItemProofPanel";
 import { useAuthStore } from "@/features/auth/store";
 import { OrderStatusTracker } from "@/features/account/OrderStatusTracker";
 import { Separator } from "@/components/ui/separator";
@@ -300,7 +301,8 @@ export default function OrderDetailPage() {
           {order.items.map((item) => {
             const categorySlug = item.categoryName ? slugify(item.categoryName) : "products";
             return (
-              <div key={item.id} className="flex gap-4 p-5">
+              <div key={item.id}>
+              <div className="flex gap-4 p-5">
                 <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-muted border border-border shrink-0">
                   {item.thumbnailUrl ? (
                     <Image src={item.thumbnailUrl} alt={item.productName} fill className="object-cover" sizes="64px" />
@@ -351,6 +353,12 @@ export default function OrderDetailPage() {
                     </Link>
                   )}
                 </div>
+              </div>
+              <ItemProofPanel
+                orderId={order.id}
+                itemId={item.id}
+                artworkStatus={item.artworkStatus ?? "none"}
+              />
               </div>
             );
           })}

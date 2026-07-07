@@ -441,6 +441,14 @@ export interface ProofApprovalResult {
   status: "approved" | "rejected";
 }
 
+export interface ItemProofInfo {
+  proof_id: number;
+  file_key: string;
+  original_filename: string;
+  version: number;
+  status: string;
+}
+
 // ─── Shipping serviceability ───────────────────────────────────────────────────
 
 export interface ServiceabilityResult {
