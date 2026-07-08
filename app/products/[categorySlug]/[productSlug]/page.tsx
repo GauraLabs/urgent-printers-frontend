@@ -16,6 +16,11 @@ interface PageProps {
   params: Promise<{ categorySlug: string; productSlug: string }>;
 }
 
+// Without this, a product page that 404s before its data exists (e.g. crawled
+// moments before the category/product went active) gets cached indefinitely —
+// dynamicParams regeneration only ever re-runs on a revalidation window.
+export const revalidate = 60;
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { productSlug } = await params;
   const product = await getProductBySlug(productSlug);
