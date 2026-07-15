@@ -398,9 +398,16 @@ export interface Testimonial {
   id: string;
   authorName: string;
   company: string;
-  avatarUrl: string;
+  avatarUrl?: string | null;
   rating: number;
   quote: string;
+}
+
+export interface Faq {
+  id: string;
+  question: string;
+  answer: string;
+  category: string | null;
 }
 
 // ─── API / Pagination ─────────────────────────────────────────────────────────

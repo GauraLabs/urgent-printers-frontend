@@ -16,4 +16,5 @@ export const ROUTES = {
   accountAddresses: "/account/addresses",
   accountProfile: "/account/profile",
   search: "/search",
+  faq: "/faq",
 } as const;

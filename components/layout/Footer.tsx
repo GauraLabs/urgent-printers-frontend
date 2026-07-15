@@ -30,6 +30,7 @@ const ACCOUNT_LINKS = [
 
 const SUPPORT_LINKS = [
   { label: "Contact Us",          href: "/contact"                        },
+  { label: "FAQs",                href: ROUTES.faq                        },
   { label: "Artwork Guidelines",  href: "/policies/artwork-guidelines"    },
   { label: "Shipping Info",       href: "/policies/shipping"              },
   { label: "Returns Policy",      href: "/policies/returns"               },
