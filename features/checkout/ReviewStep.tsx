@@ -310,6 +310,11 @@ export function ReviewStep({
               <Loader2 size={16} className="animate-spin" />
               {paymentMethod === "cod" ? "Placing Order…" : "Opening Razorpay…"}
             </>
+          ) : previewLoading ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              Verifying order…
+            </>
           ) : paymentMethod === "cod" ? (
             <>Place Order · {formatPrice(total)}</>
           ) : (
