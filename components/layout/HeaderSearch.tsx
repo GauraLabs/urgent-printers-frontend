@@ -152,37 +152,42 @@ export function HeaderSearch() {
                 </p>
               </div>
               <ul className="py-1">
-                {results.map((product, i) => (
-                  <li key={product.id}>
-                    <Link
-                      href={ROUTES.product(product.categorySlug, product.slug)}
-                      onClick={() => { setIsOpen(false); setQuery(""); }}
-                      role="option"
-                      aria-selected={activeIndex === i}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 transition-colors",
-                        activeIndex === i ? "bg-muted" : "hover:bg-muted/70"
-                      )}
-                    >
-                      <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-muted border border-border shrink-0">
-                        <Image
-                          src={product.images[0]}
-                          alt={product.name}
-                          fill
-                          className="object-cover"
-                          sizes="40px"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium line-clamp-1">{product.name}</p>
-                        <p className="text-xs text-muted-foreground">{product.categoryName}</p>
-                      </div>
-                      <p className="text-xs font-semibold text-primary shrink-0">
-                        from {formatPricePerUnit(product.pricingTiers[0].pricePerUnit)}/unit
-                      </p>
-                    </Link>
-                  </li>
-                ))}
+                {results.map((product, i) => {
+                  const unitPrice = product.pricingTiers[0]?.pricePerUnit ?? product.priceFrom;
+                  return (
+                    <li key={product.id}>
+                      <Link
+                        href={ROUTES.product(product.categorySlug, product.slug)}
+                        onClick={() => { setIsOpen(false); setQuery(""); }}
+                        role="option"
+                        aria-selected={activeIndex === i}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2.5 transition-colors",
+                          activeIndex === i ? "bg-muted" : "hover:bg-muted/70"
+                        )}
+                      >
+                        <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-muted border border-border shrink-0">
+                          <Image
+                            src={product.images[0]}
+                            alt={product.name}
+                            fill
+                            className="object-cover"
+                            sizes="40px"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium line-clamp-1">{product.name}</p>
+                          <p className="text-xs text-muted-foreground">{product.categoryName}</p>
+                        </div>
+                        {unitPrice !== undefined && (
+                          <p className="text-xs font-semibold text-primary shrink-0">
+                            from {formatPricePerUnit(unitPrice)}/unit
+                          </p>
+                        )}
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
 
               {/* See all */}

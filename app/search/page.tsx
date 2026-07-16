@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Search, TrendingUp } from "lucide-react";
-import { searchProducts, getCategories } from "@/lib/api";
+import { searchProductsPaged, getCategories } from "@/lib/api";
 import { ProductCard } from "@/features/products/ProductCard";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Breadcrumb } from "@/components/common/Breadcrumb";
@@ -32,8 +32,10 @@ export default async function SearchPage({ searchParams }: PageProps) {
   const { q = "" } = await searchParams;
   const query = q.trim();
 
-  const [results, categories] = await Promise.all([
-    query.length >= 2 ? searchProducts(query) : Promise.resolve([]),
+  const [{ data: results, total }, categories] = await Promise.all([
+    query.length >= 2
+      ? searchProductsPaged(query, 1, 24)
+      : Promise.resolve({ data: [], total: 0, page: 1, pageSize: 24, totalPages: 0 }),
     getCategories(),
   ]);
 
@@ -48,7 +50,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
             Results for <span className="text-primary">&ldquo;{query}&rdquo;</span>
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {results.length} product{results.length !== 1 ? "s" : ""} found
+            {total} product{total !== 1 ? "s" : ""} found
           </p>
         </div>
       ) : (
@@ -82,7 +84,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
       </form>
 
       {/* Results grid */}
-      {query.length >= 2 && results.length > 0 && (
+      {query.length >= 2 && total > 0 && (
         <section aria-label="Search results">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
             {results.map((product) => (
@@ -93,7 +95,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
       )}
 
       {/* No results */}
-      {query.length >= 2 && results.length === 0 && (
+      {query.length >= 2 && total === 0 && (
         <EmptyState
           icon={Search}
           title={`No results for "${query}"`}
