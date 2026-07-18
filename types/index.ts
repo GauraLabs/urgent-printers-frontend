@@ -420,11 +420,14 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
+export type ProductBadgeFilter = "bestseller" | "new" | "sale" | "popular";
+
 export interface ProductFilters {
   categorySlug?: string;
   minPrice?: number;
   maxPrice?: number;
   tags?: string[];
+  badge?: ProductBadgeFilter;
   search?: string;
   sort?: "price-asc" | "price-desc" | "rating" | "newest" | "popular";
   page?: number;

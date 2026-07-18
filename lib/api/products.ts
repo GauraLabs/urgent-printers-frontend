@@ -273,6 +273,43 @@ export async function getProducts(
           p.tags.some((t) => t.toLowerCase().includes(q))
       );
     }
+    // Mirrors product_repository.py: a product matches if ANY tier clears the
+    // min bound and (independently) ANY tier clears the max bound.
+    if (filters.minPrice !== undefined) {
+      const min = filters.minPrice;
+      results = results.filter((p) => p.pricingTiers.some((t) => t.pricePerUnit >= min));
+    }
+    if (filters.maxPrice !== undefined) {
+      const max = filters.maxPrice;
+      results = results.filter((p) => p.pricingTiers.some((t) => t.pricePerUnit <= max));
+    }
+    // Mirrors product_repository.py: every selected tag must be present (AND, not OR).
+    if (filters.tags?.length) {
+      results = results.filter((p) => filters.tags!.every((tag) => p.tags.includes(tag)));
+    }
+    if (filters.badge) {
+      results = results.filter((p) => p.badge === filters.badge);
+    }
+    switch (filters.sort) {
+      case "rating":
+        results.sort((a, b) => b.averageRating - a.averageRating);
+        break;
+      case "price-asc":
+        results.sort((a, b) => (a.pricingTiers[0]?.pricePerUnit ?? a.priceFrom ?? 0) - (b.pricingTiers[0]?.pricePerUnit ?? b.priceFrom ?? 0));
+        break;
+      case "price-desc":
+        results.sort((a, b) => (b.pricingTiers[0]?.pricePerUnit ?? b.priceFrom ?? 0) - (a.pricingTiers[0]?.pricePerUnit ?? a.priceFrom ?? 0));
+        break;
+      case "newest":
+        // Mock data has no created_at; approximate "newest first" by reversing
+        // catalog order (products are authored oldest-to-newest below).
+        results.reverse();
+        break;
+      case "popular":
+      case undefined:
+        results.sort((a, b) => Number(b.isFeatured) - Number(a.isFeatured));
+        break;
+    }
     const page = filters.page ?? 1;
     const pageSize = filters.pageSize ?? 12;
     return {
@@ -290,6 +327,7 @@ export async function getProducts(
     if (filters.minPrice !== undefined) params.set("min_price", String(filters.minPrice));
     if (filters.maxPrice !== undefined) params.set("max_price", String(filters.maxPrice));
     if (filters.tags?.length) params.set("tags", filters.tags.join(","));
+    if (filters.badge) params.set("badge", filters.badge);
     if (filters.sort) params.set("sort_by", SORT_MAP[filters.sort]);
     params.set("page", String(filters.page ?? 1));
     params.set("page_size", String(filters.pageSize ?? 12));
