@@ -1,5 +1,18 @@
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
 
+// Carries the HTTP status code alongside the server's error message so
+// callers that need to branch on specific statuses (403/404/409/422, etc.)
+// don't have to parse it back out of a generic Error's message string.
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 export interface BackendMeta {
   page: number;
   page_size: number;
@@ -106,7 +119,7 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     const errJson = await res.json() as { message?: string; detail?: string };
     detail = errJson.message ?? errJson.detail ?? "";
   } catch { /* non-JSON error body */ }
-  throw new Error(detail || `API ${res.status}: ${path}`);
+  throw new ApiError(detail || `API ${res.status}: ${path}`, res.status);
 }
 
 export async function apiFetchPage<T>(path: string, init?: RequestInit): Promise<BackendPage<T>> {
@@ -125,5 +138,5 @@ export async function apiFetchPage<T>(path: string, init?: RequestInit): Promise
     if (retryRes) return retryRes.json() as Promise<BackendPage<T>>;
   }
 
-  throw new Error(`API ${res.status}: ${path}`);
+  throw new ApiError(`API ${res.status}: ${path}`, res.status);
 }

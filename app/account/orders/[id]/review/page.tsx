@@ -10,6 +10,9 @@ import { toast } from "sonner";
 import { FormField } from "@/components/common/FormField";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants/routes";
+import { submitReview } from "@/lib/api";
+import { ApiError } from "@/lib/api/client";
+import { useAuthStore } from "@/features/auth/store";
 
 const schema = z.object({
   title: z.string().min(3, "Please add a short title"),
@@ -52,7 +55,9 @@ function ReviewForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const productName = searchParams.get("product") ?? "this product";
+  const productSlug = searchParams.get("productSlug") ?? "";
   const orderId = searchParams.get("orderId") ?? "";
+  const token = useAuthStore((s) => s.token);
 
   const [rating, setRating] = useState(5);
   const [submitted, setSubmitted] = useState(false);
@@ -64,10 +69,45 @@ function ReviewForm() {
 
   async function onSubmit(data: FormValues) {
     if (rating === 0) { toast.error("Please select a rating."); return; }
-    // REAL API: POST /api/reviews with { orderId, productId, rating, title, body }
-    await new Promise((r) => setTimeout(r, 800));
-    setSubmitted(true);
-    toast.success("Review submitted! Thank you.");
+    if (!token) {
+      toast.error("Please sign in to submit a review.");
+      return;
+    }
+    if (!productSlug || !orderId) {
+      toast.error("Missing order information. Please go back and try again from your order page.");
+      return;
+    }
+
+    try {
+      await submitReview(productSlug, { orderId, rating, title: data.title, body: data.body }, token);
+      setSubmitted(true);
+      toast.success("Review submitted! It's awaiting approval and will appear once reviewed.");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        switch (err.status) {
+          case 404:
+            toast.error("We couldn't find that order for this product.");
+            break;
+          case 403:
+            toast.error("This order doesn't belong to your account.");
+            break;
+          case 409:
+            toast.error(
+              err.message.toLowerCase().includes("delivered")
+                ? "This order hasn't been delivered yet, so it can't be reviewed."
+                : "You've already reviewed this product."
+            );
+            break;
+          case 422:
+            toast.error(err.message || "Please check your review details and try again.");
+            break;
+          default:
+            toast.error(err.message || "Could not submit review. Please try again.");
+        }
+      } else {
+        toast.error("Could not submit review. Please try again.");
+      }
+    }
   }
 
   if (submitted) {
@@ -76,7 +116,9 @@ function ReviewForm() {
         <CheckCircle2 size={48} className="text-success" />
         <div>
           <p className="font-heading font-bold text-xl">Thank You!</p>
-          <p className="text-muted-foreground text-sm mt-1">Your review helps other customers make great choices.</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            Your review is awaiting approval. Once reviewed, it&apos;ll help other customers make great choices.
+          </p>
         </div>
         <button
           onClick={() => router.push(ROUTES.accountOrder(orderId))}

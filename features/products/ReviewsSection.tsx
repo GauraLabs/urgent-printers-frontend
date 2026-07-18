@@ -1,17 +1,15 @@
-import Image from "next/image";
 import { BadgeCheck } from "lucide-react";
 import { StarRating } from "@/components/common/StarRating";
 import { getReviewsByProduct } from "@/lib/api";
-import { cn } from "@/lib/utils";
 
 interface ReviewsSectionProps {
-  productId: string;
+  productSlug: string;
   averageRating: number;
   reviewCount: number;
 }
 
-export async function ReviewsSection({ productId, averageRating, reviewCount }: ReviewsSectionProps) {
-  const reviews = await getReviewsByProduct(productId);
+export async function ReviewsSection({ productSlug, averageRating, reviewCount }: ReviewsSectionProps) {
+  const reviews = await getReviewsByProduct(productSlug);
 
   return (
     <section aria-labelledby="reviews-heading">
@@ -48,24 +46,14 @@ export async function ReviewsSection({ productId, averageRating, reviewCount }: 
           <article key={review.id} className="py-6">
             <div className="flex items-start gap-3">
               <div className="relative w-10 h-10 rounded-full overflow-hidden bg-muted shrink-0">
-                {review.authorAvatarUrl ? (
-                  <Image
-                    src={review.authorAvatarUrl}
-                    alt={review.authorName}
-                    fill
-                    className="object-cover"
-                    sizes="40px"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-muted-foreground font-bold text-sm">
-                    {review.authorName[0]}
-                  </div>
-                )}
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground font-bold text-sm">
+                  {review.reviewerName[0]}
+                </div>
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-semibold text-sm">{review.authorName}</p>
-                  {review.verifiedPurchase && (
+                  <p className="font-semibold text-sm">{review.reviewerName}</p>
+                  {review.isVerifiedPurchase && (
                     <span className="flex items-center gap-1 text-[10px] text-success font-medium">
                       <BadgeCheck size={11} /> Verified Purchase
                     </span>

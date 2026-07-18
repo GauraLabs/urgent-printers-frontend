@@ -345,12 +345,16 @@ export default function OrderDetailPage() {
                   <p className="font-semibold text-sm">{formatPrice(item.totalPrice)}</p>
                   <p className="text-xs text-muted-foreground">{formatPricePerUnit(item.pricePerUnit)}/unit</p>
                   {order.status === "delivered" && (
-                    <Link
-                      href={`/account/orders/${order.id}/review?product=${encodeURIComponent(item.productName)}&orderId=${order.id}`}
-                      className="text-[10px] font-semibold text-primary border border-primary/30 px-2 py-1 rounded-lg hover:bg-primary/5 transition-colors whitespace-nowrap"
-                    >
-                      ★ Write a Review
-                    </Link>
+                    item.canReview ? (
+                      <Link
+                        href={`/account/orders/${order.id}/review?productSlug=${encodeURIComponent(item.productSlug)}&product=${encodeURIComponent(item.productName)}&orderId=${order.id}`}
+                        className="text-[10px] font-semibold text-primary border border-primary/30 px-2 py-1 rounded-lg hover:bg-primary/5 transition-colors whitespace-nowrap"
+                      >
+                        ★ Write a Review
+                      </Link>
+                    ) : (
+                      <p className="text-[10px] text-muted-foreground whitespace-nowrap">Already reviewed</p>
+                    )
                   )}
                 </div>
               </div>

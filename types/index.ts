@@ -294,6 +294,8 @@ export interface OrderItem {
   artworkUrl?: string;
   artworkStatus?: string;
   templateData?: Record<string, string>;
+  // Delivered order + this customer hasn't already reviewed the product (any order, ever).
+  canReview?: boolean;
 }
 
 // Compact item shape used only in the orders list card
@@ -368,17 +370,18 @@ export interface OrderCard {
 
 // ─── Review ───────────────────────────────────────────────────────────────────
 
+export type ReviewStatus = "pending" | "approved" | "rejected";
+
 export interface Review {
   id: string;
   productId: string;
-  userId: string;
-  authorName: string;
-  authorAvatarUrl?: string;
+  reviewerName: string;
   rating: number;
   title: string;
   body: string;
-  verifiedPurchase: boolean;
+  isVerifiedPurchase: boolean;
   helpfulCount: number;
+  status: ReviewStatus;
   createdAt: string;
 }
 
