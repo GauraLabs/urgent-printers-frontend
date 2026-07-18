@@ -9,13 +9,17 @@ interface ActiveFiltersProps {
 }
 
 export function ActiveFilters({ categoryName }: ActiveFiltersProps) {
-  const { current, setSort, setCategory, setPriceRange, toggleTag, activeCount } = useProductFilters();
+  const { current, setSort, setCategory, setPriceRange, toggleTag, setBadge, setSearch, activeCount, isSearching } = useProductFilters();
 
-  if (activeCount === 0) return null;
+  if (activeCount === 0 && !isSearching) return null;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
       <span className="text-xs text-muted-foreground">Active:</span>
+
+      {isSearching && (
+        <FilterBadge label={`Search: "${current.search}"`} onRemove={() => setSearch("")} />
+      )}
 
       {current.sort !== "popular" && (
         <FilterBadge label={`Sort: ${current.sort.replace("-", " ")}`} onRemove={() => setSort("popular")} />
@@ -30,6 +34,10 @@ export function ActiveFilters({ categoryName }: ActiveFiltersProps) {
           label={`₹${current.minPrice || "0"} – ₹${current.maxPrice || "∞"}`}
           onRemove={() => setPriceRange("", "")}
         />
+      )}
+
+      {current.badge && (
+        <FilterBadge label={current.badge} onRemove={() => setBadge("")} />
       )}
 
       {current.tags.map((tag) => (

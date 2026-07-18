@@ -18,11 +18,27 @@ import type { Category } from "@/types";
 interface FiltersDrawerProps {
   categories: Category[];
   showCategoryFilter?: boolean;
+  disabled?: boolean;
 }
 
-export function FiltersDrawer({ categories, showCategoryFilter }: FiltersDrawerProps) {
+export function FiltersDrawer({ categories, showCategoryFilter, disabled }: FiltersDrawerProps) {
   const [open, setOpen] = useState(false);
   const { activeCount } = useProductFilters();
+
+  if (disabled) {
+    return (
+      <span
+        title="Filters aren't available for search results"
+        className={cn(
+          buttonVariants({ variant: "outline", size: "sm" }),
+          "gap-2 lg:hidden opacity-50 pointer-events-none"
+        )}
+      >
+        <SlidersHorizontal size={14} />
+        Filters
+      </span>
+    );
+  }
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>

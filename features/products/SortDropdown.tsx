@@ -19,9 +19,28 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "newest", label: "Newest" },
 ];
 
-export function SortDropdown() {
+interface SortDropdownProps {
+  disabled?: boolean;
+}
+
+export function SortDropdown({ disabled }: SortDropdownProps) {
   const { current, setSort } = useProductFilters();
-  const activeLabel = SORT_OPTIONS.find((o) => o.value === current.sort)?.label ?? "Most Popular";
+  const activeLabel = disabled ? "Relevance" : SORT_OPTIONS.find((o) => o.value === current.sort)?.label ?? "Most Popular";
+
+  if (disabled) {
+    return (
+      <span
+        title="Sorting isn't available for search results"
+        className={cn(
+          buttonVariants({ variant: "outline", size: "sm" }),
+          "gap-2 text-sm font-medium opacity-50 pointer-events-none"
+        )}
+      >
+        <ArrowUpDown size={14} />
+        {activeLabel}
+      </span>
+    );
+  }
 
   return (
     <DropdownMenu>

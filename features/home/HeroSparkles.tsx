@@ -11,6 +11,7 @@ export function HeroSparkles() {
       camera={{ position: [0, 0, 6], fov: 50 }}
       gl={{ alpha: true, antialias: false }}
       dpr={[1, 1.5]}
+      style={{ pointerEvents: "none" }}
     >
       <Sparkles count={45} scale={[10, 5, 3]} size={3} speed={0.25} opacity={0.5} color="#f7d293" noise={1} />
     </Canvas>

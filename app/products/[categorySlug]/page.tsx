@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getProducts, getCategories, getCategoryBySlug } from "@/lib/api";
 import { Breadcrumb } from "@/components/common/Breadcrumb";
@@ -38,9 +38,17 @@ export async function generateStaticParams() {
   return categories.map((c) => ({ categorySlug: c.slug }));
 }
 
+const PAGE_SIZE = 12;
+
 export default async function CategoryPage({ params, searchParams }: PageProps) {
   const { categorySlug } = await params;
   const sp = await searchParams;
+
+  // The Typesense /search endpoint can't be scoped to a category, so a search
+  // started from a category page hands off to the unscoped /products search
+  // view rather than silently ignoring the category or returning wrong results.
+  const query = getString(sp.q).trim();
+  if (query) redirect(`/products?q=${encodeURIComponent(query)}`);
 
   const [category, categories] = await Promise.all([
     getCategoryBySlug(categorySlug),
@@ -55,8 +63,9 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     minPrice: sp.min ? Number(sp.min) : undefined,
     maxPrice: sp.max ? Number(sp.max) : undefined,
     tags: getString(sp.tags) ? getString(sp.tags).split(",").filter(Boolean) : undefined,
+    badge: (getString(sp.badge) as ProductFilters["badge"]) || undefined,
     page: sp.page ? Number(sp.page) : 1,
-    pageSize: 12,
+    pageSize: PAGE_SIZE,
   };
 
   const { data: products, total } = await getProducts(filters);
@@ -97,6 +106,8 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
           total={total}
           categories={categories}
           categoryName={category.name}
+          baseCategorySlug={categorySlug}
+          pageSize={PAGE_SIZE}
         />
       </section>
     </>

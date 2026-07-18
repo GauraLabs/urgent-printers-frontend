@@ -46,7 +46,7 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
         {banners.map((banner) => (
           <SwiperSlide key={banner.id}>
             <div className="relative w-full h-[340px] sm:h-[420px] lg:h-[520px]">
-              <Image src={banner.imageUrl} alt="" fill priority loading="eager" className="object-cover" sizes="100vw" />
+              <Image src={banner.imageUrl} alt={banner.headline} fill priority loading="eager" className="object-cover" sizes="100vw" />
               <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/40 to-transparent" />
               <div className="absolute inset-0 z-10 flex items-center">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">

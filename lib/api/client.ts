@@ -1,5 +1,18 @@
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
 
+// Carries the HTTP status code alongside the server's error message so
+// callers that need to branch on specific statuses (403/404/409/422, etc.)
+// don't have to parse it back out of a generic Error's message string.
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 export interface BackendMeta {
   page: number;
   page_size: number;
@@ -16,14 +29,18 @@ export interface BackendPage<T> {
 // ─── Token refresh interceptor ────────────────────────────────────────────────
 // Called when any authenticated request returns 401.
 // Tries to get a new access token via the httpOnly refresh cookie.
-// If successful: updates the store + retries the original request transparently.
+// If successful: updates the store + retries the original request transparently,
+// returning the raw retried Response for the caller to parse.
 // If failed: clears the user session (AuthGuard handles redirect to login).
+//
+// Shared by apiFetch and apiFetchPage so every authenticated caller gets the
+// same 401 -> refresh -> retry-once behavior, regardless of response shape.
 
-async function handleUnauthorized<T>(
+async function handleUnauthorized(
   url: string,
   init: RequestInit | undefined,
   hasAuthHeader: boolean
-): Promise<T | null> {
+): Promise<Response | null> {
   // Only attempt refresh for authenticated requests (those with Bearer token).
   // Public endpoints returning 401 are a different kind of error — don't retry.
   if (!hasAuthHeader || typeof window === "undefined" || !API_URL) return null;
@@ -61,17 +78,19 @@ async function handleUnauthorized<T>(
       },
     });
 
-    if (!retryRes.ok) return null; // retry also failed — fall through to error
-    if (retryRes.status === 204) return undefined as T;
-
-    const json: unknown = await retryRes.json();
-    if (json !== null && typeof json === "object" && "data" in json) {
-      return (json as { data: T }).data;
-    }
-    return json as T;
+    return retryRes.ok ? retryRes : null; // retry also failed — fall through to error
   } catch {
     return null;
   }
+}
+
+async function parseEnvelope<T>(res: Response): Promise<T> {
+  if (res.status === 204) return undefined as T;
+  const json: unknown = await res.json();
+  if (json !== null && typeof json === "object" && "data" in json) {
+    return (json as { data: T }).data;
+  }
+  return json as T;
 }
 
 // ─── API client ────────────────────────────────────────────────────────────────
@@ -87,27 +106,20 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     },
   });
 
-  if (!res.ok) {
-    if (res.status === 401) {
-      const hasAuth = !!(init?.headers as Record<string, string> | undefined)?.["Authorization"];
-      const retryResult = await handleUnauthorized<T>(url, init, hasAuth);
-      if (retryResult !== null) return retryResult;
-    }
+  if (res.ok) return parseEnvelope<T>(res);
 
-    let detail = "";
-    try {
-      const errJson = await res.json() as { message?: string; detail?: string };
-      detail = errJson.message ?? errJson.detail ?? "";
-    } catch { /* non-JSON error body */ }
-    throw new Error(detail || `API ${res.status}: ${path}`);
+  if (res.status === 401) {
+    const hasAuth = !!(init?.headers as Record<string, string> | undefined)?.["Authorization"];
+    const retryRes = await handleUnauthorized(url, init, hasAuth);
+    if (retryRes) return parseEnvelope<T>(retryRes);
   }
 
-  if (res.status === 204) return undefined as T;
-  const json: unknown = await res.json();
-  if (json !== null && typeof json === "object" && "data" in json) {
-    return (json as { data: T }).data;
-  }
-  return json as T;
+  let detail = "";
+  try {
+    const errJson = await res.json() as { message?: string; detail?: string };
+    detail = errJson.message ?? errJson.detail ?? "";
+  } catch { /* non-JSON error body */ }
+  throw new ApiError(detail || `API ${res.status}: ${path}`, res.status);
 }
 
 export async function apiFetchPage<T>(path: string, init?: RequestInit): Promise<BackendPage<T>> {
@@ -117,6 +129,14 @@ export async function apiFetchPage<T>(path: string, init?: RequestInit): Promise
     credentials: "include",
     headers: { "Content-Type": "application/json", ...init?.headers },
   });
-  if (!res.ok) throw new Error(`API ${res.status}: ${path}`);
-  return res.json() as Promise<BackendPage<T>>;
+
+  if (res.ok) return res.json() as Promise<BackendPage<T>>;
+
+  if (res.status === 401) {
+    const hasAuth = !!(init?.headers as Record<string, string> | undefined)?.["Authorization"];
+    const retryRes = await handleUnauthorized(url, init, hasAuth);
+    if (retryRes) return retryRes.json() as Promise<BackendPage<T>>;
+  }
+
+  throw new ApiError(`API ${res.status}: ${path}`, res.status);
 }

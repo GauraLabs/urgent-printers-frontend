@@ -180,7 +180,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </div>
           }>
             <ReviewsSection
-              productId={product.id}
+              productSlug={product.slug}
               averageRating={product.averageRating}
               reviewCount={product.reviewCount}
             />

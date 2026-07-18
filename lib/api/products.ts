@@ -12,6 +12,7 @@ import { mockProducts } from "@/lib/mock-data";
 import { slugify } from "@/lib/utils";
 import { delay } from "./delay";
 import { apiFetch, apiFetchPage } from "./client";
+import { getCategories } from "./categories";
 
 // ─── Backend shapes ───────────────────────────────────────────────────────────
 
@@ -55,6 +56,25 @@ interface BackendProductDetail extends BackendProductCard {
     max_length?: number;
   }[];
   created_at: string | null;
+}
+
+// The dedicated /search endpoint is Typesense-backed and returns raw indexed
+// documents, not the enriched ProductListResponse shape /products returns —
+// no thumbnail_url, price_from, category_slug, or category_name. See
+// mapSearchDoc() below for how that gap is bridged on the frontend.
+interface BackendSearchDoc {
+  id: string;
+  name: string;
+  description: string;
+  short_description: string;
+  category_id: number;
+  slug: string;
+  badge: string;
+  is_featured: boolean;
+  is_active: boolean;
+  rating: number;
+  review_count: number;
+  tags: string[];
 }
 
 // ─── Default print spec (used for card-shape products that lack full specs) ───
@@ -191,6 +211,38 @@ function mapDetail(d: BackendProductDetail): Product {
   };
 }
 
+// Search results have no thumbnail/price from Typesense — fall back to a seeded
+// placeholder image (matching the pattern used for categories with no thumbnail)
+// and leave priceFrom undefined rather than fabricate a number.
+function mapSearchDoc(
+  d: BackendSearchDoc,
+  categoryMap: Map<number, { slug: string; name: string }>
+): Product {
+  const category = categoryMap.get(d.category_id);
+  return {
+    id: d.id,
+    slug: d.slug,
+    name: d.name,
+    categoryId: String(d.category_id ?? ""),
+    categorySlug: category?.slug ?? "",
+    categoryName: category?.name ?? "",
+    description: d.description ?? "",
+    shortDescription: d.short_description ?? "",
+    images: [`https://picsum.photos/seed/${d.slug}/600/400`],
+    printSpec: EMPTY_PRINT_SPEC,
+    pricingTiers: [],
+    turnaroundOptions: [],
+    averageRating: d.rating,
+    reviewCount: d.review_count,
+    isFeatured: d.is_featured,
+    tags: d.tags ?? [],
+    badge: d.badge,
+    priceFrom: undefined,
+    customizationMode: "none" as CustomizationMode,
+    templateFields: [],
+  };
+}
+
 // ─── Sort map ─────────────────────────────────────────────────────────────────
 
 const SORT_MAP: Record<NonNullable<ProductFilters["sort"]>, string> = {
@@ -221,6 +273,43 @@ export async function getProducts(
           p.tags.some((t) => t.toLowerCase().includes(q))
       );
     }
+    // Mirrors product_repository.py: a product matches if ANY tier clears the
+    // min bound and (independently) ANY tier clears the max bound.
+    if (filters.minPrice !== undefined) {
+      const min = filters.minPrice;
+      results = results.filter((p) => p.pricingTiers.some((t) => t.pricePerUnit >= min));
+    }
+    if (filters.maxPrice !== undefined) {
+      const max = filters.maxPrice;
+      results = results.filter((p) => p.pricingTiers.some((t) => t.pricePerUnit <= max));
+    }
+    // Mirrors product_repository.py: every selected tag must be present (AND, not OR).
+    if (filters.tags?.length) {
+      results = results.filter((p) => filters.tags!.every((tag) => p.tags.includes(tag)));
+    }
+    if (filters.badge) {
+      results = results.filter((p) => p.badge === filters.badge);
+    }
+    switch (filters.sort) {
+      case "rating":
+        results.sort((a, b) => b.averageRating - a.averageRating);
+        break;
+      case "price-asc":
+        results.sort((a, b) => (a.pricingTiers[0]?.pricePerUnit ?? a.priceFrom ?? 0) - (b.pricingTiers[0]?.pricePerUnit ?? b.priceFrom ?? 0));
+        break;
+      case "price-desc":
+        results.sort((a, b) => (b.pricingTiers[0]?.pricePerUnit ?? b.priceFrom ?? 0) - (a.pricingTiers[0]?.pricePerUnit ?? a.priceFrom ?? 0));
+        break;
+      case "newest":
+        // Mock data has no created_at; approximate "newest first" by reversing
+        // catalog order (products are authored oldest-to-newest below).
+        results.reverse();
+        break;
+      case "popular":
+      case undefined:
+        results.sort((a, b) => Number(b.isFeatured) - Number(a.isFeatured));
+        break;
+    }
     const page = filters.page ?? 1;
     const pageSize = filters.pageSize ?? 12;
     return {
@@ -238,6 +327,7 @@ export async function getProducts(
     if (filters.minPrice !== undefined) params.set("min_price", String(filters.minPrice));
     if (filters.maxPrice !== undefined) params.set("max_price", String(filters.maxPrice));
     if (filters.tags?.length) params.set("tags", filters.tags.join(","));
+    if (filters.badge) params.set("badge", filters.badge);
     if (filters.sort) params.set("sort_by", SORT_MAP[filters.sort]);
     params.set("page", String(filters.page ?? 1));
     params.set("page_size", String(filters.pageSize ?? 12));
@@ -324,26 +414,80 @@ export async function getRecommendedProducts(
   }
 }
 
-export async function searchProducts(query: string): Promise<Product[]> {
-  // REAL API: GET /products?search=query
+// /products has no search/query param — the real search endpoint is the
+// dedicated Typesense-backed /search route (see
+// urgent-printers-backend/app/api/v1/routes/search.py). Its category map is
+// cached briefly since instant-search fires one call per debounced keystroke.
+let categoryMapCache: { map: Map<number, { slug: string; name: string }>; expiresAt: number } | null = null;
+const CATEGORY_MAP_TTL_MS = 5 * 60 * 1000;
+
+async function getCategoryMap(): Promise<Map<number, { slug: string; name: string }>> {
+  if (categoryMapCache && categoryMapCache.expiresAt > Date.now()) {
+    return categoryMapCache.map;
+  }
+  const categories = await getCategories();
+  const map = new Map(categories.map((c) => [Number(c.id), { slug: c.slug, name: c.name }]));
+  categoryMapCache = { map, expiresAt: Date.now() + CATEGORY_MAP_TTL_MS };
+  return map;
+}
+
+async function runSearch(
+  query: string,
+  page: number,
+  pageSize: number
+): Promise<PaginatedResponse<Product>> {
   if (!process.env.NEXT_PUBLIC_API_URL) {
     await delay(300);
     const q = query.toLowerCase();
-    return mockProducts
-      .filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.shortDescription.toLowerCase().includes(q) ||
-          p.categoryName.toLowerCase().includes(q) ||
-          p.tags.some((t) => t.toLowerCase().includes(q))
-      )
-      .slice(0, 8);
+    const matches = mockProducts.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.shortDescription.toLowerCase().includes(q) ||
+        p.categoryName.toLowerCase().includes(q) ||
+        p.tags.some((t) => t.toLowerCase().includes(q))
+    );
+    return {
+      data: matches.slice((page - 1) * pageSize, page * pageSize),
+      total: matches.length,
+      page,
+      pageSize,
+      totalPages: Math.max(1, Math.ceil(matches.length / pageSize)),
+    };
   }
+
   try {
-    const params = new URLSearchParams({ search: query, page_size: "8" });
-    const res = await apiFetchPage<BackendProductCard>(`/products?${params}`);
-    return res.data.map(mapCard);
+    const params = new URLSearchParams({
+      q: query,
+      page: String(page),
+      page_size: String(pageSize),
+    });
+    const [res, categoryMap] = await Promise.all([
+      apiFetchPage<BackendSearchDoc>(`/search?${params}`),
+      getCategoryMap(),
+    ]);
+    return {
+      data: res.data.map((d) => mapSearchDoc(d, categoryMap)),
+      total: res.meta.total,
+      page: res.meta.page,
+      pageSize: res.meta.page_size,
+      totalPages: res.meta.total_pages,
+    };
   } catch {
-    return [];
+    return { data: [], total: 0, page, pageSize, totalPages: 0 };
   }
+}
+
+export async function searchProducts(query: string, limit = 8): Promise<Product[]> {
+  // REAL API: GET /search?q=query&page_size=limit
+  const { data } = await runSearch(query, 1, limit);
+  return data;
+}
+
+export async function searchProductsPaged(
+  query: string,
+  page = 1,
+  pageSize = 24
+): Promise<PaginatedResponse<Product>> {
+  // REAL API: GET /search?q=query&page=page&page_size=pageSize
+  return runSearch(query, page, pageSize);
 }

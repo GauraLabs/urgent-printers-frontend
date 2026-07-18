@@ -1,11 +1,21 @@
-import Image from "next/image";
 import { Quote } from "lucide-react";
 import { SectionHeading } from "@/components/common/SectionHeading";
 import { StarRating } from "@/components/common/StarRating";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { Testimonial } from "@/types";
 
 interface TestimonialsSectionProps {
   testimonials: Testimonial[];
+}
+
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 }
 
 function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
@@ -17,15 +27,14 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
       </p>
       <StarRating rating={testimonial.rating} size="sm" />
       <div className="flex items-center gap-3 pt-2 border-t border-border">
-        <div className="relative w-9 h-9 rounded-full overflow-hidden bg-muted shrink-0">
-          <Image
-            src={testimonial.avatarUrl}
-            alt={testimonial.authorName}
-            fill
-            className="object-cover"
-            sizes="36px"
-          />
-        </div>
+        <Avatar className="size-9">
+          {testimonial.avatarUrl && (
+            <AvatarImage src={testimonial.avatarUrl} alt={testimonial.authorName} />
+          )}
+          <AvatarFallback className="bg-primary font-heading font-semibold text-primary-foreground">
+            {getInitials(testimonial.authorName)}
+          </AvatarFallback>
+        </Avatar>
         <div>
           <p className="font-heading font-semibold text-xs">{testimonial.authorName}</p>
           <p className="text-muted-foreground text-xs">{testimonial.company}</p>

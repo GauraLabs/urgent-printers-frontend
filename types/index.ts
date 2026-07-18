@@ -294,6 +294,8 @@ export interface OrderItem {
   artworkUrl?: string;
   artworkStatus?: string;
   templateData?: Record<string, string>;
+  // Delivered order + this customer hasn't already reviewed the product (any order, ever).
+  canReview?: boolean;
 }
 
 // Compact item shape used only in the orders list card
@@ -368,17 +370,18 @@ export interface OrderCard {
 
 // ─── Review ───────────────────────────────────────────────────────────────────
 
+export type ReviewStatus = "pending" | "approved" | "rejected";
+
 export interface Review {
   id: string;
   productId: string;
-  userId: string;
-  authorName: string;
-  authorAvatarUrl?: string;
+  reviewerName: string;
   rating: number;
   title: string;
   body: string;
-  verifiedPurchase: boolean;
+  isVerifiedPurchase: boolean;
   helpfulCount: number;
+  status: ReviewStatus;
   createdAt: string;
 }
 
@@ -398,9 +401,16 @@ export interface Testimonial {
   id: string;
   authorName: string;
   company: string;
-  avatarUrl: string;
+  avatarUrl?: string | null;
   rating: number;
   quote: string;
+}
+
+export interface Faq {
+  id: string;
+  question: string;
+  answer: string;
+  category: string | null;
 }
 
 // ─── API / Pagination ─────────────────────────────────────────────────────────
@@ -413,11 +423,14 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
+export type ProductBadgeFilter = "bestseller" | "new" | "sale" | "popular";
+
 export interface ProductFilters {
   categorySlug?: string;
   minPrice?: number;
   maxPrice?: number;
   tags?: string[];
+  badge?: ProductBadgeFilter;
   search?: string;
   sort?: "price-asc" | "price-desc" | "rating" | "newest" | "popular";
   page?: number;

@@ -46,6 +46,7 @@ interface BackendOrderItem {
   artworkUrl?: string;
   artworkStatus?: string;
   templateData?: Record<string, string>;
+  canReview?: boolean;
 }
 
 interface BackendPricing {
@@ -139,6 +140,7 @@ function mapOrderDetail(b: BackendOrderDetail): Order {
     artworkUrl:     i.artworkUrl,
     artworkStatus:  i.artworkStatus,
     templateData:   i.templateData,
+    canReview:      i.canReview ?? false,
   }));
 
   const statusHistory: OrderStatusEvent[] = b.statusHistory.map((s) => ({

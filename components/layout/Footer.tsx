@@ -3,6 +3,7 @@ import { Mail, Phone, MapPin } from "lucide-react";
 import { Logo } from "@/components/common/Logo";
 import { InstagramIcon, FacebookIcon, XIcon } from "@/components/common/SocialIcons";
 import { Separator } from "@/components/ui/separator";
+import { getNavLinks } from "@/lib/api";
 import { ROUTES } from "@/lib/constants/routes";
 
 const SOCIAL_LINKS = [
@@ -11,14 +12,7 @@ const SOCIAL_LINKS = [
   { label: "Twitter", href: "https://twitter.com/urgentprinters", icon: XIcon },
 ];
 
-const PRODUCT_LINKS = [
-  { label: "Business Cards", href: ROUTES.category("business-cards") },
-  { label: "Flyers", href: ROUTES.category("flyers") },
-  { label: "Banners", href: ROUTES.category("banners") },
-  { label: "Packaging", href: ROUTES.category("packaging") },
-  { label: "Brochures", href: ROUTES.category("brochures") },
-  { label: "Custom Merch", href: ROUTES.category("custom-merch") },
-];
+const FALLBACK_NAV_LINKS = [{ label: "Products", href: ROUTES.products }];
 
 const ACCOUNT_LINKS = [
   { label: "Sign In", href: ROUTES.login },
@@ -30,13 +24,17 @@ const ACCOUNT_LINKS = [
 
 const SUPPORT_LINKS = [
   { label: "Contact Us",          href: "/contact"                        },
+  { label: "FAQs",                href: ROUTES.faq                        },
   { label: "Artwork Guidelines",  href: "/policies/artwork-guidelines"    },
   { label: "Shipping Info",       href: "/policies/shipping"              },
   { label: "Returns Policy",      href: "/policies/returns"               },
   { label: "Privacy Policy",      href: "/policies/privacy"               },
 ];
 
-export function Footer() {
+export async function Footer() {
+  const fetchedLinks = await getNavLinks("footer");
+  const productLinks = fetchedLinks.length > 0 ? fetchedLinks : FALLBACK_NAV_LINKS;
+
   return (
     <footer className="relative mt-auto overflow-hidden border-t border-border bg-secondary/30">
       <div className="h-1 bg-gradient-to-r from-primary via-brand-orange to-primary" />
@@ -97,7 +95,7 @@ export function Footer() {
           <div>
             <h3 className="font-heading font-semibold text-sm mb-4">Products</h3>
             <ul className="space-y-2.5">
-              {PRODUCT_LINKS.map((link) => (
+              {productLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
