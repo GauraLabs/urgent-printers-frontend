@@ -17,6 +17,10 @@ import { TestimonialsSection } from "@/features/home/TestimonialsSection";
 
 export const revalidate = 60;
 
+// CategoryGrid is 2 cols (mobile) / 3 cols (desktop, first tile spans 2x2).
+// 12 is a multiple of both, so rows fill evenly with no dangling partial row.
+const HOMEPAGE_CATEGORY_LIMIT = 12;
+
 export const metadata: Metadata = {
   title: "Urgent Printers — Premium Print Solutions, Fast",
   description:
@@ -74,7 +78,7 @@ export default async function HomePage() {
       />
       <HeroBannerSection banners={banners} />
       <TrustBadges />
-      <CategoryGrid categories={categories} />
+      <CategoryGrid categories={categories.slice(0, HOMEPAGE_CATEGORY_LIMIT)} />
       <FeaturedProducts products={featured} />
       <RecommendedProducts products={recommended} />
       <HowItWorks />
