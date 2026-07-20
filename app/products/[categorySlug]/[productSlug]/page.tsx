@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { getProductBySlug, getCategoryBySlug, getCategories } from "@/lib/api";
+import { getProductBySlug, getCategoryBySlug } from "@/lib/api";
 import { Breadcrumb } from "@/components/common/Breadcrumb";
 import { StarRating } from "@/components/common/StarRating";
 import { ReviewSkeleton } from "@/components/common/ProductCardSkeleton";
@@ -39,19 +39,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+// Previously fetched every category then, per category, called getProducts
+// with pageSize: 100 in a Promise.all — one products request per category,
+// fired near-simultaneously. In `next dev`, generateStaticParams re-runs on
+// every navigation to a route it covers, so with 180+ categories in the DB
+// (including seed/test rows) this burst the backend and tripped its rate
+// limiter (429s). No path needs to be known at build time here: the page
+// already opts into on-demand ISR via `revalidate` above, so returning an
+// empty array lets each product page render (and cache) on first visit.
 export async function generateStaticParams() {
-  const categories = await getCategories();
-  const slugPairs: { categorySlug: string; productSlug: string }[] = [];
-
-  await Promise.all(
-    categories.map(async (cat) => {
-      const { getProducts } = await import("@/lib/api");
-      const { data } = await getProducts({ categorySlug: cat.slug, pageSize: 100 });
-      data.forEach((p) => slugPairs.push({ categorySlug: cat.slug, productSlug: p.slug }));
-    })
-  );
-
-  return slugPairs;
+  return [];
 }
 
 export default async function ProductDetailPage({ params }: PageProps) {

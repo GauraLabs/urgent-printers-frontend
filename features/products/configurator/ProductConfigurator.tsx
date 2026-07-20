@@ -11,7 +11,7 @@ import { makeCartItemId } from "@/features/cart/cartItemId";
 import { formatPrice, formatPricePerUnit, cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants/routes";
 import Link from "next/link";
-import type { Product, SidesOption, CartItemConfig } from "@/types";
+import type { Product, SidesOption, TurnaroundOption, CartItemConfig } from "@/types";
 
 interface ProductConfiguratorProps {
   product: Product;
@@ -96,7 +96,13 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     const [selectedFinish, setSelectedFinish] = useState(() => getDefault(printSpec.finishes));
     const [selectedSides, setSelectedSides] = useState<SidesOption | undefined>(() => getDefault(printSpec.sides));
     const [selectedQuantity, setSelectedQuantity] = useState(defaultTier.quantity);
-    const [selectedTurnaround, setSelectedTurnaround] = useState(turnaroundOptions[0]);
+    // Some legacy/seed-data products have an empty turnaround_options array
+    // from the backend — unlike size/paper/finish, turnaround is required by
+    // CartItemConfig, so a missing selection here blocks Add to Cart below
+    // rather than being silently treated as "not applicable."
+    const [selectedTurnaround, setSelectedTurnaround] = useState<TurnaroundOption | undefined>(
+      () => turnaroundOptions[0]
+    );
 
     const addItem    = useCartStore((s) => s.addItem);
     const cartItems  = useCartStore((s) => s.items);
@@ -119,7 +125,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     const finishM = selectedFinish?.priceMultiplier ?? 1;
     const sidesM  = selectedSides?.priceMultiplier ?? 1;
     const pricePerUnit = parseFloat((baseTier.pricePerUnit * sizeM * paperM * finishM * sidesM).toFixed(2));
-    const totalPrice = parseFloat((pricePerUnit * selectedQuantity + selectedTurnaround.extraCost).toFixed(2));
+    const totalPrice = parseFloat((pricePerUnit * selectedQuantity + (selectedTurnaround?.extraCost ?? 0)).toFixed(2));
 
     // Notify parent (ProductDetailClient) so StickyAddToCart stays in sync
     useEffect(() => {
@@ -148,10 +154,16 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
       // category doesn't apply to this product — not an error. Only guard
       // against the case where options exist but getDefault() still failed
       // to pick one (shouldn't normally happen given its fallback to [0]).
+      //
+      // Turnaround is different: CartItemConfig requires turnaroundId/Label/
+      // ExtraCost, so a product with no turnaround_options at all (seen on
+      // some legacy/seed-data rows from the backend) isn't orderable yet —
+      // block instead of sending an empty/invalid turnaround to the cart.
       if (
         (printSpec.sizes.length > 0 && !selectedSize) ||
         (printSpec.papers.length > 0 && !selectedPaper) ||
-        (printSpec.finishes.length > 0 && !selectedFinish)
+        (printSpec.finishes.length > 0 && !selectedFinish) ||
+        !selectedTurnaround
       ) {
         toast.error("Please select all required options", {
           description: "Some print options are missing a selection. Please try again.",
@@ -315,40 +327,52 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
           />
         </div>
 
-        {/* Turnaround */}
-        <div>
-          <SectionLabel>Turnaround Time</SectionLabel>
-          <div className="flex flex-col gap-2">
-            {turnaroundOptions.map((opt) => {
-              const costLabel = opt.extraCost > 0
-                ? `+${formatPrice(opt.extraCost)}`
-                : "Included";
-              return (
-                <SelectableCard
-                  key={opt.id}
-                  selected={selectedTurnaround.id === opt.id}
-                  onClick={() => setSelectedTurnaround(opt)}
-                  className="flex items-center justify-between px-4 py-3 rounded-xl"
-                >
-                  <div>
-                    <p className={cn("text-sm font-medium", selectedTurnaround.id === opt.id && "text-primary")}>
-                      {opt.label}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">{opt.businessDays} business days</p>
-                  </div>
-                  <span className={cn(
-                    "text-xs font-semibold px-2 py-0.5 rounded-full",
-                    opt.extraCost === 0
-                      ? "bg-success/10 text-success"
-                      : "bg-brand-orange/10 text-brand-orange"
-                  )}>
-                    {costLabel}
-                  </span>
-                </SelectableCard>
-              );
-            })}
+        {/* Turnaround — an empty list means this product's turnaround_options
+            weren't set up on the backend; it isn't orderable until they are,
+            so we surface that instead of rendering an empty/broken picker. */}
+        {turnaroundOptions.length > 0 ? (
+          <div>
+            <SectionLabel>Turnaround Time</SectionLabel>
+            <div className="flex flex-col gap-2">
+              {turnaroundOptions.map((opt) => {
+                const costLabel = opt.extraCost > 0
+                  ? `+${formatPrice(opt.extraCost)}`
+                  : "Included";
+                return (
+                  <SelectableCard
+                    key={opt.id}
+                    selected={selectedTurnaround?.id === opt.id}
+                    onClick={() => setSelectedTurnaround(opt)}
+                    className="flex items-center justify-between px-4 py-3 rounded-xl"
+                  >
+                    <div>
+                      <p className={cn("text-sm font-medium", selectedTurnaround?.id === opt.id && "text-primary")}>
+                        {opt.label}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">{opt.businessDays} business days</p>
+                    </div>
+                    <span className={cn(
+                      "text-xs font-semibold px-2 py-0.5 rounded-full",
+                      opt.extraCost === 0
+                        ? "bg-success/10 text-success"
+                        : "bg-brand-orange/10 text-brand-orange"
+                    )}>
+                      {costLabel}
+                    </span>
+                  </SelectableCard>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div>
+            <SectionLabel>Turnaround Time</SectionLabel>
+            <div className="rounded-xl border border-dashed border-border p-3 flex items-center gap-2 text-xs text-muted-foreground">
+              <Info size={14} className="shrink-0" />
+              Turnaround options aren&rsquo;t available for this product yet. Please contact support to place an order.
+            </div>
+          </div>
+        )}
 
         {/* Add to Cart / Update Cart button */}
         <div className="flex flex-col gap-2">
