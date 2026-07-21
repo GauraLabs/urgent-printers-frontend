@@ -200,6 +200,8 @@ export interface CreateOrderItem {
   productId: string;
   productSlug: string;
   productName: string;
+  categoryName?: string;
+  thumbnailUrl?: string;
   sizeId?: string;
   sizeLabel?: string;
   paperId?: string;

@@ -11,9 +11,10 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { ROUTES } from "@/lib/constants/routes";
 import { buttonVariants } from "@/components/ui/button";
-import { formatPrice, formatPricePerUnit, cn, slugify } from "@/lib/utils";
+import { formatPrice, formatPricePerUnit, cn } from "@/lib/utils";
 import { getOrderById, downloadReceipt } from "@/lib/api";
 import { useAuthStore } from "@/features/auth/store";
+import { useOrderItemCategorySlugs } from "@/hooks/useOrderItemCategorySlugs";
 import type { Order } from "@/types";
 
 export default function OrderConfirmationPage() {
@@ -22,6 +23,8 @@ export default function OrderConfirmationPage() {
   const [order,       setOrder]       = useState<Order | null>(null);
   const [loading,     setLoading]     = useState(true);
   const [downloading, setDownloading] = useState(false);
+
+  const categorySlugs = useOrderItemCategorySlugs(order?.items);
 
   useEffect(() => {
     if (!token || !orderId) return;
@@ -94,7 +97,7 @@ export default function OrderConfirmationPage() {
             {/* Items */}
             <div className="divide-y divide-border">
               {order.items.map((item) => {
-                const categorySlug = item.categoryName ? slugify(item.categoryName) : "products";
+                const categorySlug = categorySlugs[item.productSlug];
                 return (
                   <div key={item.id} className="flex gap-3 px-5 py-4">
                     <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-muted border border-border shrink-0">
@@ -107,12 +110,16 @@ export default function OrderConfirmationPage() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <Link
-                        href={ROUTES.product(categorySlug, item.productSlug)}
-                        className="font-semibold text-sm hover:text-primary transition-colors line-clamp-1"
-                      >
-                        {item.productName}
-                      </Link>
+                      {categorySlug ? (
+                        <Link
+                          href={ROUTES.product(categorySlug, item.productSlug)}
+                          className="font-semibold text-sm hover:text-primary transition-colors line-clamp-1"
+                        >
+                          {item.productName}
+                        </Link>
+                      ) : (
+                        <p className="font-semibold text-sm line-clamp-1">{item.productName}</p>
+                      )}
                       {(() => {
                         const specLine = [item.sizeLabel, item.paperLabel, item.finishLabel].filter(
                           (v): v is string => Boolean(v)

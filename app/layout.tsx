@@ -6,6 +6,7 @@ import { QueryProvider } from "@/components/providers/QueryProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { TokenRefreshProvider } from "@/features/auth/TokenRefreshProvider";
 import { CartSyncProvider } from "@/features/cart/CartSyncProvider";
+import { WishlistSyncProvider } from "@/features/wishlist/WishlistSyncProvider";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <QueryProvider>
           <TokenRefreshProvider>
           <CartSyncProvider>
+          <WishlistSyncProvider>
           <ThemeProvider>
             <AnnouncementBar />
             <Header />
@@ -52,6 +54,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               }}
             />
           </ThemeProvider>
+          </WishlistSyncProvider>
           </CartSyncProvider>
           </TokenRefreshProvider>
         </QueryProvider>
