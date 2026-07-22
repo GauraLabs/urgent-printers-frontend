@@ -160,6 +160,58 @@
   --chart-5: oklch(0.68 0.01 35);
 }
 
+/* First-ever visit — no color-mode cookie exists yet, so app/layout.tsx
+   couldn't add an explicit .dark/.light class server-side. This pure-CSS
+   fallback gives crawlers and first paint a deterministic dark/light result
+   with zero client-side flash. The instant a preference is known (cookie
+   set on toggle), ThemeProvider applies an explicit .dark or .light class,
+   which always wins over this media query via the :not() guards below. */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light):not(.dark) {
+    --primary: oklch(0.74 0.12 35);
+    --primary-foreground: oklch(0.18 0.02 40);
+    --brand-orange: oklch(0.78 0.15 55);
+    --brand-orange-foreground: oklch(0.16 0.02 55);
+    --background: oklch(0.16 0.015 35);
+    --foreground: oklch(0.95 0.01 35);
+    --card: oklch(0.20 0.015 35);
+    --card-foreground: oklch(0.95 0.01 35);
+    --popover: oklch(0.20 0.015 35);
+    --popover-foreground: oklch(0.95 0.01 35);
+    --secondary: oklch(0.26 0.03 35);
+    --secondary-foreground: oklch(0.95 0.01 35);
+    --muted: oklch(0.24 0.015 35);
+    --muted-foreground: oklch(0.68 0.01 35);
+    --accent: oklch(0.28 0.05 55);
+    --accent-foreground: oklch(0.85 0.10 55);
+    --destructive: oklch(0.704 0.191 22.216);
+    --success: oklch(0.62 0.13 145);
+    --success-foreground: oklch(0.98 0 0);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.74 0.12 35);
+    --sidebar: oklch(0.20 0.015 35);
+    --sidebar-foreground: oklch(0.95 0.01 35);
+    --sidebar-primary: oklch(0.74 0.12 35);
+    --sidebar-primary-foreground: oklch(0.18 0.02 40);
+    --sidebar-accent: oklch(0.26 0.03 35);
+    --sidebar-accent-foreground: oklch(0.95 0.01 35);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.74 0.12 35);
+    --chart-1: oklch(0.74 0.12 35);
+    --chart-2: oklch(0.78 0.15 55);
+    --chart-3: oklch(0.62 0.13 145);
+    --chart-4: oklch(0.65 0.15 320);
+    --chart-5: oklch(0.68 0.01 35);
+  }
+}
+
+/* Marker only — :root already holds the light-mode token values. Its sole
+   purpose is to opt <html> out of the prefers-color-scheme fallback above
+   once an explicit "light" choice is known (cookie/localStorage present). */
+.light {
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    PREMIUM THEME VARIANTS — each .theme-* class overrides the primary palette
    tokens on top of the Rose Gold Boutique defaults. Dark mode still works

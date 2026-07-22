@@ -48,3 +48,10 @@ export const THEMES: Theme[] = [
 ];
 
 export const DEFAULT_THEME: ThemeId = "roseGold";
+
+// localStorage key for the dark/light preference. Read by the blocking
+// inline script in app/layout.tsx (before hydration, to paint the right
+// mode with zero flicker) and by features/theme/store.ts (kept in sync on
+// toggle) — kept here so both sides share one name instead of duplicating
+// the literal.
+export const COLOR_MODE_STORAGE_KEY = "color-mode";

@@ -153,10 +153,12 @@ urgent-printers-frontend/
 | Variable | Description | Required |
 |---|---|---|
 | `NEXT_PUBLIC_SITE_URL` | Production URL (e.g. `https://urgentprinters.com`) | Yes (for sitemap + OG URLs) |
+| `REVALIDATE_SECRET` | Shared secret checked on incoming `X-Revalidate-Secret` header at `app/api/revalidate/theme/route.ts`. Must match `REVALIDATE_SECRET` configured on `urgent-printers-backend` exactly — the backend calls this route as a webhook after an admin theme change, using this value to authenticate the request. Server-side only, never `NEXT_PUBLIC_*`. | Yes (for the admin theme-revalidation webhook) |
 
 Set in `.env.local` for local development:
 ```bash
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+REVALIDATE_SECRET=<same value as the backend's REVALIDATE_SECRET>
 ```
 
 ---
@@ -186,7 +188,7 @@ Key integrations to add for production:
 ## Deploy on Vercel
 
 1. Push to GitHub and import the repo on [vercel.com](https://vercel.com)
-2. Set environment variable: `NEXT_PUBLIC_SITE_URL=https://urgentprinters.com`
+2. Set environment variables: `NEXT_PUBLIC_SITE_URL=https://urgentprinters.com` and `REVALIDATE_SECRET` (must match the backend's value — see [Environment Variables](#environment-variables))
 3. Set production branch to `main` in Vercel project settings
 
 The `build` script (`next build && next-sitemap`) runs automatically on every deploy.

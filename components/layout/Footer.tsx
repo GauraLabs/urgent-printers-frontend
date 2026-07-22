@@ -7,8 +7,8 @@ import { getNavLinks } from "@/lib/api";
 import { ROUTES } from "@/lib/constants/routes";
 
 const SOCIAL_LINKS = [
-  { label: "Instagram", href: "https://www.instagram.com/urgentprinters", icon: InstagramIcon },
-  { label: "Facebook", href: "https://www.facebook.com/urgentprinters", icon: FacebookIcon },
+  { label: "Instagram", href: "https://www.instagram.com/urgent_printers_2026", icon: InstagramIcon },
+  { label: "Facebook", href: "https://www.facebook.com/people/Urgent-Printers/61591832844842/", icon: FacebookIcon },
   { label: "Twitter", href: "https://twitter.com/urgentprinters", icon: XIcon },
 ];
 
