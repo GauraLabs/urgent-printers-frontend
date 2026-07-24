@@ -2,6 +2,7 @@
 
 import { Heart } from "lucide-react";
 import { useWishlistStore } from "@/features/wishlist/store";
+import { useMounted } from "@/hooks/useMounted";
 import { cn } from "@/lib/utils";
 
 interface WishlistButtonProps {
@@ -12,8 +13,10 @@ interface WishlistButtonProps {
 }
 
 export function WishlistButton({ productId, productSlug, productName, productImage }: WishlistButtonProps) {
+  const mounted = useMounted();
   const toggleItem = useWishlistStore((s) => s.toggleItem);
-  const isWishlisted = useWishlistStore((s) => s.isWishlisted(productId));
+  const wishlisted = useWishlistStore((s) => s.isWishlisted(productId));
+  const isWishlisted = mounted && wishlisted;
 
   function handleClick(e: React.MouseEvent) {
     e.preventDefault();
