@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-interface WishlistItem {
+export interface WishlistItem {
   productId: string;
   productSlug: string;
   productName: string;
@@ -18,6 +18,7 @@ interface WishlistStore {
   removeItem: (productId: string) => void;
   toggleItem: (item: Omit<WishlistItem, "addedAt">) => void;
   isWishlisted: (productId: string) => boolean;
+  setItems: (items: WishlistItem[]) => void;
   clearWishlist: () => void;
 }
 
@@ -48,6 +49,8 @@ export const useWishlistStore = create<WishlistStore>()(
 
       isWishlisted: (productId) =>
         get().items.some((i) => i.productId === productId),
+
+      setItems: (items) => set({ items }),
 
       clearWishlist: () => set({ items: [] }),
     }),

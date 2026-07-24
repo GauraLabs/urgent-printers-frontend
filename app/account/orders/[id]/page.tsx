@@ -8,10 +8,11 @@ import { ArrowLeft, ExternalLink, Loader2, XCircle, Lock, CreditCard, Download, 
 import { getOrderById, cancelOrder, verifyPayment, downloadReceipt } from "@/lib/api";
 import ItemProofPanel from "./ItemProofPanel";
 import { useAuthStore } from "@/features/auth/store";
+import { useOrderItemCategorySlugs } from "@/hooks/useOrderItemCategorySlugs";
 import { OrderStatusTracker } from "@/features/account/OrderStatusTracker";
 import { Separator } from "@/components/ui/separator";
 import { ROUTES } from "@/lib/constants/routes";
-import { formatPrice, formatPricePerUnit, slugify } from "@/lib/utils";
+import { formatPrice, formatPricePerUnit } from "@/lib/utils";
 import { ORDER_STATUS_LABELS } from "@/lib/constants/print-specs";
 import { RAZORPAY_THEME_COLOR } from "@/lib/constants/payment";
 import { toast } from "sonner";
@@ -42,6 +43,8 @@ export default function OrderDetailPage() {
   const [cancelling,  setCancelling]  = useState(false);
   const [retrying,    setRetrying]    = useState(false);
   const [downloading, setDownloading] = useState(false);
+
+  const categorySlugs = useOrderItemCategorySlugs(order?.items);
 
   useEffect(() => {
     if (!token || !id) return;
@@ -299,7 +302,7 @@ export default function OrderDetailPage() {
         </div>
         <div className="divide-y divide-border">
           {order.items.map((item) => {
-            const categorySlug = item.categoryName ? slugify(item.categoryName) : "products";
+            const categorySlug = categorySlugs[item.productSlug];
             return (
               <div key={item.id}>
               <div className="flex gap-4 p-5">
@@ -313,12 +316,23 @@ export default function OrderDetailPage() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <Link
-                    href={ROUTES.product(categorySlug, item.productSlug)}
-                    className="font-semibold text-sm hover:text-primary transition-colors line-clamp-1"
-                  >
-                    {item.productName}
-                  </Link>
+                  {categorySlug ? (
+                    <Link
+                      href={ROUTES.product(categorySlug, item.productSlug)}
+                      className="font-semibold text-sm hover:text-primary transition-colors line-clamp-1"
+                    >
+                      {item.productName}
+                    </Link>
+                  ) : (
+                    <p className="font-semibold text-sm line-clamp-1">
+                      {item.productName}
+                      {categorySlug === null && (
+                        <span className="block text-[10px] font-normal text-muted-foreground">
+                          No longer available
+                        </span>
+                      )}
+                    </p>
+                  )}
                   <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
                     {(() => {
                       const specLine = [item.sizeLabel, item.paperLabel, item.finishLabel].filter(

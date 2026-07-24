@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, Trash2, ArrowRight } from "lucide-react";
+import { Heart, ImageIcon, Trash2, ArrowRight } from "lucide-react";
 import { useWishlistStore } from "@/features/wishlist/store";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ROUTES } from "@/lib/constants/routes";
@@ -36,8 +36,12 @@ export default function SavedItemsPage() {
               className="flex gap-4 p-4 rounded-2xl border border-border bg-card"
             >
               <Link href={ROUTES.product(item.productSlug.split("-").slice(0, -2).join("-") || "products", item.productSlug)}>
-                <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-muted shrink-0">
-                  <Image src={item.productImage} alt={item.productName} fill className="object-cover" sizes="80px" />
+                <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-muted shrink-0 flex items-center justify-center">
+                  {item.productImage ? (
+                    <Image src={item.productImage} alt={item.productName} fill className="object-cover" sizes="80px" />
+                  ) : (
+                    <ImageIcon size={20} className="text-muted-foreground" />
+                  )}
                 </div>
               </Link>
               <div className="flex-1 min-w-0 flex flex-col justify-between">

@@ -3,20 +3,28 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Package, Heart, MapPin, ArrowRight, Clock, Loader2 } from "lucide-react";
-import { getOrders } from "@/lib/api";
+import { getOrders, getAddresses } from "@/lib/api";
 import { useAuthStore } from "@/features/auth/store";
+import { useWishlistStore } from "@/features/wishlist/store";
+import { useMounted } from "@/hooks/useMounted";
 import { ROUTES } from "@/lib/constants/routes";
 import { formatPrice } from "@/lib/utils";
 import { ORDER_STATUS_LABELS } from "@/lib/constants/print-specs";
 import { ORDER_STATUS_COLORS } from "@/lib/constants/order-status";
-import type { OrderCard } from "@/types";
+import type { Address, OrderCard } from "@/types";
 
 export default function DashboardPage() {
   const user  = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
 
+  const mounted = useMounted();
+  const wishlistCount = useWishlistStore((s) => s.items.length);
+
   const [orders,  setOrders]  = useState<OrderCard[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [addressesLoading, setAddressesLoading] = useState(true);
 
   useEffect(() => {
     if (!token || !user) return;
@@ -25,13 +33,20 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, [token, user]);
 
+  useEffect(() => {
+    if (!token || !user) return;
+    getAddresses(user.id, token)
+      .then(setAddresses)
+      .finally(() => setAddressesLoading(false));
+  }, [token, user]);
+
   const activeCount = orders.filter((o) => !["delivered", "cancelled"].includes(o.status)).length;
 
   const stats = [
-    { label: "Total Orders",  value: loading ? "…" : orders.length, icon: Package, href: ROUTES.accountOrders    },
-    { label: "Active Orders", value: loading ? "…" : activeCount,   icon: Clock,   href: ROUTES.accountOrders    },
-    { label: "Saved Items",   value: "View",                         icon: Heart,   href: ROUTES.accountSaved     },
-    { label: "Addresses",     value: "Manage",                       icon: MapPin,  href: ROUTES.accountAddresses },
+    { label: "Total Orders",  value: loading ? "…" : orders.length,             icon: Package, href: ROUTES.accountOrders    },
+    { label: "Active Orders", value: loading ? "…" : activeCount,               icon: Clock,   href: ROUTES.accountOrders    },
+    { label: "Saved Items",   value: !mounted ? "…" : wishlistCount,            icon: Heart,   href: ROUTES.accountSaved     },
+    { label: "Addresses",     value: addressesLoading ? "…" : addresses.length, icon: MapPin,  href: ROUTES.accountAddresses },
   ];
 
   return (

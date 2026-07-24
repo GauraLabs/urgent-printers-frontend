@@ -55,7 +55,7 @@ The auth store also has `_isHydrated` / `_setHydrated` via `onRehydrateStorage` 
 - **"Rose Gold Boutique"** premium palette — blush/ivory backgrounds, rose-gold/copper primary, warm gold accents
 - **Primary:** Rose Gold / Copper `oklch(0.50 0.13 35)` → `bg-primary`
 - **CTA:** Warm Gold `oklch(0.72 0.16 55)` → `bg-brand-orange text-brand-orange-foreground`
-- **4 themes:** `roseGold` (default, rootless `:root`) · `gold` ("Royal Gold & Ivory") · `emerald` ("Emerald & Gold Heritage") · `slate` ("Slate Luxury") — non-default variants applied as `.theme-*` class on `<html>`; defined in `lib/themes.ts`
+- **6 themes:** `roseGold` (default, rootless `:root`) · `gold` ("Royal Gold & Ivory") · `emerald` ("Emerald & Gold Heritage") · `slate` ("Slate Luxury") · `pink` ("Blush Pink") · `plum` ("Orchid Plum") — non-default variants applied as `.theme-*` class on `<html>`; defined in `lib/themes.ts`; all 6 are admin-selectable
 - **Headings:** `font-heading` (Cormorant Garamond via `--font-display`)
 - **Body:** `font-sans` (DM Sans via `--font-dm-sans`)
 - **Border radius base:** `0.75rem` (modern, rounded)

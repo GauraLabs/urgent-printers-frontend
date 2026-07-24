@@ -55,8 +55,8 @@ const organizationJsonLd = {
     availableLanguage: ["English", "Hindi"],
   },
   sameAs: [
-    "https://www.instagram.com/urgentprinters",
-    "https://www.facebook.com/urgentprinters",
+    "https://www.instagram.com/urgent_printers_2026",
+    "https://www.facebook.com/people/Urgent-Printers/61591832844842/",
     "https://twitter.com/urgentprinters",
   ],
 };
