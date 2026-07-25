@@ -239,8 +239,8 @@ export default function OrderConfirmationPage() {
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
-              href={ROUTES.accountOrders}
-              className={cn(buttonVariants(), "flex-1 gap-2 bg-primary hover:bg-primary/90 text-primary-foreground justify-center")}
+              href={ROUTES.accountOrder(order.id)}
+              className={cn(buttonVariants({ size: "xl" }), "w-full sm:flex-1 gap-2 bg-primary hover:bg-primary/90 text-primary-foreground justify-center")}
             >
               Track Your Order <ArrowRight size={15} />
             </Link>
@@ -248,7 +248,7 @@ export default function OrderConfirmationPage() {
               onClick={handleDownload}
               disabled={downloading}
               className={cn(
-                buttonVariants({ variant: "outline" }),
+                buttonVariants({ variant: "outline", size: "xl" }),
                 "gap-2 justify-center disabled:opacity-60"
               )}
             >
@@ -259,7 +259,7 @@ export default function OrderConfirmationPage() {
             </button>
             <button
               onClick={() => window.print()}
-              className={cn(buttonVariants({ variant: "outline" }), "gap-2 justify-center")}
+              className={cn(buttonVariants({ variant: "outline", size: "xl" }), "gap-2 justify-center")}
             >
               <Printer size={14} /> Print
             </button>

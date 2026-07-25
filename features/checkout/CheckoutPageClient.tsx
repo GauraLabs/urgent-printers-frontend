@@ -113,8 +113,21 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
       const order = await trackConnectivity(createOrder(buildRequest(address), token));
 
       // ── COD: no payment gateway needed ──────────────────────────────────────
-      if (paymentMethod === "cod" || !order.payment?.razorpayOrderId) {
+      if (paymentMethod === "cod") {
         finishOrder(order.id);
+        return;
+      }
+
+      // ── Online payment: razorpayOrderId is required to open the gateway.
+      // If it's missing, the order was created but never got a payment
+      // session — do NOT treat this as success (that would confirm an unpaid
+      // order). Surface an error and keep the user on checkout to retry.
+      if (!order.payment?.razorpayOrderId) {
+        toast.error(
+          `Could not start payment for order #${order.orderNumber}. Please retry from My Orders — you have not been charged.`,
+          { duration: 10000 }
+        );
+        setIsPlacing(false);
         return;
       }
 
