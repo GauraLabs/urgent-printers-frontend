@@ -13,6 +13,7 @@ import { slugify } from "@/lib/utils";
 import { delay } from "./delay";
 import { apiFetch, apiFetchPage } from "./client";
 import { getCategories } from "./categories";
+import { logApiError } from "./logApiError";
 
 // ─── Backend shapes ───────────────────────────────────────────────────────────
 
@@ -340,7 +341,8 @@ export async function getProducts(
       pageSize: res.meta.page_size,
       totalPages: res.meta.total_pages,
     };
-  } catch {
+  } catch (err) {
+    logApiError("getProducts", err);
     return { data: [], total: 0, page: 1, pageSize: 12, totalPages: 0 };
   }
 }
@@ -354,7 +356,8 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
     const data = await apiFetch<BackendProductDetail>(`/products/${slug}`);
     return mapDetail(data);
-  } catch {
+  } catch (err) {
+    logApiError(`getProductBySlug(${slug})`, err);
     return null;
   }
 }
@@ -368,7 +371,8 @@ export async function getFeaturedProducts(): Promise<Product[]> {
   try {
     const data = await apiFetch<BackendProductCard[]>("/products/featured?limit=8");
     return data.map(mapCard);
-  } catch {
+  } catch (err) {
+    logApiError("getFeaturedProducts", err);
     return [];
   }
 }
@@ -392,7 +396,8 @@ export async function getRelatedProducts(
       .map(mapCard)
       .filter((p) => p.id !== productId)
       .slice(0, limit);
-  } catch {
+  } catch (err) {
+    logApiError(`getRelatedProducts(${categorySlug})`, err);
     return [];
   }
 }
@@ -409,7 +414,8 @@ export async function getRecommendedProducts(
   try {
     const data = await apiFetch<BackendProductCard[]>(`/products/recommended?limit=${limit}`);
     return data.map(mapCard).filter((p) => !excludeIds.includes(p.id));
-  } catch {
+  } catch (err) {
+    logApiError("getRecommendedProducts", err);
     return [];
   }
 }
@@ -472,7 +478,8 @@ async function runSearch(
       pageSize: res.meta.page_size,
       totalPages: res.meta.total_pages,
     };
-  } catch {
+  } catch (err) {
+    logApiError(`runSearch(${query})`, err);
     return { data: [], total: 0, page, pageSize, totalPages: 0 };
   }
 }

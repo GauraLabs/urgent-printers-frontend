@@ -1,5 +1,6 @@
 import type { Review, ReviewStatus } from "@/types";
 import { apiFetch, apiFetchPage } from "./client";
+import { logApiError } from "./logApiError";
 
 // ─── Backend shape (snake_case — reviews are not alias_generator=to_camel) ────
 
@@ -43,7 +44,7 @@ export async function getReviewsByProduct(productSlug: string): Promise<Review[]
     const res = await apiFetchPage<BackendReview>(`/products/${productSlug}/reviews`);
     return res.data.map(mapReview);
   } catch (err) {
-    console.error(`Failed to fetch reviews for product "${productSlug}"`, err);
+    logApiError(`getReviewsByProduct(${productSlug})`, err);
     return [];
   }
 }

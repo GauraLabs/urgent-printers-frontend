@@ -7,6 +7,8 @@ import { TokenRefreshProvider } from "@/features/auth/TokenRefreshProvider";
 import { CartSyncProvider } from "@/features/cart/CartSyncProvider";
 import { WishlistSyncProvider } from "@/features/wishlist/WishlistSyncProvider";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
+import { SiteStatusBanner } from "@/components/layout/SiteStatusBanner";
+import { DegradedStatusBanner } from "@/components/layout/DegradedStatusBanner";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
@@ -52,6 +54,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <TokenRefreshProvider>
           <CartSyncProvider>
           <WishlistSyncProvider>
+            <SiteStatusBanner />
+            <DegradedStatusBanner />
             <AnnouncementBar />
             <Header />
             <main className="flex-1 pb-16 lg:pb-0">{children}</main>

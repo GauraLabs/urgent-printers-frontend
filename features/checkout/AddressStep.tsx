@@ -15,6 +15,7 @@ import { FormField } from "@/components/common/FormField";
 import { SelectableCard } from "@/components/ui/selectable-card";
 import { useAuthStore } from "@/features/auth/store";
 import { getAddresses, createAddress } from "@/lib/api";
+import { trackConnectivity } from "@/features/site-status/trackConnectivity";
 import { lookupPincode } from "@/lib/pincode";
 import { cn } from "@/lib/utils";
 import type { Address } from "@/types";
@@ -71,11 +72,11 @@ function NewAddressForm({
 
   async function onSubmit(data: FormValues) {
     try {
-      const created = await createAddress(
+      const created = await trackConnectivity(createAddress(
         userId,
         { ...data, line2: data.line2 || undefined, country: "India", isDefault: false },
         token
-      );
+      ));
       onSave(created);
       toast.success("Address saved.");
     } catch {
@@ -167,7 +168,7 @@ export function AddressStep({ onNext }: AddressStepProps) {
 
   useEffect(() => {
     if (!token || !user) return;
-    getAddresses(user.id, token)
+    trackConnectivity(getAddresses(user.id, token))
       .then((data) => {
         setAddresses(data);
         const def = data.find((a) => a.isDefault) ?? data[0];

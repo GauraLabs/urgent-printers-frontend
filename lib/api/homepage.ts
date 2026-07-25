@@ -2,6 +2,7 @@ import type { HeroBanner, Testimonial } from "@/types";
 import { mockHeroBanners, mockTestimonials } from "@/lib/mock-data";
 import { delay } from "./delay";
 import { apiFetch } from "./client";
+import { logApiError } from "./logApiError";
 
 // ─── Backend shapes ───────────────────────────────────────────────────────────
 
@@ -72,7 +73,8 @@ export async function getHeroBanners(): Promise<HeroBanner[]> {
   try {
     const data = await apiFetch<BackendBanner[]>("/content/banners");
     return data.map(mapBanner);
-  } catch {
+  } catch (err) {
+    logApiError("getHeroBanners", err);
     return [];
   }
 }
@@ -86,7 +88,8 @@ export async function getTestimonials(): Promise<Testimonial[]> {
   try {
     const data = await apiFetch<BackendTestimonial[]>("/content/testimonials");
     return data.map(mapTestimonial);
-  } catch {
+  } catch (err) {
+    logApiError("getTestimonials", err);
     return [];
   }
 }
@@ -98,7 +101,8 @@ export async function getAnnouncement(): Promise<BackendAnnouncement | null> {
   }
   try {
     return await apiFetch<BackendAnnouncement | null>("/content/announcement");
-  } catch {
+  } catch (err) {
+    logApiError("getAnnouncement", err);
     return null;
   }
 }

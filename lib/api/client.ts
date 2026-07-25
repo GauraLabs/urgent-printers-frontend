@@ -1,15 +1,23 @@
+import { logApiError } from "./logApiError";
+
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
 
 // Carries the HTTP status code alongside the server's error message so
 // callers that need to branch on specific statuses (403/404/409/422, etc.)
 // don't have to parse it back out of a generic Error's message string.
+// `code` carries the backend's `error` field (see backend app/core/exceptions.py
+// `_error_response`) so callers can branch on a specific failure kind — e.g.
+// distinguishing a 503 "orders_halted" from a generic 503 infrastructure
+// outage — without string-matching `message`.
 export class ApiError extends Error {
   readonly status: number;
+  readonly code?: string;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, code?: string) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -79,7 +87,8 @@ async function handleUnauthorized(
     });
 
     return retryRes.ok ? retryRes : null; // retry also failed — fall through to error
-  } catch {
+  } catch (err) {
+    logApiError("handleUnauthorized", err);
     return null;
   }
 }
@@ -115,11 +124,15 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   }
 
   let detail = "";
+  let code: string | undefined;
   try {
-    const errJson = await res.json() as { message?: string; detail?: string };
+    const errJson = await res.json() as { message?: string; detail?: string; error?: string };
     detail = errJson.message ?? errJson.detail ?? "";
-  } catch { /* non-JSON error body */ }
-  throw new ApiError(detail || `API ${res.status}: ${path}`, res.status);
+    code = errJson.error;
+  } catch (err) {
+    logApiError(`apiFetch(${path}) — non-JSON error body`, err);
+  }
+  throw new ApiError(detail || `API ${res.status}: ${path}`, res.status, code);
 }
 
 export async function apiFetchPage<T>(path: string, init?: RequestInit): Promise<BackendPage<T>> {

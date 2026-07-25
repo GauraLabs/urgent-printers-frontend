@@ -1,6 +1,7 @@
 import type { Faq } from "@/types";
 import { delay } from "./delay";
 import { apiFetch } from "./client";
+import { logApiError } from "./logApiError";
 
 // ─── Backend shapes ───────────────────────────────────────────────────────────
 
@@ -35,7 +36,8 @@ export async function getFaqs(): Promise<Faq[]> {
   try {
     const data = await apiFetch<BackendFaq[]>("/content/faqs");
     return data.map(mapFaq);
-  } catch {
+  } catch (err) {
+    logApiError("getFaqs", err);
     return [];
   }
 }
