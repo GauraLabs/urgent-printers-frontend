@@ -10,6 +10,7 @@ import { useCartStore } from "@/features/cart/store";
 import { useAuthStore } from "@/features/auth/store";
 import { useMounted } from "@/hooks/useMounted";
 import { validateCoupon } from "@/lib/api";
+import { trackConnectivity } from "@/features/site-status/trackConnectivity";
 import { ROUTES } from "@/lib/constants/routes";
 import { formatPrice, formatPricePerUnit, slugify, cn } from "@/lib/utils";
 
@@ -84,7 +85,7 @@ export default function CartPage() {
     setPromoError("");
     setValidating(true);
     try {
-      const coupon = await validateCoupon(code, subtotal, token);
+      const coupon = await trackConnectivity(validateCoupon(code, subtotal, token));
       setAppliedCoupon(coupon);
       setPromoInput("");
     } catch (err) {

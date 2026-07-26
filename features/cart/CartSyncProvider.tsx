@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useAuthStore } from "@/features/auth/store";
 import { useCartStore } from "./store";
 import { getCart, syncCart } from "@/lib/api";
+import { trackConnectivity } from "@/features/site-status/trackConnectivity";
 import type { CartItem } from "@/types";
 
 // Local wins on conflict — guest's latest intent takes priority over an old server item
@@ -46,12 +47,12 @@ export function CartSyncProvider({ children }: { children: React.ReactNode }) {
 
     void (async () => {
       try {
-        const serverItems = await getCart(token);
+        const serverItems = await trackConnectivity(getCart(token));
         const localItems  = useCartStore.getState().items;
 
         if (serverItems.length === 0) {
           // Nothing on server — push local cart up (handles first login + page refresh)
-          if (localItems.length > 0) await syncCart(localItems, token);
+          if (localItems.length > 0) await trackConnectivity(syncCart(localItems, token));
           return;
         }
 
@@ -65,7 +66,7 @@ export function CartSyncProvider({ children }: { children: React.ReactNode }) {
         const merged = mergeCartItems(localItems, serverItems);
         const addedFromServer = merged.length > localItems.length;
         setItems(merged);
-        await syncCart(merged, token);
+        await trackConnectivity(syncCart(merged, token));
 
         if (addedFromServer) {
           toast.success("Cart updated", {
@@ -89,7 +90,7 @@ export function CartSyncProvider({ children }: { children: React.ReactNode }) {
       const t    = tokenRef.current;
       const auth = useAuthStore.getState().isAuthenticated;
       if (!auth || !t) return;
-      void syncCart(useCartStore.getState().items, t).catch(() => {});
+      void trackConnectivity(syncCart(useCartStore.getState().items, t)).catch(() => {});
     }, 500);
 
     return () => clearTimeout(syncTimerRef.current);

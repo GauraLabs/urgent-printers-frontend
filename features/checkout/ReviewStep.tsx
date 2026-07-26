@@ -24,6 +24,8 @@ interface ReviewStepProps {
   onPlaceOrder: () => Promise<void>;
   onBack: () => void;
   isPlacing: boolean;
+  ordersHalted: boolean;
+  haltMessage: string | null;
 }
 
 const PAYMENT_LABELS: Record<PaymentMethod, string> = {
@@ -35,6 +37,7 @@ export function ReviewStep({
   items, address, paymentMethod,
   preview, previewLoading, previewError,
   onPlaceOrder, onBack, isPlacing,
+  ordersHalted, haltMessage,
 }: ReviewStepProps) {
   const appliedCoupon = useCartStore((s) => s.appliedCoupon);
 
@@ -287,6 +290,20 @@ export function ReviewStep({
         </div>
       )}
 
+      {/* Order-halt notice — separate from the pricing-preview error above;
+          this blocks placing the order rather than just estimating it */}
+      {ordersHalted && (
+        <div className="flex items-start gap-2 p-3 rounded-xl bg-destructive/5 border border-destructive/20 text-xs">
+          <AlertCircle size={14} className="text-destructive shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-destructive">Orders temporarily paused</p>
+            <p className="text-muted-foreground mt-0.5">
+              {haltMessage ?? "We're not accepting new orders right now. Please check back shortly."}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex gap-3">
         <button
@@ -298,7 +315,7 @@ export function ReviewStep({
         </button>
         <button
           onClick={onPlaceOrder}
-          disabled={isPlacing || previewLoading}
+          disabled={isPlacing || previewLoading || ordersHalted}
           className={cn(
             "flex-1 h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2",
             "bg-brand-orange hover:bg-brand-orange/90 text-brand-orange-foreground",
@@ -315,6 +332,8 @@ export function ReviewStep({
               <Loader2 size={16} className="animate-spin" />
               Verifying order…
             </>
+          ) : ordersHalted ? (
+            "Orders paused"
           ) : paymentMethod === "cod" ? (
             <>Place Order · {formatPrice(total)}</>
           ) : (

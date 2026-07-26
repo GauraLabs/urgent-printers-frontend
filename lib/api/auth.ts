@@ -1,5 +1,6 @@
 import type { User } from "@/types";
 import { apiFetch } from "./client";
+import { logApiError } from "./logApiError";
 
 const AUTH = "/auth";
 
@@ -191,7 +192,8 @@ export async function getMe(token: string): Promise<User | null> {
       headers: { Authorization: `Bearer ${token}` },
     });
     return mapUser(res);
-  } catch {
+  } catch (err) {
+    logApiError("getMe", err);
     return null;
   }
 }
@@ -205,7 +207,8 @@ export async function refreshTokens(): Promise<string | null> {
       method: "POST",
     });
     return res.access_token;
-  } catch {
+  } catch (err) {
+    logApiError("refreshTokens", err);
     return null;
   }
 }

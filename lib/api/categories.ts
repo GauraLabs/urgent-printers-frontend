@@ -2,6 +2,7 @@ import type { Category } from "@/types";
 import { mockCategories } from "@/lib/mock-data";
 import { delay } from "./delay";
 import { apiFetch } from "./client";
+import { logApiError } from "./logApiError";
 
 // ─── Backend shape ────────────────────────────────────────────────────────────
 
@@ -52,7 +53,8 @@ export async function getCategories(): Promise<Category[]> {
   try {
     const data = await apiFetch<BackendCategory[]>("/categories");
     return data.map(mapCategory);
-  } catch {
+  } catch (err) {
+    logApiError("getCategories", err);
     return [];
   }
 }
@@ -66,7 +68,8 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
   try {
     const data = await apiFetch<BackendCategory>(`/categories/${slug}`);
     return mapCategory(data);
-  } catch {
+  } catch (err) {
+    logApiError(`getCategoryBySlug(${slug})`, err);
     return null;
   }
 }

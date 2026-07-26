@@ -1,5 +1,6 @@
 import { ROUTES } from "@/lib/constants/routes";
 import { apiFetch } from "./client";
+import { logApiError } from "./logApiError";
 
 // ─── Backend shape ────────────────────────────────────────────────────────────
 
@@ -43,7 +44,8 @@ export async function getNavLinks(placement: "header" | "footer"): Promise<NavLi
       next: { revalidate: 300, tags: ["nav-links"] },
     });
     return data.map(mapNavLink);
-  } catch {
+  } catch (err) {
+    logApiError(`getNavLinks(${placement})`, err);
     return [];
   }
 }

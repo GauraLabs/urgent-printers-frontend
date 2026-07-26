@@ -6,6 +6,7 @@ import type {
   ProofInfo, ProofApprovalResult, ItemProofInfo,
 } from "@/types";
 import { apiFetch, apiFetchPage, API_URL } from "./client";
+import { logApiError } from "./logApiError";
 
 // ─── Backend shapes (camelCase from server, totalAmount as string) ────────────
 
@@ -193,7 +194,8 @@ export async function getOrders(
       headers: { Authorization: `Bearer ${token}` },
     });
     return { orders: res.data.map(mapOrderCard), total: res.meta.total };
-  } catch {
+  } catch (err) {
+    logApiError(`getOrders(page=${page})`, err);
     return { orders: [], total: 0 };
   }
 }
@@ -205,7 +207,8 @@ export async function getOrderById(orderId: string, token: string): Promise<Orde
       headers: { Authorization: `Bearer ${token}` },
     });
     return mapOrderDetail(data);
-  } catch {
+  } catch (err) {
+    logApiError(`getOrderById(${orderId})`, err);
     return null;
   }
 }
@@ -399,8 +402,9 @@ export async function getOrderItemProof(
     return await apiFetch<ItemProofInfo>(`/orders/${orderId}/items/${itemId}/current-proof`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-  } catch {
+  } catch (err) {
     // 404 = proof not sent yet; any other error = don't surface to customer
+    logApiError(`getOrderItemProof(order=${orderId}, item=${itemId})`, err);
     return null;
   }
 }
