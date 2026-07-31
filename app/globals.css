@@ -427,6 +427,17 @@
     font-family: var(--font-heading);
   }
 
+  /* Pre-paint guard against the cookie-consent-banner flash: the inline
+     CONSENT_INIT_SCRIPT in app/layout.tsx sets this attribute on <html>
+     synchronously, before hydration, when localStorage already holds a
+     decided ("accepted"/"rejected") status. CookieConsentBanner's root
+     carries [data-cookie-consent-banner] so it's hidden for the very first
+     frame — React's own status check removes it from the DOM shortly after,
+     but this covers the gap before that effect runs. */
+  html[data-cookie-consent-decided] [data-cookie-consent-banner] {
+    display: none;
+  }
+
   .scrollbar-hide {
     scrollbar-width: none;
     -ms-overflow-style: none;

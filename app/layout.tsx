@@ -12,9 +12,12 @@ import { DegradedStatusBanner } from "@/components/layout/DegradedStatusBanner";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
+import { ConsentedScripts } from "@/components/analytics/ConsentedScripts";
 import { CartDrawer } from "@/features/cart/CartDrawer";
 import { getSiteTheme } from "@/lib/api/theme";
 import { DEFAULT_THEME, COLOR_MODE_STORAGE_KEY } from "@/lib/themes";
+import { COOKIE_CONSENT_STORAGE_KEY } from "@/lib/consent";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
@@ -40,6 +43,18 @@ export const metadata: Metadata = {
 // below remains the only server-side data dependency of this layout.
 const COLOR_MODE_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem(${JSON.stringify(COLOR_MODE_STORAGE_KEY)});var d=s?s==="dark":window.matchMedia("(prefers-color-scheme: dark)").matches;var h=document.documentElement;h.classList.toggle("dark",d);h.classList.toggle("light",!d);}catch(e){}})();`;
 
+// Same technique as COLOR_MODE_INIT_SCRIPT above, applied to the cookie
+// consent banner: useConsent (hooks/useConsent.ts) can't tell "accepted" or
+// "rejected" apart from "undecided" until after mount, so without this the
+// banner flashes visible for one frame on every reload, even for visitors
+// who already chose. This runs before hydration and, if localStorage
+// already holds a decided status, sets data-cookie-consent-decided on
+// <html> synchronously so the CSS rule in globals.css
+// ([data-cookie-consent-decided] [data-cookie-consent-banner]) hides the
+// banner before the browser ever paints it. React's own status check still
+// drives the real unmount shortly after — this only closes the pre-paint gap.
+const CONSENT_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem(${JSON.stringify(COOKIE_CONSENT_STORAGE_KEY)});if(s==="accepted"||s==="rejected"){document.documentElement.setAttribute("data-cookie-consent-decided","");}}catch(e){}})();`;
+
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const presetId = await getSiteTheme();
   const brandClass = presetId === DEFAULT_THEME ? null : `theme-${presetId}`;
@@ -48,18 +63,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html lang="en-IN" className={cn(cormorant.variable, dmSans.variable, "h-full", brandClass)} suppressHydrationWarning>
       <body className="min-h-full flex flex-col antialiased">
         <script dangerouslySetInnerHTML={{ __html: COLOR_MODE_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: CONSENT_INIT_SCRIPT }} />
         <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
-        <Script id="microsoft-clarity" strategy="afterInteractive">{`(function(c,l,a,r,i,t,y){
-    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-    t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-})(window, document, "clarity", "script", "xuel02vjkg");`}</Script>
-        <Script src="https://www.googletagmanager.com/gtag/js?id=G-VQYX1D7JCP" strategy="afterInteractive" />
-        <Script id="google-analytics" strategy="afterInteractive">{`window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', 'G-VQYX1D7JCP');`}</Script>
+        <ConsentedScripts />
         <QueryProvider>
           <TokenRefreshProvider>
           <CartSyncProvider>
@@ -71,6 +78,7 @@ gtag('config', 'G-VQYX1D7JCP');`}</Script>
             <main className="flex-1 pb-16 lg:pb-0">{children}</main>
             <Footer />
             <MobileBottomNav />
+            <CookieConsentBanner />
             <CartDrawer />
             <Toaster
               richColors
