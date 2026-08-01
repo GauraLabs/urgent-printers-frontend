@@ -191,6 +191,8 @@ function mapDetail(d: BackendProductDetail): Product {
     description: d.description ?? "",
     shortDescription: d.short_description ?? "",
     images,
+    videoUrl: d.video_url,
+    videoThumbnailUrl: d.video_thumbnail_url,
     printSpec,
     pricingTiers,
     turnaroundOptions,

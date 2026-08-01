@@ -112,7 +112,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 xl:gap-16">
           {/* Left — Gallery */}
           <div className="lg:sticky lg:top-20 lg:self-start">
-            <ProductGallery images={product.images} productName={product.name} />
+            <ProductGallery
+              images={product.images}
+              productName={product.name}
+              videoUrl={product.videoUrl}
+              videoThumbnailUrl={product.videoThumbnailUrl}
+            />
           </div>
 
           {/* Right — Info + Configurator */}

@@ -23,6 +23,8 @@ export interface Category {
   // Fields populated when fetched from the real backend (absent in mock data)
   thumbnailUrl?: string | null;
   bannerUrl?: string | null;
+  videoUrl?: string | null;
+  videoThumbnailUrl?: string | null;
   iconName?: string | null;
   metaTitle?: string | null;
   metaDescription?: string | null;
@@ -103,6 +105,9 @@ export interface Product {
   description: string;
   shortDescription: string;
   images: string[];
+  // Absent in mock data; populated from the backend when the product has an uploaded video
+  videoUrl?: string | null;
+  videoThumbnailUrl?: string | null;
   printSpec: PrintSpec;
   pricingTiers: PricingTier[];
   turnaroundOptions: TurnaroundOption[];

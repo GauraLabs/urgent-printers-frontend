@@ -20,6 +20,8 @@ interface BackendCategory {
   product_count: number;
   thumbnail_url: string | null;
   banner_url: string | null;
+  video_url: string | null;
+  video_thumbnail_url: string | null;
 }
 
 function mapCategory(c: BackendCategory): Category {
@@ -33,6 +35,9 @@ function mapCategory(c: BackendCategory): Category {
     productCount: c.product_count,
     thumbnailUrl: c.thumbnail_url,
     bannerUrl: c.banner_url,
+    // Optional on the backend response (absent from stale cached Redis dicts) — coalesce defensively
+    videoUrl: c.video_url ?? null,
+    videoThumbnailUrl: c.video_thumbnail_url ?? null,
     iconName: c.icon_name,
     metaTitle: c.meta_title,
     metaDescription: c.meta_description,
