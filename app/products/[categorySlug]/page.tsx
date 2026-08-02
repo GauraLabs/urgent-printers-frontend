@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getProducts, getCategories, getCategoryBySlug } from "@/lib/api";
 import { Breadcrumb } from "@/components/common/Breadcrumb";
+import { CategoryHero } from "@/features/categories/CategoryHero";
 import { ProductsPageShell } from "@/features/products/ProductsPageShell";
 import { ROUTES } from "@/lib/constants/routes";
 import type { ProductFilters } from "@/types";
@@ -87,6 +88,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       <section>
+        <CategoryHero category={category} />
         <div className="border-b border-border bg-secondary/30">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <Breadcrumb
