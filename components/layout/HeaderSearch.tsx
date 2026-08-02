@@ -153,7 +153,16 @@ export function HeaderSearch() {
               </div>
               <ul className="py-1">
                 {results.map((product, i) => {
-                  const unitPrice = product.pricingTiers[0]?.pricePerUnit ?? product.priceFrom;
+                  // "From" price merchandises the best-value tier, not the
+                  // mathematically cheapest per-unit price (usually the
+                  // highest-quantity tier). Falls back to the true lowest
+                  // price, then priceFrom, if no tier is flagged.
+                  const bestValueTier = product.pricingTiers.find((t) => t.isBestValue);
+                  const unitPrice = bestValueTier
+                    ? bestValueTier.pricePerUnit
+                    : product.pricingTiers.length > 0
+                      ? Math.min(...product.pricingTiers.map((t) => t.pricePerUnit))
+                      : product.priceFrom;
                   return (
                     <li key={product.id}>
                       <Link

@@ -124,8 +124,22 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     const paperM  = selectedPaper?.priceMultiplier ?? 1;
     const finishM = selectedFinish?.priceMultiplier ?? 1;
     const sidesM  = selectedSides?.priceMultiplier ?? 1;
-    const pricePerUnit = parseFloat((baseTier.pricePerUnit * sizeM * paperM * finishM * sidesM).toFixed(2));
+    const optionMultiplier = sizeM * paperM * finishM * sidesM;
+    const pricePerUnit = parseFloat((baseTier.pricePerUnit * optionMultiplier).toFixed(2));
     const totalPrice = parseFloat((pricePerUnit * selectedQuantity + (selectedTurnaround?.extraCost ?? 0)).toFixed(2));
+
+    // PricingTable must reflect the currently selected size/paper/finish/sides
+    // combination for every quantity row, not just the raw base tiers from the
+    // product payload — otherwise it stays frozen at the default combination's
+    // prices while the summary card above updates.
+    const adjustedTiers = pricingTiers.map((tier) => {
+      const tierPricePerUnit = parseFloat((tier.pricePerUnit * optionMultiplier).toFixed(2));
+      return {
+        ...tier,
+        pricePerUnit: tierPricePerUnit,
+        totalPrice: parseFloat((tierPricePerUnit * tier.quantity).toFixed(2)),
+      };
+    });
 
     // Notify parent (ProductDetailClient) so StickyAddToCart stays in sync
     useEffect(() => {
@@ -321,7 +335,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
         <div>
           <SectionLabel>Quantity</SectionLabel>
           <PricingTable
-            tiers={pricingTiers}
+            tiers={adjustedTiers}
             selectedQuantity={selectedQuantity}
             onSelectQuantity={setSelectedQuantity}
           />

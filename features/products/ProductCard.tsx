@@ -17,9 +17,16 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, className }: ProductCardProps) {
-  const lowestTier = product.pricingTiers[0];
   const href = ROUTES.product(product.categorySlug, product.slug);
-  const displayPrice = lowestTier?.pricePerUnit ?? product.priceFrom ?? 0;
+  // "From" price merchandises the best-value tier, not the mathematically
+  // cheapest per-unit price (usually the highest-quantity tier). Falls back
+  // to the true lowest price, then priceFrom, if no tier is flagged.
+  const bestValueTier = product.pricingTiers.find((t) => t.isBestValue);
+  const displayPrice = bestValueTier
+    ? bestValueTier.pricePerUnit
+    : product.pricingTiers.length > 0
+      ? Math.min(...product.pricingTiers.map((t) => t.pricePerUnit))
+      : (product.priceFrom ?? 0);
 
   return (
     <motion.article
@@ -32,7 +39,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
       )}
     >
       {/* Image */}
-      <Link href={href} className="relative block aspect-[4/3] overflow-hidden bg-muted">
+      <Link href={href} className="relative block aspect-square overflow-hidden bg-muted">
         <Image
           src={product.images[0]}
           alt={product.name}

@@ -90,7 +90,7 @@ export function ProductGallery({ images, productName, videoUrl, videoThumbnailUr
   return (
     <div className="flex flex-col gap-3">
       {/* Main image */}
-      <div className="relative rounded-2xl overflow-hidden bg-muted aspect-[4/3]">
+      <div className="relative rounded-2xl overflow-hidden bg-muted aspect-square">
         {/* Mobile: Swiper with touch */}
         <div className="block md:hidden h-full">
           <Swiper
@@ -168,7 +168,7 @@ export function ProductGallery({ images, productName, videoUrl, videoThumbnailUr
                 <button
                   aria-label={slide.type === "video" ? `Play video` : `View image ${i + 1}`}
                   className={cn(
-                    "relative w-full aspect-[4/3] rounded-lg overflow-hidden border-2 transition-all",
+                    "relative w-full aspect-square rounded-lg overflow-hidden border-2 transition-all",
                     activeIndex === i
                       ? "border-primary"
                       : "border-transparent hover:border-muted-foreground/30"

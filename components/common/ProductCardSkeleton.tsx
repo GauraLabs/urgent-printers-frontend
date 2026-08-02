@@ -8,7 +8,7 @@ interface ProductCardSkeletonProps {
 export function ProductCardSkeleton({ className }: ProductCardSkeletonProps) {
   return (
     <div className={cn("flex flex-col gap-3", className)}>
-      <Skeleton className="w-full aspect-[4/3] rounded-xl" />
+      <Skeleton className="w-full aspect-square rounded-xl" />
       <div className="px-1 space-y-2">
         <Skeleton className="h-3 w-1/3 rounded" />
         <Skeleton className="h-4 w-3/4 rounded" />
