@@ -61,8 +61,22 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   if (!product || !category) notFound();
 
-  const lowestPrice = product.pricingTiers[0].pricePerUnit;
-  const highestPrice = product.pricingTiers[product.pricingTiers.length - 1].pricePerUnit;
+  // Tiers are ordered by ascending quantity, not ascending price — per-unit
+  // price falls as quantity rises, so index 0 is the *most* expensive tier
+  // and the last index the cheapest. Derive lowest/highest explicitly rather
+  // than relying on array position.
+  const tierPrices = product.pricingTiers.map((t) => t.pricePerUnit);
+  const lowestPrice = Math.min(...tierPrices);
+  const highestPrice = Math.max(...tierPrices);
+
+  // The customer-facing "From" price merchandises the best-value tier, not
+  // the mathematically cheapest per-unit price (usually the highest-quantity
+  // tier) — falls back to the true lowest price if no tier is flagged.
+  // JSON-LD below intentionally keeps using true lowestPrice/highestPrice:
+  // schema.org AggregateOffer.lowPrice/highPrice describe the actual price
+  // range across all offers for search engines, independent of merchandising.
+  const bestValueTier = product.pricingTiers.find((t) => t.isBestValue);
+  const displayPrice = bestValueTier?.pricePerUnit ?? lowestPrice;
 
   // JSON-LD structured data
   const jsonLd = {
@@ -138,7 +152,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   size="sm"
                 />
                 <span className="text-xs text-muted-foreground">
-                  From <span className="font-semibold text-foreground">{formatPricePerUnit(lowestPrice)}</span> / unit
+                  From <span className="font-semibold text-foreground">{formatPricePerUnit(displayPrice)}</span> / unit
                 </span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">

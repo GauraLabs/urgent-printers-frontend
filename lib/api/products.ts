@@ -256,6 +256,16 @@ const SORT_MAP: Record<NonNullable<ProductFilters["sort"]>, string> = {
   popular: "featured",
 };
 
+// Tiers are ordered by ascending quantity, not ascending price — per-unit price
+// falls as quantity rises, so pricingTiers[0] is the *most* expensive tier, not
+// the cheapest. Used for "From ₹X" sort/display; falls back to priceFrom when a
+// product has no tiers loaded (e.g. card-shape search docs).
+function lowestPricePerUnit(product: Product): number {
+  return product.pricingTiers.length > 0
+    ? Math.min(...product.pricingTiers.map((t) => t.pricePerUnit))
+    : (product.priceFrom ?? 0);
+}
+
 // ─── API functions ────────────────────────────────────────────────────────────
 
 export async function getProducts(
@@ -298,10 +308,10 @@ export async function getProducts(
         results.sort((a, b) => b.averageRating - a.averageRating);
         break;
       case "price-asc":
-        results.sort((a, b) => (a.pricingTiers[0]?.pricePerUnit ?? a.priceFrom ?? 0) - (b.pricingTiers[0]?.pricePerUnit ?? b.priceFrom ?? 0));
+        results.sort((a, b) => lowestPricePerUnit(a) - lowestPricePerUnit(b));
         break;
       case "price-desc":
-        results.sort((a, b) => (b.pricingTiers[0]?.pricePerUnit ?? b.priceFrom ?? 0) - (a.pricingTiers[0]?.pricePerUnit ?? a.priceFrom ?? 0));
+        results.sort((a, b) => lowestPricePerUnit(b) - lowestPricePerUnit(a));
         break;
       case "newest":
         // Mock data has no created_at; approximate "newest first" by reversing

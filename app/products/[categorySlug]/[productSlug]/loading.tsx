@@ -6,10 +6,10 @@ export default function ProductDetailLoading() {
       <Skeleton className="h-3 w-64 mb-6 rounded" />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 xl:gap-16">
         <div className="flex flex-col gap-3">
-          <Skeleton className="w-full aspect-[4/3] rounded-2xl" />
+          <Skeleton className="w-full aspect-square rounded-2xl" />
           <div className="hidden md:flex gap-2">
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="flex-1 aspect-[4/3] rounded-lg" />
+              <Skeleton key={i} className="flex-1 aspect-square rounded-lg" />
             ))}
           </div>
         </div>
