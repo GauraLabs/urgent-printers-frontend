@@ -1,0 +1,38 @@
+{
+  "title": "Documentation content blocks (Module 9 output — PDF/Markdown renderer input)",
+  "type": "object",
+  "required": ["feature_name", "sections", "screenshot_captions"],
+  "additionalProperties": false,
+  "properties": {
+    "feature_name": { "type": "string", "minLength": 1 },
+    "plan_path": { "type": ["string", "null"] },
+    "run_path": { "type": ["string", "null"] },
+    "analysis_path": { "type": ["string", "null"] },
+    "generated_at": { "type": ["string", "null"] },
+    "sections": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "required": ["heading", "body_markdown"],
+        "additionalProperties": false,
+        "properties": {
+          "heading": { "type": "string", "minLength": 1 },
+          "body_markdown": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "screenshot_captions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["screenshot_path", "caption"],
+        "additionalProperties": false,
+        "properties": {
+          "screenshot_path": { "type": "string", "minLength": 1 },
+          "caption": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "feature_found": true,
+  "feature_name": "Product Catalog Browsing",
+  "source_files": [
+    "app/products/page.tsx",
+    "app/products/[categorySlug]/page.tsx",
+    "app/products/loading.tsx",
+    "features/products/ProductsPageShell.tsx",
+    "features/products/FilterControls.tsx",
+    "features/products/SortDropdown.tsx",
+    "features/products/ActiveFilters.tsx",
+    "features/products/ProductCard.tsx",
+    "features/products/useProductFilters.ts",
+    "lib/api/products.ts",
+    "hooks/useDebounce.ts"
+  ],
+  "user_goal": "Find a print product to order by browsing, filtering, sorting, or searching the catalog.",
+  "business_goal": "Faster, more relevant product discovery drives add-to-cart and checkout conversion.",
+  "user_journey": [
+    { "step": "Land on the all-products listing", "route_or_state": "/products" },
+    { "step": "Narrow to a category (either via the category-scoped route or the ?category= filter)", "route_or_state": "/products/[categorySlug]" },
+    { "step": "Refine with price/tag/badge filters and a sort order", "route_or_state": "/products (query params: sort, min, max, tags, badge)" },
+    { "step": "Or bypass filters entirely with a text search", "route_or_state": "/products?q=<term> (routes to Typesense /search, not /products)" },
+    { "step": "Scroll to load more results (infinite scroll)", "route_or_state": "/products (client-side page increment, same URL)" },
+    { "step": "Open a product", "route_or_state": "/products/[categorySlug]/[productSlug]" }
+  ],
+  "happy_path": [
+    { "step_id": "hp-01", "action": "Open the all-products listing", "selector": null, "expected_result": "Product grid renders; toolbar shows the real total count as \"<N> products\" (features/products/ProductsPageShell.tsx:159)" },
+    { "step_id": "hp-02", "action": "Open the sort dropdown and choose a different sort order", "selector": "button, initial text \"Most Popular\" (features/products/SortDropdown.tsx:27-40); menu item text from SORT_OPTIONS, e.g. \"Price: Low to High\"", "expected_result": "URL's sort param updates and the grid re-fetches page 1 sorted accordingly" },
+    { "step_id": "hp-03", "action": "Apply a category filter from the sidebar", "selector": null, "expected_result": "Grid re-fetches scoped to the chosen category; category chip appears in ActiveFilters" },
+    { "step_id": "hp-04", "action": "Scroll to the bottom sentinel to trigger infinite-scroll load-more", "selector": "sentinelRef div (features/products/ProductsPageShell.tsx:207), visible only while hasMore is true", "expected_result": "\"Loading more…\" spinner shows (ProductsPageShell.tsx:210), then additional products append to the grid without resetting scroll position" },
+    { "step_id": "hp-05", "action": "Open a product from the grid", "selector": "ProductCard root <Link> wrapping the product image/name (features/products/ProductCard.tsx:31)", "expected_result": "Navigates to /products/[categorySlug]/[productSlug]" }
+  ],
+  "alternate_paths": [
+    {
+      "path_name": "Category-scoped route instead of query param",
+      "steps": [
+        { "step_id": "alt-01", "action": "Navigate directly to /products/[categorySlug]", "selector": null, "expected_result": "Category filter is derived from the path segment; any stray ?category= query param is stripped rather than conflicting (features/products/useProductFilters.ts:24-46, CATEGORY_PATH_RE)" }
+      ]
+    },
+    {
+      "path_name": "Text search bypasses filters",
+      "steps": [
+        { "step_id": "alt-02", "action": "Type 2+ characters into the search input", "selector": "input[aria-label=\"Search this catalog\"] (features/products/ProductsPageShell.tsx:131-137)", "expected_result": "After a 400ms debounce (hooks/useDebounce.ts), results come from searchProductsPaged() (Typesense /search) instead of getProducts(); FilterControls and SortDropdown both render disabled with title=\"Sorting isn't available for search results\" (SortDropdown.tsx:33), and a note explains category/price/tag filters aren't available while searching (ProductsPageShell.tsx:174-176)" }
+      ]
+    },
+    {
+      "path_name": "Clear an active filter via the chip",
+      "steps": [
+        { "step_id": "alt-03", "action": "Remove a filter from the ActiveFilters chip row", "selector": "chip inside features/products/ActiveFilters.tsx (exact markup not read this pass)", "expected_result": "Corresponding URL param is cleared and the grid re-fetches" }
+      ]
+    }
+  ],
+  "error_paths": [
+    {
+      "trigger": "Search term matches nothing",
+      "expected_ui_response": "EmptyState with title \"No products found\" and description literally \"No results for \\\"<term>\\\". Try a different search term.\" (features/products/ProductsPageShell.tsx:190-197)",
+      "selector": null
+    },
+    {
+      "trigger": "Filter combination matches nothing (non-search)",
+      "expected_ui_response": "EmptyState with title \"No products found\" and description \"Try adjusting your filters or search for something else.\" (same component, non-search branch)",
+      "selector": null
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "Scroll-triggered load-more firing again while a previous load is still in flight",
+      "existing_validation": "loadMore() returns immediately if loadingMore || !hasMore (features/products/ProductsPageShell.tsx:93)",
+      "risk_note": "Validated in code — a real regression here would be a race that appends duplicate items, not a missing guard."
+    },
+    {
+      "case": "A filter/sort/search change arrives while a load-more request for the previous result set is still in flight",
+      "existing_validation": "generationRef increments on every fresh products/total from the server; a load-more response captured against a stale generation is discarded instead of appended (features/products/ProductsPageShell.tsx:74-83, 97)",
+      "risk_note": "Worth an explicit test: change the sort order immediately after triggering a load-more and confirm no stale-page duplicate/mismatched items appear."
+    },
+    {
+      "case": "Reaching the true end of results",
+      "existing_validation": "hasMore is derived from items.length < total; UI shows \"You've seen all <N> products.\" instead of the sentinel (ProductsPageShell.tsx:218-222)",
+      "risk_note": "None identified — implemented and directly assertable, included for completeness rather than as a gap."
+    },
+    {
+      "case": "Rapid typing in the search box",
+      "existing_validation": "400ms debounce (hooks/useDebounce.ts) before the URL/search fires",
+      "risk_note": "No client-side minimum-length guard visible in ProductsPageShell beyond the shared isSearching >= 2 chars convention in useProductFilters.ts — confirm the debounce alone doesn't fire a wasted 1-character query."
+    }
+  ],
+  "gaps": [
+    "features/products/ActiveFilters.tsx's chip markup/selectors were not read this pass — needed before /qa:generate-tests can script alt-03 without letting the Playwright Generator agent discover it live.",
+    "Category names/slugs are seeded data from the backend, not present in source — hp-03's exact category selector is intentionally left null; the Generator agent should discover it from the live DOM rather than have one guessed here.",
+    "This plan only covers the storefront listing/search/browse surface. Add-to-cart, pricing-tier selection, and the product detail page itself are separate features (product detail page has its own configurator per features/products/configurator/) and were out of scope for this grounding pass."
+  ]
+}

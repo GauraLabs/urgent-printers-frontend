@@ -1,0 +1,49 @@
+{
+  "title": "Release Notes (Module 10 — Release Notes Generator output)",
+  "description": "Produced by diffing this run's plan + analysis against the previous archived run for the same feature in history_dir. The four buckets are the master plan's; `compared_against` and `evidence` are additions, because a release note nobody can trace back to a step is a release note nobody can check.",
+  "type": "object",
+  "required": ["feature_name", "compared_against", "new_features", "fixes", "known_limitations", "breaking_changes"],
+  "additionalProperties": false,
+  "properties": {
+    "feature_name": { "type": "string", "minLength": 1 },
+    "compared_against": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The previous archive id (a history_dir subdirectory name), or the literal 'none' for a first run."
+    },
+    "generated_at": { "type": ["string", "null"] },
+    "new_features": { "$ref": "#/definitions/entries" },
+    "fixes": { "$ref": "#/definitions/entries" },
+    "known_limitations": { "$ref": "#/definitions/entries" },
+    "breaking_changes": {
+      "description": "Changed selector/route/expected_result on a step that already existed. Flagged, never assumed intentional — a renamed selector and a regression look identical from here.",
+      "$ref": "#/definitions/entries"
+    }
+  },
+  "definitions": {
+    "entries": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "type": "string", "minLength": 1 },
+          {
+            "type": "object",
+            "required": ["text"],
+            "additionalProperties": false,
+            "properties": {
+              "text": { "type": "string", "minLength": 1 },
+              "step_id": {
+                "type": ["string", "null"],
+                "description": "The step this claim came from, so a reader can open the run log and check it."
+              },
+              "evidence": {
+                "type": ["string", "null"],
+                "description": "What in the artifacts supports this — a status change, a selector diff, a persisting risk_note."
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

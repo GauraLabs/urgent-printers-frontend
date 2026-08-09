@@ -1,0 +1,72 @@
+{
+  "project_name": "Urgent Printers — Storefront",
+  "repo_root": ".",
+  "tech_stack": {
+    "frontend": "Next.js 16.2 App Router, React 19, TypeScript strict, Tailwind v4, Zustand (persist), TanStack Query, react-hook-form + zod",
+    "backend": "FastAPI, sibling repo ../urgent-printers-backend (async SQLModel + PostgreSQL). Not driven through the browser — read app/api/v1/routes/customer/ and app/schemas/ for request/response contracts only.",
+    "test_framework": "playwright"
+  },
+  "urls": {
+    "staging": "http://localhost:3000",
+    "production": "https://urgentprinters.com"
+  },
+  "dev_command": "npm run dev",
+  "brand": {
+    "logo_path": "public/logo.png",
+    "primary_color": "oklch(0.50 0.13 35)",
+    "accent_color": "oklch(0.72 0.16 55)",
+    "font_family": "'DM Sans', ui-sans-serif, system-ui, sans-serif",
+    "voice_persona": "confident, warm, plain-spoken — a helpful teammate showing a customer around, not an ad"
+  },
+  "video_defaults": {
+    "resolutions": ["1080p60", "1440p60", "4K60"],
+    "max_duration_seconds": 90,
+    "cursor_style": "vector-arrow",
+    "field_style": {
+      "background": "#ffffff",
+      "text": "#1c1917"
+    }
+  },
+  "output_dirs": {
+    "tests": "qa-pipeline/playwright/specs",
+    "docs": "qa-pipeline/artifacts/docs",
+    "video": "qa-pipeline/artifacts/video"
+  },
+  "artifact_dirs": {
+    "plans": "qa-pipeline/artifacts/plans",
+    "runs": "qa-pipeline/artifacts/runs",
+    "analyses": "qa-pipeline/artifacts/analyses",
+    "docs_blocks": "qa-pipeline/artifacts/docs",
+    "shot_lists": "qa-pipeline/artifacts/shot-lists",
+    "screenshots": "qa-pipeline/artifacts/screenshots",
+    "traces": "qa-pipeline/artifacts/traces",
+    "narration": "qa-pipeline/artifacts/narration",
+    "release_notes": "qa-pipeline/artifacts/release-notes",
+    "schemas": "qa-pipeline/schemas",
+    "prompts": "../.claude/commands/qa"
+  },
+  "history_dir": "qa-pipeline/history",
+  "tts": {
+    "provider": "elevenlabs",
+    "api_key_env": "ELEVENLABS_API_KEY",
+    "voice_id": "__FILL_ME__",
+    "voice_name": null,
+    "model_id": "eleven_multilingual_v2",
+    "output_format": "mp3_44100_128",
+    "language": "en",
+    "lead_in_ms": 220,
+    "tail_ms": 320,
+    "providers": {
+      "elevenlabs": { "base_url": "https://api.elevenlabs.io/v1" }
+    }
+  },
+  "llm": null,
+  "_notes": {
+    "_generated": "Set up as part of the QA/docs/demo-video pipeline. See ../pipeline/README.md for the module map and ../.claude/commands/qa/*.md for the prompts that read this file.",
+    "brand": "primary_color/accent_color are this app's live theme tokens (rootless :root 'roseGold' default — see app/globals.css and lib/themes.ts). oklch() renders fine in the Chromium engine Remotion uses.",
+    "field_style": "White background / dark text matches the default storefront theme. If a demo is captured on a dark-themed variant, override this per-run rather than changing the default.",
+    "tts": "voice_id is unfilled — pick a voice from the ElevenLabs dashboard before the first /qa:narrate-feature run. Free tier cannot use library voices over the API; a stock voice works for eleven_multilingual_v2.",
+    "llm": "null routes every AI module to Claude, which needs no local infrastructure. See ../pipeline/README.md's 'AI models' section before changing this.",
+    "urls": "Playwright's playwright.config.js boots dev_command at urls.staging with reuseExistingServer: true, so an already-running `npm run dev` is reused."
+  }
+}

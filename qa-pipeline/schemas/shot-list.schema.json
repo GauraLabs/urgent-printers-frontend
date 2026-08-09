@@ -1,0 +1,67 @@
+{
+  "title": "Shot List (Module 2 — Shot-List Director output; Remotion renderer input)",
+  "type": "object",
+  "required": ["feature_name", "total_estimated_duration_ms", "shots", "flagged_for_review"],
+  "additionalProperties": false,
+  "properties": {
+    "feature_name": { "type": "string", "minLength": 1 },
+    "total_estimated_duration_ms": { "type": "number", "minimum": 0, "maximum": 90000 },
+    "shots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["step_id", "emphasis", "duration_ms", "callout_text", "callout_position", "transition_in"],
+        "additionalProperties": false,
+        "properties": {
+          "step_id": { "type": "string", "pattern": "^[a-z]+-[0-9]{2}$" },
+          "emphasis": { "type": "string", "enum": ["zoom", "highlight", "cut", "pause"] },
+          "duration_ms": { "type": "number", "minimum": 800, "maximum": 4000 },
+          "callout_text": { "type": ["string", "null"] },
+          "callout_position": { "type": "string", "enum": ["top", "bottom", "left", "right", "none"] },
+          "transition_in": { "type": "string", "enum": ["cut", "crossfade", "whip-pan"] }
+        }
+      }
+    },
+    "flagged_for_review": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["step_id", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "step_id": { "type": "string", "pattern": "^[a-z]+-[0-9]{2}$" },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "page_findings": {
+      "type": "array",
+      "description": "Page-level accessibility findings keyed by route. axe runs per navigation, so its violations describe a whole screen, not the element a step touched. Recording them here keeps them visible to a human without letting sitewide noise veto every shot that happens to land on that route.",
+      "items": {
+        "type": "object",
+        "required": ["route", "violations"],
+        "additionalProperties": false,
+        "properties": {
+          "route": { "type": "string", "minLength": 1 },
+          "violations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "impact", "nodes"],
+              "additionalProperties": false,
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "impact": { "type": "string", "enum": ["minor", "moderate", "serious", "critical"] },
+                "nodes": { "type": "number", "minimum": 0 }
+              }
+            }
+          },
+          "blocks_public_cut": {
+            "type": "boolean",
+            "description": "True when this route's findings are severe enough that the whole cut should be treated as internal-only rather than published."
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "title": "Feature Plan (Module 1 — Planner output)",
+  "type": "object",
+  "required": ["feature_found", "feature_name", "source_files"],
+  "additionalProperties": false,
+  "properties": {
+    "feature_found": { "type": "boolean" },
+    "feature_name": { "type": "string", "minLength": 1 },
+    "source_files": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "user_goal": { "type": "string", "minLength": 1 },
+    "business_goal": { "type": "string", "minLength": 1 },
+    "user_journey": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["step", "route_or_state"],
+        "additionalProperties": false,
+        "properties": {
+          "step": { "type": "string", "minLength": 1 },
+          "route_or_state": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "happy_path": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/step" } },
+    "alternate_paths": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path_name", "steps"],
+        "additionalProperties": false,
+        "properties": {
+          "path_name": { "type": "string", "minLength": 1 },
+          "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/step" } }
+        }
+      }
+    },
+    "error_paths": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["trigger", "expected_ui_response", "selector"],
+        "additionalProperties": false,
+        "properties": {
+          "trigger": { "type": "string", "minLength": 1 },
+          "expected_ui_response": { "type": "string", "minLength": 1 },
+          "selector": { "type": ["string", "null"] },
+          "step_id": { "type": "string", "pattern": "^[a-z]+-[0-9]{2}$" }
+        }
+      }
+    },
+    "edge_cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["case", "existing_validation", "risk_note"],
+        "additionalProperties": false,
+        "properties": {
+          "case": { "type": "string", "minLength": 1 },
+          "existing_validation": { "type": ["string", "null"] },
+          "risk_note": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "gaps": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+  },
+  "definitions": {
+    "step": {
+      "type": "object",
+      "required": ["step_id", "action", "selector", "expected_result"],
+      "additionalProperties": false,
+      "properties": {
+        "step_id": { "type": "string", "pattern": "^[a-z]+-[0-9]{2}$" },
+        "action": { "type": "string", "minLength": 1 },
+        "selector": { "type": ["string", "null"] },
+        "expected_result": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
