@@ -60,9 +60,10 @@ interface BackendProductDetail extends BackendProductCard {
 }
 
 // The dedicated /search endpoint is Typesense-backed and returns raw indexed
-// documents, not the enriched ProductListResponse shape /products returns —
-// no thumbnail_url, price_from, category_slug, or category_name. See
-// mapSearchDoc() below for how that gap is bridged on the frontend.
+// documents, not the enriched ProductListResponse shape /products returns.
+// thumbnail_url and base_price are now indexed and present here, but
+// category_slug/category_name still are not — mapSearchDoc() below still
+// bridges that part of the gap via the categoryMap parameter.
 interface BackendSearchDoc {
   id: string;
   name: string;
@@ -76,6 +77,8 @@ interface BackendSearchDoc {
   rating: number;
   review_count: number;
   tags: string[];
+  base_price: number | null;
+  thumbnail_url: string | null;
 }
 
 // ─── Default print spec (used for card-shape products that lack full specs) ───
@@ -214,14 +217,15 @@ function mapDetail(d: BackendProductDetail): Product {
   };
 }
 
-// Search results have no thumbnail/price from Typesense — fall back to a seeded
-// placeholder image (matching the pattern used for categories with no thumbnail)
-// and leave priceFrom undefined rather than fabricate a number.
+// Typesense now indexes thumbnail_url/base_price, so search results carry a
+// real image and price. category_slug/category_name are still not indexed,
+// so those keep coming from the categoryMap lookup below.
 function mapSearchDoc(
   d: BackendSearchDoc,
   categoryMap: Map<number, { slug: string; name: string }>
 ): Product {
   const category = categoryMap.get(d.category_id);
+  const imageUrl = d.thumbnail_url ?? `https://picsum.photos/seed/${d.slug}/600/400`;
   return {
     id: d.id,
     slug: d.slug,
@@ -231,7 +235,7 @@ function mapSearchDoc(
     categoryName: category?.name ?? "",
     description: d.description ?? "",
     shortDescription: d.short_description ?? "",
-    images: [`https://picsum.photos/seed/${d.slug}/600/400`],
+    images: [imageUrl],
     printSpec: EMPTY_PRINT_SPEC,
     pricingTiers: [],
     turnaroundOptions: [],
@@ -240,7 +244,7 @@ function mapSearchDoc(
     isFeatured: d.is_featured,
     tags: d.tags ?? [],
     badge: d.badge,
-    priceFrom: undefined,
+    priceFrom: d.base_price ?? undefined,
     customizationMode: "none" as CustomizationMode,
     templateFields: [],
   };
