@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build && next-sitemap",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "qa:capture": "playwright test --config=qa-pipeline/playwright/playwright.config.js",
+    "qa:validate": "node qa-pipeline/scripts/validate.mjs",
+    "qa:docs": "node qa-pipeline/scripts/render-docs.mjs",
+    "qa:video": "node qa-pipeline/scripts/render-video.mjs",
+    "qa:narrate": "node qa-pipeline/scripts/synthesize-narration.mjs",
+    "qa:archive": "node qa-pipeline/scripts/archive-run.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -36,6 +42,11 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.62.0",
+    "@remotion/bundler": "^4.0.501",
+    "@remotion/cli": "^4.0.501",
+    "@remotion/renderer": "^4.0.501",
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.20",
     "@types/node": "^20",
@@ -43,6 +54,10 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
+    "lighthouse": "^13.4.1",
+    "marked": "^18.0.7",
+    "playwright-lighthouse": "^4.0.0",
+    "remotion": "^4.0.501",
     "shadcn": "^4.5.0",
     "tailwindcss": "^4",
     "typescript": "^5"

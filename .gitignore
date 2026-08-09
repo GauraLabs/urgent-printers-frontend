@@ -49,3 +49,14 @@ client_secret*.json
 
 # Windows Zone.Identifier metadata files (WSL artifact)
 *:Zone.Identifier
+
+# QA pipeline (see ../pipeline/README.md): screenshots/traces/video/audio are build products.
+# Plans, run logs, analyses, shot lists and rendered docs stay tracked — diffing those is how
+# a flow change shows up, and a checked-in report degrading to a filename note when a
+# gitignored screenshot isn't on disk is expected, not a bug.
+qa-pipeline/artifacts/screenshots
+qa-pipeline/artifacts/traces
+qa-pipeline/artifacts/video
+qa-pipeline/artifacts/narration/**/*.mp3
+playwright-report
+test-results

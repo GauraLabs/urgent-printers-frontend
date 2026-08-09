@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "type": "module",
+  "description": "Not a real package — this file exists solely so Node treats qa-pipeline/**/*.js as ES modules (import/export) without changing the parent app's CommonJS default. See ../../pipeline/README.md."
+}

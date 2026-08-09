@@ -1,0 +1,75 @@
+{
+  "title": "Narration (Module 8 — Narration author output, then patched by the TTS synthesizer)",
+  "description": "Written by /narrate-feature, then patched in place by synthesize-narration.mjs, which fills audio_path, duration_ms and alignment for every line. The two halves are deliberately separate: the language is a judgement call an LLM makes, the durations are a measurement only the TTS provider can supply. Nothing downstream may guess a duration — a line whose audio has not been measured must not be rendered.",
+  "type": "object",
+  "required": ["feature_name", "language", "lines"],
+  "additionalProperties": false,
+  "properties": {
+    "feature_name": { "type": "string", "minLength": 1 },
+    "language": {
+      "type": "string",
+      "description": "Free-form label for the spoken language, e.g. 'hinglish'. Must match project.config.json's tts.language."
+    },
+    "voice_persona": { "type": ["string", "null"] },
+    "synthesized_at": {
+      "type": ["string", "null"],
+      "description": "ISO timestamp of the last successful synthesis run. Null before the first."
+    },
+    "tts": {
+      "type": ["object", "null"],
+      "description": "What actually produced the audio, recorded so a cut can be traced to a provider/voice/model rather than assumed.",
+      "additionalProperties": true,
+      "properties": {
+        "provider": { "type": "string" },
+        "voice_id": { "type": "string" },
+        "voice_name": { "type": ["string", "null"] },
+        "model_id": { "type": "string" }
+      }
+    },
+    "lines": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["step_id", "text"],
+        "additionalProperties": false,
+        "properties": {
+          "step_id": {
+            "type": "string",
+            "description": "Joins to a shot in the shot list, or the literal 'intro' / 'outro' for the brand cards.",
+            "pattern": "^([a-z]+-[0-9]{2}|intro|outro)$"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The spoken line AND the on-screen caption — one source of truth, so a viewer reading along never sees words that were not said."
+          },
+          "text_roman": {
+            "type": ["string", "null"],
+            "description": "Optional Latin-script transliteration. Never spoken and never displayed; it exists so a reviewer who cannot read Devanagari can still check the script."
+          },
+          "audio_path": {
+            "type": ["string", "null"],
+            "description": "Repo-relative path to the synthesized mp3. Null until synthesize-narration.mjs has run."
+          },
+          "duration_ms": {
+            "type": ["number", "null"],
+            "minimum": 0,
+            "description": "MEASURED audio length, never estimated. The timeline extends a shot to fit this, which is why a wrong value silently truncates speech."
+          },
+          "alignment": {
+            "type": ["object", "null"],
+            "description": "Per-character timings from the provider, used to highlight the caption in sync with the voice.",
+            "required": ["characters", "start_times_ms", "end_times_ms"],
+            "additionalProperties": false,
+            "properties": {
+              "characters": { "type": "array", "items": { "type": "string" } },
+              "start_times_ms": { "type": "array", "items": { "type": "number" } },
+              "end_times_ms": { "type": "array", "items": { "type": "number" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}
