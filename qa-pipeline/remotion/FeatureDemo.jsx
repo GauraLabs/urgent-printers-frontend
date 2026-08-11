@@ -529,13 +529,13 @@ export function FeatureDemo({
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#0b1220' }}>
-      <Sequence durationInFrames={timeline.introFrames}>
+      <Sequence durationInFrames={timeline.introSequenceFrames}>
         <BrandCard
           title={shotlist.feature_name}
           subtitle={projectName}
           brand={brand}
           logoDataUri={logoDataUri}
-          frames={timeline.introFrames}
+          frames={timeline.introSequenceFrames}
         />
       </Sequence>
 

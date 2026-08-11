@@ -1,0 +1,102 @@
+{
+  "feature_found": true,
+  "feature_name": "Category Storefront Visibility",
+  "source_files": [
+    "lib/api/categories.ts",
+    "lib/mock-data/categories.ts",
+    "lib/api/navLinks.ts",
+    "app/page.tsx",
+    "app/products/page.tsx",
+    "app/products/[categorySlug]/page.tsx",
+    "app/not-found.tsx",
+    "app/api/revalidate/site-status/route.ts",
+    "app/api/revalidate/theme/route.ts",
+    "features/home/CategoryGrid.tsx",
+    "features/categories/CategoryHero.tsx",
+    "features/products/FilterControls.tsx",
+    "features/products/ProductsPageShell.tsx",
+    "features/products/FiltersDrawer.tsx",
+    "features/products/ActiveFilters.tsx",
+    "components/common/EmptyState.tsx",
+    "components/common/Breadcrumb.tsx",
+    "components/layout/Header.tsx",
+    "components/layout/MobileNavDrawer.tsx",
+    "components/layout/MobileBottomNav.tsx",
+    "next.config.ts"
+  ],
+  "user_goal": "Browse the storefront and find products by category, with accurate category names, images, and product counts.",
+  "business_goal": "Category browsing is a primary product-discovery path; stale or broken category pages directly cost sales.",
+  "user_journey": [
+    { "step": "See categories on the homepage", "route_or_state": "/" },
+    { "step": "Open a category's dedicated listing", "route_or_state": "/products/[categorySlug]" },
+    { "step": "Filter the general listing by category", "route_or_state": "/products (Category filter group)" },
+    { "step": "Reach a category via header/mobile nav, if a nav link targets one", "route_or_state": "header nav / mobile drawer" }
+  ],
+  "happy_path": [
+    { "step_id": "hp-01", "action": "Load the homepage", "selector": null, "expected_result": "\"Shop by Category\" grid renders (features/home/CategoryGrid.tsx), each tile showing the category's real name and \"{N} products\"; first tile is a larger 2x2 featured tile" },
+    { "step_id": "hp-02", "action": "Click a category tile", "selector": "Link wrapping a CategoryGrid tile, href = ROUTES.category(slug)", "expected_result": "Navigates to /products/[categorySlug]" },
+    { "step_id": "hp-03", "action": "Observe the category page header", "selector": null, "expected_result": "<h1>{category.name}</h1> and a description paragraph render in a bg-secondary/30 strip; Breadcrumb shows \"All Products\" -> category name, last crumb has aria-current=\"page\"" },
+    { "step_id": "hp-04", "action": "Observe the product grid on the category page", "selector": null, "expected_result": "Only products belonging to that category render, via the shared ProductsPageShell" },
+    { "step_id": "hp-05", "action": "Go to the general /products listing and open the Category filter", "selector": "FilterControls \"Category\" radio group, name=\"category\", first option always \"All Products\"", "expected_result": "Real categories listed by name, first 6 shown; a \"Show all {N} categories\" toggle appears only if more than 6 exist" },
+    { "step_id": "hp-06", "action": "Select a category radio option", "selector": "radio input within the Category filter group, matched by category name label", "expected_result": "Grid re-fetches scoped to that category; a matching chip appears in ActiveFilters" }
+  ],
+  "alternate_paths": [
+    {
+      "path_name": "Category hero banner/video",
+      "steps": [
+        { "step_id": "alt-01", "action": "Open a category that has a banner or video set", "selector": null, "expected_result": "CategoryHero renders a poster image (video thumbnail if a video is set, else the banner) with eager/priority loading, plus an autoplay video overlay if videoUrl is set" },
+        { "step_id": "alt-02", "action": "Open a category with neither banner nor video set", "selector": null, "expected_result": "CategoryHero renders nothing (returns null) — no fallback banner shown" }
+      ]
+    },
+    {
+      "path_name": "SEO metadata on a category page",
+      "steps": [
+        { "step_id": "alt-03", "action": "Inspect generateMetadata output for a real category route", "selector": null, "expected_result": "title = category.name; description includes category.description + \"Fast delivery across India. Order from 25 units.\"; OpenGraph og:image = category.imageUrl; a BreadcrumbList JSON-LD script with 3 items (Home, All Products, category name) is present" }
+      ]
+    }
+  ],
+  "error_paths": [
+    {
+      "trigger": "Navigate to /products/[a category slug that does not exist]",
+      "expected_ui_response": "notFound() renders app/not-found.tsx: title \"404 — Page Not Found\", <h1>Page Not Found</h1>, body \"Looks like this page has been taken to the printers and never came back. Let's get you back on track.\", with \"Go Home\" / \"Browse Products\" / \"Search\" actions",
+      "selector": null
+    },
+    {
+      "trigger": "Open a real category that currently has zero products",
+      "expected_ui_response": "Category header/breadcrumb/hero still render normally; the product-grid area shows the generic EmptyState — title \"No products found\", description \"Try adjusting your filters or search for something else.\" (same copy as an unmatched filter on the general listing, not a category-specific message)",
+      "selector": null
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "A category just created in the admin panel does not yet appear on the homepage or its own storefront route",
+      "existing_validation": "app/page.tsx and app/products/[categorySlug]/page.tsx both set `export const revalidate = 60` (ISR). There is no revalidate-on-demand webhook for categories — grep confirmed only \"site-status\" and \"theme\" tags have one (app/api/revalidate/), unlike nav-links which at least tags its fetch.",
+      "risk_note": "This directly affects the admin-create -> storefront-visible flow: expect up to ~60s of staleness after creating/editing/deleting a category in the admin panel, with no way to force it sooner short of a redeploy. A test that checks storefront visibility immediately after an admin create should either wait out the window or explicitly assert the staleness rather than treat it as a bug."
+    },
+    {
+      "case": "getCategories() fails against the backend",
+      "existing_validation": "Both getCategories() and getCategoryBySlug() catch ApiError and degrade gracefully — return [] and null respectively — rather than throwing or crashing the page.",
+      "risk_note": "A transient failure during ISR revalidation silently degrades the homepage grid to CategoryGrid's own empty state (\"Nothing to show right now\" / \"Categories are temporarily unavailable. Please check back shortly.\") rather than preserving last-known-good data, if there was no prior successful cache (e.g. a cold start with the backend down)."
+    },
+    {
+      "case": "Category route requested with a search query present: /products/[categorySlug]?q=term",
+      "existing_validation": "The page redirects to /products?q=term BEFORE the category lookup / notFound() check runs.",
+      "risk_note": "Consequence: /products/[a bogus slug]?q=foo redirects to the general search rather than 404ing, even though the category doesn't exist — this ordering is easy to get backwards in a test; assert the redirect, not a 404, when ?q= is present."
+    },
+    {
+      "case": "A category has no thumbnail_url uploaded in the admin panel",
+      "existing_validation": null,
+      "risk_note": "mapCategory() falls back to a seeded https://picsum.photos/seed/{slug}/600/400 placeholder that looks like a real photo, not an obviously-broken image. A test asserting \"an image renders\" will falsely pass for a category that's actually missing its real thumbnail — assert the real image src/network request, not just image presence."
+    },
+    {
+      "case": "The general /products listing's own category-data caching window",
+      "existing_validation": null,
+      "risk_note": "Could not be determined by static analysis alone — app/products/page.tsx has no revalidate export and reads searchParams (a request-time API), and cacheComponents is not enabled in next.config.ts. Whether getCategories() is cached there, and for how long, needs empirical verification (response timing/headers) during the live run rather than being assumed from hp-05/hp-06's plan text."
+    }
+  ],
+  "gaps": [
+    "Whether any current header/mobile-nav link is configured to target a specific category (vs. just linking to /products generally) depends on live admin-managed nav-link data, not source code — verify live before writing alt-path tests around it.",
+    "This plan assumes categories only ever become storefront-visible via the ~60s ISR window (edge-01) since no revalidate webhook exists for them today — if one is added later, this plan and its test expectations go stale and should be regenerated.",
+    "/products page's exact category-fetch caching behavior (see the last edge_case) needs live verification, not assumption."
+  ]
+}

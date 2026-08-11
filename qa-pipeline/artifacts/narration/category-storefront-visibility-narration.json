@@ -1,0 +1,14 @@
+{
+  "feature_name": "Category Storefront Visibility",
+  "language": "en",
+  "voice_persona": "confident, warm, plain-spoken — a helpful teammate showing a customer around, not an ad",
+  "synthesized_at": null,
+  "tts": null,
+  "lines": [
+    { "step_id": "intro", "text": "Here's how customers find products by category on the storefront.", "audio_path": null, "duration_ms": null, "alignment": null },
+    { "step_id": "hp-02", "text": "Every category is one click away.", "audio_path": null, "duration_ms": null, "alignment": null },
+    { "step_id": "hp-04", "text": "Just the products that belong here.", "audio_path": null, "duration_ms": null, "alignment": null },
+    { "step_id": "hp-06", "text": "Or filter to a category from anywhere.", "audio_path": null, "duration_ms": null, "alignment": null },
+    { "step_id": "outro", "text": "Simple browsing, built around how customers actually shop.", "audio_path": null, "duration_ms": null, "alignment": null }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "feature_name": "Category Storefront Edge Search Redirect Ordering",
+  "plan_path": "qa-pipeline/artifacts/plans/category-storefront-visibility-plan.json",
+  "run_timestamp": "2026-08-09T20:16:28.355Z",
+  "trace_path": "qa-pipeline/artifacts/traces/category-storefront-edge-search-redirect-ordering-trace.zip",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "edg-01",
+      "action": "Navigate to a bogus category slug with a ?q= search param present",
+      "selector": null,
+      "route": "/products",
+      "bounding_box": null,
+      "timestamp_ms": 1781,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/category-storefront-edge-search-redirect-ordering/edg-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": [
+        "%c%s%c [lib/api] getCategoryBySlug(totally-bogus-category-slug-xyz): background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px  Server   ApiError: Category 'totally-bogus-category-slug-xyz' not found\n    at apiFetch (about://React/Server/file:///home/others/urgentprinters/urgent-printers-frontend/.next/dev/server/chunks/ssr/%5Broot-of-the-server%5D__0-q9i76._.js?19:1919:11)\n    at getCategoryBySlug (about://React/Server/file:///home/others/urgentprinters/urgent-printers-frontend/.next/dev/server/chunks/ssr/%5Broot-of-the-server%5D__0-q9i76._.js?20:1995:22)\n    at Module.generateMetadata (about://React/Server/file:///home/others/urgentprinters/urgent-printers-frontend/.next/dev/server/chunks/ssr/%5Broot-of-the-server%5D__0fr.aiq._.js?21:318:22)\n    at resolveErrorDev (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:1919:105)\n    at getOutlinedModel (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:1469:28)\n    at parseModelString (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:1584:50)\n    at reviveModel (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2522:66)\n    at parseModel (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2517:16)\n    at initializeModelChunk (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:1084:25)\n    at getOutlinedModel (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:1407:17)\n    at parseModelString (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:1639:50)\n    at reviveModel (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2522:66)\n    at reviveModel (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2525:61)\n    at parseModel (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2517:16)\n    at initializeModelChunk (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:1084:25)\n    at resolveConsoleEntry (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2047:96)\n    at processFullStringRow (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2453:17)\n    at processFullBinaryRow (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2393:9)\n    at processBinaryChunk (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2502:221)\n    at progress (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_0p3wegg._.js:2676:20)",
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>\n      <RedirectBoundary>\n        <RedirectErrorBoundary router={{...}}>\n          <InnerLayoutRouter url=\"/products?...\" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} ...>\n            <SegmentViewNode type=\"page\" pagePath=\"products/p...\">\n              <SegmentTrieNode>\n              <ProductsPage>\n                <section>\n                  <div>\n                  <ProductsPageShell products={[...]} total={4} categories={[...]} showCategoryFilter={true} ...>\n                    <Suspense fallback={<div>}>\n                      <ShellInner products={[...]} total={4} categories={[...]} showCategoryFilter={true} pageSize={12}>\n                        <div className=\"max-w-7xl ...\">\n                          <div className=\"relative m...\">\n                            <Search>\n                            <input\n                              type=\"search\"\n                              value=\"business\"\n                              onChange={function onChange}\n                              placeholder=\"Search this catalog…\"\n                              autoComplete=\"off\"\n                              aria-label=\"Search this catalog\"\n                              className=\"w-full h-10 rounded-full border border-border bg-card pl-10 pr-9 text-sm plac...\"\n-                             style={{caret-color:\"transparent\"}}\n                            >\n                            ...\n                          ...\n            ...\n          ...\n"
+      ]
+    }
+  ],
+  "lighthouse": {
+    "initial_load": null,
+    "final_state": null
+  }
+}
