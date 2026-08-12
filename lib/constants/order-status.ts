@@ -10,3 +10,13 @@ export const ORDER_STATUS_COLORS: Record<string, string> = {
   refund_initiated: "bg-destructive/10 text-destructive",
   refunded: "bg-destructive/10 text-destructive",
 };
+
+export const SHIPMENT_STATUS_COLORS: Record<string, string> = {
+  created: "bg-muted text-muted-foreground",
+  picked_up: "bg-primary/10 text-primary",
+  in_transit: "bg-brand-orange/10 text-brand-orange",
+  out_for_delivery: "bg-brand-orange/10 text-brand-orange",
+  delivered: "bg-success/10 text-success",
+  rto: "bg-destructive/10 text-destructive",
+  cancelled: "bg-destructive/10 text-destructive",
+};

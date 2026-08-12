@@ -281,6 +281,15 @@ export interface OrderStatusEvent {
   createdBy?: string;
 }
 
+export type ShipmentStatus =
+  | "created"
+  | "picked_up"
+  | "in_transit"
+  | "out_for_delivery"
+  | "delivered"
+  | "rto"
+  | "cancelled";
+
 // Item shape returned in the full order detail response
 export interface OrderItem {
   id: string;
@@ -357,6 +366,9 @@ export interface Order {
   totalAmount: number;          // convenience copy of pricing.totalAmount
   notes?: string;
   trackingNumber?: string;
+  courier?: string;
+  trackingUrl?: string;
+  shipmentStatus?: ShipmentStatus;
   estimatedDelivery?: string;
   statusHistory: OrderStatusEvent[];
   placedAt: string;

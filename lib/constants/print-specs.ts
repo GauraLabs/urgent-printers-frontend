@@ -26,3 +26,13 @@ export const ORDER_STATUS_LABELS: Record<string, string> = {
   refund_initiated: "Refund Initiated",
   refunded: "Refunded",
 };
+
+export const SHIPMENT_STATUS_LABELS: Record<string, string> = {
+  created: "Order Confirmed for Shipping",
+  picked_up: "Picked Up by Courier",
+  in_transit: "On the Way",
+  out_for_delivery: "Out for Delivery",
+  delivered: "Delivered",
+  rto: "Returned to Sender",
+  cancelled: "Shipment Cancelled",
+};
