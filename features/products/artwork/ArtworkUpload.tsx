@@ -100,7 +100,7 @@ export function ArtworkUpload({ onChange }: ArtworkUploadProps) {
               : "border-border hover:border-primary/50 hover:bg-muted/50"
           )}
         >
-          <input {...getInputProps()} />
+          <input {...getInputProps({ "aria-label": "Upload artwork file" })} />
           <div className={cn(
             "w-12 h-12 rounded-xl flex items-center justify-center",
             isDragActive ? "bg-primary/10" : "bg-muted"

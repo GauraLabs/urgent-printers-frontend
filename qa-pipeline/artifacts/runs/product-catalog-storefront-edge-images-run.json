@@ -1,0 +1,31 @@
+{
+  "feature_name": "Product Catalog Storefront Edge Images",
+  "plan_path": "qa-pipeline/artifacts/plans/product-catalog-storefront-plan.json",
+  "run_timestamp": "2026-08-11T07:51:17.235Z",
+  "trace_path": "qa-pipeline/artifacts/traces/product-catalog-storefront-edge-images-trace.zip",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "edge-13",
+      "action": "Load the catalog and watch for failed image requests",
+      "selector": null,
+      "route": "/products",
+      "bounding_box": null,
+      "timestamp_ms": 2062,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-edge-images/edge-13.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    }
+  ],
+  "lighthouse": {
+    "initial_load": null,
+    "final_state": null
+  }
+}

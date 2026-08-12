@@ -1,0 +1,407 @@
+{
+  "feature_name": "Product Catalog Storefront Happy Path",
+  "plan_path": "qa-pipeline/artifacts/plans/product-catalog-storefront-plan.json",
+  "run_timestamp": "2026-08-11T07:51:39.506Z",
+  "trace_path": "qa-pipeline/artifacts/traces/product-catalog-storefront-happy-path-trace.zip",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "hp-01",
+      "action": "Navigate to the full catalog listing",
+      "selector": null,
+      "route": "/products",
+      "bounding_box": null,
+      "timestamp_ms": 1397,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-happy-path/hp-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 4
+        }
+      ],
+      "console_errors": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>\n      <RedirectBoundary>\n        <RedirectErrorBoundary router={{...}}>\n          <InnerLayoutRouter url=\"/products\" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>\n            <SegmentViewNode type=\"page\" pagePath=\"products/p...\">\n              <SegmentTrieNode>\n              <ProductsPage>\n                <section>\n                  <div>\n                  <ProductsPageShell products={[...]} total={10} categories={[...]} showCategoryFilter={true} ...>\n                    <Suspense fallback={<div>}>\n                      <ShellInner products={[...]} total={10} categories={[...]} showCategoryFilter={true} pageSize={12}>\n                        <div className=\"max-w-7xl ...\">\n                          <div className=\"relative m...\">\n                            <Search>\n                            <input\n                              type=\"search\"\n                              value=\"\"\n                              onChange={function onChange}\n                              placeholder=\"Search this catalog…\"\n                              autoComplete=\"off\"\n                              aria-label=\"Search this catalog\"\n                              className=\"w-full h-10 rounded-full border border-border bg-card pl-10 pr-9 text-sm plac...\"\n-                             style={{caret-color:\"transparent\"}}\n                            >\n                          <div>\n                          <div>\n                          ...\n                            <div className=\"flex flex-...\">\n                              <div>\n                              <div>\n                                <p>\n                                <div className=\"flex flex-...\">\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={true}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  ...\n                              ...\n                              <div>\n                                <p>\n                                <div className=\"flex items...\">\n                                  <input\n                                    type=\"number\"\n                                    placeholder=\"Min\"\n                                    value=\"\"\n                                    onChange={function onChange}\n                                    onBlur={function applyPrice}\n                                    onKeyDown={function onKeyDown}\n                                    min={0}\n                                    className=\"w-full h-8 rounded-md border border-border bg-background px-3 text-sm f...\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  <span>\n                                  <input\n                                    type=\"number\"\n                                    placeholder=\"Max\"\n                                    value=\"\"\n                                    onChange={function onChange}\n                                    onBlur={function applyPrice}\n                                    onKeyDown={function onKeyDown}\n                                    min={0}\n                                    className=\"w-full h-8 rounded-md border border-border bg-background px-3 text-sm f...\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                              <Separator>\n                              <div>\n                                <p>\n                                <div className=\"flex flex-...\">\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                              <Separator>\n                              <div>\n                                <p>\n                                <div className=\"flex flex-...\">\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n            ...\n          ...\n"
+      ]
+    },
+    {
+      "step_id": "hp-02",
+      "action": "Observe the desktop filter sidebar",
+      "selector": "locator('aside')",
+      "route": "/products",
+      "bounding_box": {
+        "x": 32,
+        "y": 338,
+        "width": 224,
+        "height": 2242
+      },
+      "timestamp_ms": 1746,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-happy-path/hp-02.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-03",
+      "action": "Expand the truncated category list",
+      "selector": "locator('aside').getByRole('button', { name: /^Show all \\d+ categories$/ })",
+      "route": "/products",
+      "bounding_box": {
+        "x": 32,
+        "y": 606,
+        "width": 142,
+        "height": 16
+      },
+      "timestamp_ms": 2154,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-happy-path/hp-03.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-04",
+      "action": "Select the 'Business Cards' category radio",
+      "selector": "locator('aside').getByLabel('Business Cards')",
+      "route": "/products",
+      "bounding_box": {
+        "x": 32,
+        "y": 465,
+        "width": 14,
+        "height": 14
+      },
+      "timestamp_ms": 2659,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-happy-path/hp-04.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 2
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-05",
+      "action": "Open the sort dropdown and choose 'Price: Low to High'",
+      "selector": "getByRole('button', { name: 'Most Popular' })",
+      "route": "/products",
+      "bounding_box": {
+        "x": 1115,
+        "y": 290,
+        "width": 133,
+        "height": 28
+      },
+      "timestamp_ms": 3447,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-happy-path/hp-05.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 2
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-06",
+      "action": "Read a product card",
+      "selector": "locator('article').filter({ has: getByRole('heading', { name: 'Standard Business Cards' }) })",
+      "route": "/products",
+      "bounding_box": {
+        "x": 288,
+        "y": 344,
+        "width": 307,
+        "height": 526
+      },
+      "timestamp_ms": 3822,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-happy-path/hp-06.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-07",
+      "action": "Open the product detail page from the card",
+      "selector": "locator('article').filter({ has: getByRole('heading', { name: 'Standard Business Cards' }) }).getByRole('link', { name: /Configure/ })",
+      "route": "/products/business-cards/standard-business-cards",
+      "bounding_box": {
+        "x": 504,
+        "y": 688,
+        "width": 74,
+        "height": 16
+      },
+      "timestamp_ms": 4846,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-happy-path/hp-07.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 10
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-08",
+      "action": "Observe the live pricing summary",
+      "selector": null,
+      "route": "/products/business-cards/standard-business-cards",
+      "bounding_box": null,
+      "timestamp_ms": 5135,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-happy-path/hp-08.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-09",
+      "action": "Select the 300 GSM Card paper option",
+      "selector": "getByRole('button', { name: /300 GSM Card/ })",
+      "route": "/products/business-cards/standard-business-cards",
+      "bounding_box": {
+        "x": 964,
+        "y": 657,
+        "width": 284,
+        "height": 58
+      },
+      "timestamp_ms": 5621,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-happy-path/hp-09.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-10",
+      "action": "Select the 1,000-unit quantity tier",
+      "selector": "getByRole('button').filter({ hasText: '1,000' }).first()",
+      "route": "/products/business-cards/standard-business-cards",
+      "bounding_box": {
+        "x": 673,
+        "y": 338,
+        "width": 574,
+        "height": 44
+      },
+      "timestamp_ms": 6052,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-happy-path/hp-10.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-11",
+      "action": "Select the Rush turnaround option",
+      "selector": "getByRole('button').filter({ hasText: 'Rush' }).first()",
+      "route": "/products/business-cards/standard-business-cards",
+      "bounding_box": {
+        "x": 672,
+        "y": 536,
+        "width": 576,
+        "height": 63
+      },
+      "timestamp_ms": 6412,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-happy-path/hp-11.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-12",
+      "action": "Confirm Check is disabled before a full pincode is entered",
+      "selector": "getByRole('button', { name: 'Check', exact: true })",
+      "route": "/products/business-cards/standard-business-cards",
+      "bounding_box": {
+        "x": 1156,
+        "y": 340,
+        "width": 75,
+        "height": 40
+      },
+      "timestamp_ms": 6727,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-happy-path/hp-12.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-13",
+      "action": "Enter a serviceable 6-digit pincode",
+      "selector": "getByLabel('Pincode')",
+      "route": "/products/business-cards/standard-business-cards",
+      "bounding_box": {
+        "x": 689,
+        "y": 340,
+        "width": 459,
+        "height": 40
+      },
+      "timestamp_ms": 7048,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-happy-path/hp-13.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "110001",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-14",
+      "action": "Submit the delivery check",
+      "selector": "getByRole('button', { name: 'Check', exact: true })",
+      "route": "/products/business-cards/standard-business-cards",
+      "bounding_box": {
+        "x": 1156,
+        "y": 340,
+        "width": 75,
+        "height": 40
+      },
+      "timestamp_ms": 7520,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-happy-path/hp-14.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-15",
+      "action": "Return to the filtered catalog",
+      "selector": null,
+      "route": "/products",
+      "bounding_box": null,
+      "timestamp_ms": 8609,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-happy-path/hp-15.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 2
+        }
+      ],
+      "console_errors": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>\n      <RedirectBoundary>\n        <RedirectErrorBoundary router={{...}}>\n          <InnerLayoutRouter url={\"/product...\"} tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} ...>\n            <SegmentViewNode type=\"page\" pagePath=\"products/p...\">\n              <SegmentTrieNode>\n              <ProductsPage>\n                <section>\n                  <div>\n                  <ProductsPageShell products={[...]} total={3} categories={[...]} showCategoryFilter={true} ...>\n                    <Suspense fallback={<div>}>\n                      <ShellInner products={[...]} total={3} categories={[...]} showCategoryFilter={true} pageSize={12}>\n                        <div className=\"max-w-7xl ...\">\n                          <div className=\"relative m...\">\n                            <Search>\n                            <input\n                              type=\"search\"\n                              value=\"\"\n                              onChange={function onChange}\n                              placeholder=\"Search this catalog…\"\n                              autoComplete=\"off\"\n                              aria-label=\"Search this catalog\"\n                              className=\"w-full h-10 rounded-full border border-border bg-card pl-10 pr-9 text-sm plac...\"\n-                             style={{caret-color:\"transparent\"}}\n                            >\n                          <div>\n                          <div>\n                          ...\n                            <div className=\"flex flex-...\">\n                              <div>\n                              <div>\n                                <p>\n                                <div className=\"flex flex-...\">\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={true}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  ...\n                              ...\n                              <div>\n                                <p>\n                                <div className=\"flex items...\">\n                                  <input\n                                    type=\"number\"\n                                    placeholder=\"Min\"\n                                    value=\"\"\n                                    onChange={function onChange}\n                                    onBlur={function applyPrice}\n                                    onKeyDown={function onKeyDown}\n                                    min={0}\n                                    className=\"w-full h-8 rounded-md border border-border bg-background px-3 text-sm f...\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  <span>\n                                  <input\n                                    type=\"number\"\n                                    placeholder=\"Max\"\n                                    value=\"\"\n                                    onChange={function onChange}\n                                    onBlur={function applyPrice}\n                                    onKeyDown={function onKeyDown}\n                                    min={0}\n                                    className=\"w-full h-8 rounded-md border border-border bg-background px-3 text-sm f...\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                              <Separator>\n                              <div>\n                                <p>\n                                <div className=\"flex flex-...\">\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                              <Separator>\n                              <div>\n                                <p>\n                                <div className=\"flex flex-...\">\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n            ...\n          ...\n"
+      ]
+    },
+    {
+      "step_id": "hp-16",
+      "action": "Clear every active filter",
+      "selector": "locator('aside').getByRole('button', { name: /^Clear all \\(\\d+\\)$/ })",
+      "route": "/products",
+      "bounding_box": {
+        "x": 175,
+        "y": 382,
+        "width": 81,
+        "height": 16
+      },
+      "timestamp_ms": 9139,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-happy-path/hp-16.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 4
+        }
+      ],
+      "console_errors": []
+    }
+  ],
+  "lighthouse": {
+    "initial_load": {
+      "url": "http://localhost:3000/products",
+      "requested_url": "http://localhost:3000/products",
+      "url_mismatch": false,
+      "session_seeded": true,
+      "warm_cache": true,
+      "fetched_at": "2026-08-11T07:51:58.862Z",
+      "scores": {
+        "performance": 0.56,
+        "accessibility": 0.97,
+        "best_practices": 0.96
+      },
+      "metrics": {
+        "first_contentful_paint_ms": 1115.5563499999998,
+        "largest_contentful_paint_ms": 2760.28175,
+        "total_blocking_time_ms": 695.0000000000009,
+        "cumulative_layout_shift": 0,
+        "speed_index_ms": 1395.5373254497126,
+        "time_to_interactive_ms": 6531.8505275000025
+      }
+    },
+    "final_state": {
+      "url": "http://localhost:3000/products",
+      "requested_url": "http://localhost:3000/products",
+      "url_mismatch": false,
+      "session_seeded": true,
+      "warm_cache": true,
+      "fetched_at": "2026-08-11T07:52:26.059Z",
+      "scores": {
+        "performance": 0.65,
+        "accessibility": 0.97,
+        "best_practices": 0.96
+      },
+      "metrics": {
+        "first_contentful_paint_ms": 1099.883,
+        "largest_contentful_paint_ms": 2023.467,
+        "total_blocking_time_ms": 569.5886954650882,
+        "cumulative_layout_shift": 0,
+        "speed_index_ms": 1278.0747059762436,
+        "time_to_interactive_ms": 2633.2448259185794
+      }
+    }
+  }
+}

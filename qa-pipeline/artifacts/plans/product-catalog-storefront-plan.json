@@ -1,0 +1,325 @@
+{
+  "feature_found": true,
+  "feature_name": "Product Catalog (Storefront)",
+  "source_files": [
+    "urgent-printers-frontend/app/products/page.tsx",
+    "urgent-printers-frontend/app/products/[categorySlug]/page.tsx",
+    "urgent-printers-frontend/app/products/[categorySlug]/[productSlug]/page.tsx",
+    "urgent-printers-frontend/app/search/page.tsx",
+    "urgent-printers-frontend/app/not-found.tsx",
+    "urgent-printers-frontend/features/products/ProductsPageShell.tsx",
+    "urgent-printers-frontend/features/products/useProductFilters.ts",
+    "urgent-printers-frontend/features/products/FilterControls.tsx",
+    "urgent-printers-frontend/features/products/FiltersDrawer.tsx",
+    "urgent-printers-frontend/features/products/ActiveFilters.tsx",
+    "urgent-printers-frontend/features/products/SortDropdown.tsx",
+    "urgent-printers-frontend/features/products/ProductCard.tsx",
+    "urgent-printers-frontend/features/products/WishlistButton.tsx",
+    "urgent-printers-frontend/features/products/ProductDetailClient.tsx",
+    "urgent-printers-frontend/features/products/DeliveryCheck.tsx",
+    "urgent-printers-frontend/features/products/configurator/ProductConfigurator.tsx",
+    "urgent-printers-frontend/features/products/configurator/PricingTable.tsx",
+    "urgent-printers-frontend/features/products/template/TemplateForm.tsx",
+    "urgent-printers-frontend/features/products/artwork/ArtworkUpload.tsx",
+    "urgent-printers-frontend/features/products/gallery/ProductGallery.tsx",
+    "urgent-printers-frontend/features/products/RelatedProducts.tsx",
+    "urgent-printers-frontend/features/categories/CategoryHero.tsx",
+    "urgent-printers-frontend/features/home/CategoryGrid.tsx",
+    "urgent-printers-frontend/components/layout/HeaderSearch.tsx",
+    "urgent-printers-frontend/components/common/EmptyState.tsx",
+    "urgent-printers-frontend/components/common/Breadcrumb.tsx",
+    "urgent-printers-frontend/components/common/StarRating.tsx",
+    "urgent-printers-frontend/lib/api/products.ts",
+    "urgent-printers-frontend/lib/api/categories.ts",
+    "urgent-printers-frontend/lib/api/shipping.ts",
+    "urgent-printers-frontend/lib/api/client.ts",
+    "urgent-printers-frontend/lib/constants/routes.ts",
+    "urgent-printers-frontend/lib/utils.ts",
+    "urgent-printers-frontend/lib/themes.ts",
+    "urgent-printers-backend/app/api/v1/routes/products.py",
+    "urgent-printers-backend/app/api/v1/routes/search.py",
+    "urgent-printers-backend/app/api/v1/routes/categories.py",
+    "urgent-printers-backend/app/schemas/product.py",
+    "urgent-printers-backend/app/repositories/product_repository.py",
+    "urgent-printers-backend/app/repositories/category_repository.py",
+    "urgent-printers-backend/app/services/product_service.py",
+    "urgent-printers-backend/app/services/search_service.py"
+  ],
+  "user_goal": "Find the right print product by browsing the catalog, narrowing it with category/price/highlight/tag filters and sort, or searching by name, then open its detail page to configure and price it.",
+  "business_goal": "The catalog is the storefront's entire discovery surface — every product an admin publishes has to be findable, correctly priced, correctly linked, and correctly counted here, or it cannot be sold.",
+  "user_journey": [
+    { "step": "Open the full catalog listing", "route_or_state": "/products" },
+    { "step": "Narrow by category using the sidebar filter", "route_or_state": "/products?category=business-cards" },
+    { "step": "Sort the results", "route_or_state": "/products?category=business-cards&sort=price-asc" },
+    { "step": "Narrow further by price / highlight / tag", "route_or_state": "/products?min=&max=&badge=&tags=" },
+    { "step": "Open a category's own landing page", "route_or_state": "/products/[categorySlug]" },
+    { "step": "Search the catalog (header instant search, catalog search input, or the search page)", "route_or_state": "/products?q= or /search?q=" },
+    { "step": "Open a product's detail page", "route_or_state": "/products/[categorySlug]/[productSlug]" },
+    { "step": "Configure size / paper / finish / sides / quantity / turnaround and see live pricing", "route_or_state": "product detail — ProductConfigurator" },
+    { "step": "Check delivery date for a pincode", "route_or_state": "product detail — DeliveryCheck" },
+    { "step": "Fill personalisation fields where the product requires them", "route_or_state": "product detail — TemplateForm" }
+  ],
+  "happy_path": [
+    {
+      "step_id": "hp-01",
+      "action": "Navigate to the full catalog listing",
+      "selector": "route /products",
+      "expected_result": "h1 'All Products' with the sub-line 'Premium printing for every business need — delivered fast across India'; a Breadcrumb naming 'All Products'; the toolbar count reads '10 products' (every categorised, active product in the dev DB)."
+    },
+    {
+      "step_id": "hp-02",
+      "action": "Observe the desktop filter sidebar",
+      "selector": "aside > 'Filters' heading; 'Category', 'Price per Unit (₹)', 'Highlights', 'Tags' group labels",
+      "expected_result": "All four filter groups render. Category shows 'All Products' plus the first 6 categories (7 radios), CATEGORY_VISIBLE_LIMIT being 6."
+    },
+    {
+      "step_id": "hp-03",
+      "action": "Expand the truncated category list",
+      "selector": "button 'Show all 8 categories'",
+      "expected_result": "All 8 category radios render (9 including 'All Products') and the button label becomes 'Show less'."
+    },
+    {
+      "step_id": "hp-04",
+      "action": "Select the 'Business Cards' category radio",
+      "selector": "input[type=radio][name=category] labelled 'Business Cards'",
+      "expected_result": "URL becomes /products?category=business-cards, the toolbar count reads '3 products', an 'Active:' row appears and a chip labelled 'business-cards' with a 'Remove business-cards filter' button (ActiveFilters falls back to the slug when no categoryName prop is passed on /products)."
+    },
+    {
+      "step_id": "hp-05",
+      "action": "Open the sort dropdown and choose 'Price: Low to High'",
+      "selector": "DropdownMenuTrigger button showing the active sort label; DropdownMenuItem 'Price: Low to High'",
+      "expected_result": "URL gains sort=price-asc, the trigger label becomes 'Price: Low to High', a 'Sort: price asc' chip appears, and every product card's 'From ₹x.xx' value is non-decreasing down the grid."
+    },
+    {
+      "step_id": "hp-06",
+      "action": "Read a product card",
+      "selector": "article containing heading 'Standard Business Cards'",
+      "expected_result": "Card shows the category eyebrow 'Business Cards', the product name, a short description, a star rating, a 'From' label with an INR-formatted per-unit price and a 'per unit' caption, a 'Configure' link, and a wishlist button labelled 'Add to wishlist'."
+    },
+    {
+      "step_id": "hp-07",
+      "action": "Open the product detail page from the card",
+      "selector": "link 'Configure' inside the 'Standard Business Cards' card",
+      "expected_result": "Navigates to /products/business-cards/standard-business-cards; h1 'Standard Business Cards'; breadcrumb 'All Products / Business Cards / Standard Business Cards' with the last crumb aria-current='page'."
+    },
+    {
+      "step_id": "hp-08",
+      "action": "Observe the live pricing summary",
+      "selector": "'Price per unit' block and 'Total for N units' block",
+      "expected_result": "Per-unit price is the best-value tier (₹4.50 for the 500 tier), the total reads for 500 units, and 'GST and shipping calculated at checkout' is shown."
+    },
+    {
+      "step_id": "hp-09",
+      "action": "Select the 300 GSM Card paper option",
+      "selector": "SelectableCard '300 GSM Card' in the 'Paper / Material' group",
+      "expected_result": "price_multiplier 1.1 lifts the per-unit price to ₹4.95 and the 500-unit total to ₹2,475.00, and every row of the Quantity Pricing table recomputes. The static 'From ₹4.50 / unit' line in the product header is merchandising copy and deliberately does not track options."
+    },
+    {
+      "step_id": "hp-10",
+      "action": "Select the 1,000-unit quantity tier",
+      "selector": "Quantity Pricing table row for 1,000",
+      "expected_result": "The 1,000 row becomes selected and the summary reads 'Total for 1,000 units'."
+    },
+    {
+      "step_id": "hp-11",
+      "action": "Select the Rush turnaround option",
+      "selector": "SelectableCard 'Rush' in the 'Turnaround Time' group",
+      "expected_result": "'Rush' shows '1 business days' and '+₹150.00'; the flat extra cost is added once to the total, not per unit."
+    },
+    {
+      "step_id": "hp-12",
+      "action": "Confirm the delivery check is gated before a full pincode is entered",
+      "selector": "button 'Check'",
+      "expected_result": "PINCODE_RE (/^\\d{6}$/) fails on an empty field, so the Check button is disabled and no request can fire."
+    },
+    {
+      "step_id": "hp-13",
+      "action": "Enter a serviceable 6-digit pincode",
+      "selector": "input aria-label 'Pincode'",
+      "expected_result": "The field accepts '110001' and the Check button becomes enabled."
+    },
+    {
+      "step_id": "hp-14",
+      "action": "Submit the delivery check",
+      "selector": "button 'Check'",
+      "expected_result": "A success badge reading 'Delivery by <date>' appears, formatted en-IN (day numeric, month short, year numeric)."
+    },
+    {
+      "step_id": "hp-15",
+      "action": "Return to the filtered catalog",
+      "selector": "route /products?category=business-cards&sort=price-asc",
+      "expected_result": "The category+sort filters are restored from the URL alone and the count reads '3 products'."
+    },
+    {
+      "step_id": "hp-16",
+      "action": "Clear every active filter",
+      "selector": "button 'Clear all (2)'",
+      "expected_result": "The button counts both active filters, clearAll() resets the URL to bare /products, the count returns to '10 products' and the 'Active:' chip row is gone."
+    }
+  ],
+  "alternate_paths": [
+    {
+      "path_name": "Category landing page (path-scoped route)",
+      "steps": [
+        { "step_id": "alt-01", "action": "Navigate directly to a category route", "selector": "route /products/business-cards", "expected_result": "CategoryHero renders, h1 'Business Cards', breadcrumb 'All Products / Business Cards' with the last crumb aria-current='page', and the toolbar count reads '3 products'." },
+        { "step_id": "alt-02", "action": "Switch category from inside a path-scoped category page", "selector": "input[type=radio] labelled 'Flyers & Leaflets'", "expected_result": "Navigates to the other category's own path /products/flyers-leaflets (not ?category=), per useProductFilters.setCategory's pathCategorySlug branch." },
+        { "step_id": "alt-03", "action": "Select the 'All Products' radio from a category page", "selector": "input[type=radio] labelled 'All Products'", "expected_result": "Navigates back to /products with no category query param." }
+      ]
+    },
+    {
+      "path_name": "Header instant search",
+      "steps": [
+        { "step_id": "alt-04", "action": "Open the storefront and focus the header search", "selector": "input aria-label 'Search products'", "expected_result": "aria-expanded flips to true and the panel shows 'Popular Searches'. Per the ARIA combobox pattern no role='listbox' exists yet — it is only rendered once there are options for it to own." },
+        { "step_id": "alt-05", "action": "Type a query into the header search", "selector": "input aria-label 'Search products'", "expected_result": "The 320ms debounce elapses and a Typesense-backed /search call fires." },
+        { "step_id": "alt-06", "action": "Observe the instant-search results", "selector": "role=listbox named 'Search results'", "expected_result": "The listbox appears with one role='option' per product, each showing name, category name and 'from ₹x.xx/unit', and the input's aria-controls points at it." },
+        { "step_id": "alt-07", "action": "Click 'See all results'", "selector": "button 'See all results for “business”'", "expected_result": "Navigates to /search?q=business; the header input clears and the dropdown closes. This control is a button, not an option — it triggers a navigation rather than selecting a value, so it sits outside the listbox." },
+        { "step_id": "alt-08", "action": "Type into the header search again to keyboard-navigate it", "selector": "input aria-label 'Search products'", "expected_result": "The results listbox reopens." },
+        { "step_id": "alt-09", "action": "ArrowDown then Enter opens the highlighted product", "selector": "input aria-label 'Search products'", "expected_result": "ArrowDown sets aria-selected='true' on the first option and points the input's aria-activedescendant at it; Enter navigates straight to that product's detail route." },
+        { "step_id": "alt-10", "action": "Escape closes the instant-search dropdown", "selector": "input aria-label 'Search products'", "expected_result": "Escape sets aria-expanded back to false and unmounts the panel. Re-opening needs a real focus event — clicking an already-focused input fires none." }
+      ]
+    },
+    {
+      "path_name": "Dedicated search page",
+      "steps": [
+        { "step_id": "alt-11", "action": "Open the search page with no query", "selector": "route /search", "expected_result": "h1 'Search' with 'Find the perfect print product for your business', a GET form to /search, a 'Popular Searches' section of 9 term chips, and a 'Browse by Category' grid of all 8 categories (each tile's accessible name carries an emoji)." },
+        { "step_id": "alt-12", "action": "Type a query into the search form", "selector": "input[name=q]", "expected_result": "The field accepts the term; no request fires until submit (this form is a no-JS-safe GET)." },
+        { "step_id": "alt-13", "action": "Submit the search form", "selector": "button 'Search'", "expected_result": "Navigates to /search?q=<term>; h1 becomes 'Results for “<term>”', the sub-line reads 'N products found', and a region labelled 'Search results' holds the grid." }
+      ]
+    },
+    {
+      "path_name": "In-catalog search input",
+      "steps": [
+        { "step_id": "alt-14", "action": "Open the catalog listing", "selector": "route /products", "expected_result": "The unfiltered catalog renders with '10 products'." },
+        { "step_id": "alt-15", "action": "Type into the catalog search field", "selector": "input aria-label 'Search this catalog'", "expected_result": "Typing is instant locally; the URL is untouched until the 400ms debounce settles." },
+        { "step_id": "alt-16", "action": "Wait for the debounced search to take over the listing", "selector": "route /products?q=business", "expected_result": "h1 becomes 'Results for \"business\"' and the sub-line 'N products found'." },
+        { "step_id": "alt-17", "action": "Observe the filter controls while a search is active", "selector": "aside FilterControls; SortDropdown; FiltersDrawer", "expected_result": "The sidebar is replaced by 'Filters unavailable' plus 'Category, price, and tag filters aren’t available while searching. Clear your search to use them.' — the same sentence also appears above the grid, twice in total — and the sort control renders the inert 'Relevance' label." },
+        { "step_id": "alt-18", "action": "Clear the search from its active-filter chip", "selector": "button aria-label 'Remove Search: \"business\" filter'", "expected_result": "The q param is removed, the catalog returns to '10 products' and the filter sidebar becomes usable again." },
+        { "step_id": "alt-19", "action": "Search again, then clear it from the input", "selector": "input aria-label 'Search this catalog'", "expected_result": "The search re-applies after the debounce." },
+        { "step_id": "alt-20", "action": "Clear the search with the input's own clear button", "selector": "button aria-label 'Clear search'", "expected_result": "The input empties and, once the debounce settles, the URL loses the q param and the full catalog returns." }
+      ]
+    },
+    {
+      "path_name": "Highlight (badge), tag and price filters",
+      "steps": [
+        { "step_id": "alt-21", "action": "Open the catalog listing", "selector": "route /products", "expected_result": "'10 products'." },
+        { "step_id": "alt-22", "action": "Tick the 'Bestseller' highlight", "selector": "input[type=checkbox] labelled 'Bestseller'", "expected_result": "URL gains badge=bestseller, a 'bestseller' chip appears, and only 'Matte Finish Business Cards' remains — '1 product', singular." },
+        { "step_id": "alt-23", "action": "Untick the same highlight", "selector": "input[type=checkbox] labelled 'Bestseller'", "expected_result": "setBadge toggles the param off (current.badge === badge → null), the chip disappears and the count returns to 10." },
+        { "step_id": "alt-24", "action": "Tick the 'Events' tag", "selector": "input[type=checkbox] labelled 'Events'", "expected_result": "URL gains tags=events and the result set narrows to the two products tagged 'events' (A2 Posters, A5 Flyers) — '2 products'." },
+        { "step_id": "alt-25", "action": "Add a second tag on top of the first", "selector": "input[type=checkbox] labelled 'Corporate'", "expected_result": "URL becomes tags=events,corporate and the backend ANDs them (Product.tags contains every selected tag), yielding '0 products' and the 'No products found' empty state — not an OR union." },
+        { "step_id": "alt-26", "action": "Clear the tag filters", "selector": "button 'Clear all (2)'", "expected_result": "Both tags count toward activeCount; clearing returns the bare /products listing at '10 products'." },
+        { "step_id": "alt-27", "action": "Enter a minimum price per unit", "selector": "input[placeholder=Min] in 'Price per Unit (₹)'", "expected_result": "The value is held locally until committed — no navigation on keystroke." },
+        { "step_id": "alt-28", "action": "Commit the price range with Enter", "selector": "input[placeholder=Min]", "expected_result": "URL gains min=200, a chip reading '₹200 – ₹∞' appears, and products with no tier at or above ₹200/unit (e.g. A5 Flyers) drop out." },
+        { "step_id": "alt-29", "action": "Enter a maximum price per unit", "selector": "input[placeholder=Max]", "expected_result": "Held locally until committed." },
+        { "step_id": "alt-30", "action": "Commit the maximum by blurring the field", "selector": "input[placeholder=Max]", "expected_result": "onBlur applies the same filter as Enter — there is no separate Apply button — and the chip becomes '₹200 – ₹400'." }
+      ]
+    },
+    {
+      "path_name": "Product detail — gallery, description, related",
+      "steps": [
+        { "step_id": "alt-31", "action": "Open a product that has an uploaded image", "selector": "route /products/business-cards/matte-finish-business-cards", "expected_result": "ProductGallery renders slide images with alt text '<name> — view 1'. Two Swipers exist (touch: block md:hidden; thumbnail-controlled: hidden md:block), so at desktop widths the visible slide is the second match." },
+        { "step_id": "alt-32", "action": "Read the full product description and tag chips", "selector": "heading 'Product Details'", "expected_result": "The product's rich description renders, and its tags render as chips whose text is tag.replace('-', ' ') — only the first hyphen is replaced, and capitalisation is CSS-only, so 'business-cards' reads as 'business cards' in the DOM." },
+        { "step_id": "alt-33", "action": "Scroll to related products", "selector": "region labelled 'You Might Also Like'", "expected_result": "Up to 4 sibling products from the same category render as ProductCards, excluding the product being viewed." }
+      ]
+    }
+  ],
+  "error_paths": [
+    { "step_id": "err-01", "trigger": "Navigate to /products/<slug that is not a category>", "expected_ui_response": "getCategoryBySlug returns null → notFound(); the 404 page renders with h1 'Page Not Found' and 'Looks like this page has been taken to the printers and never came back. Let’s get you back on track.', plus 'Go Home' / 'Browse Products' / 'Search' links. Document title 'Category Not Found | Urgent Printers'.", "selector": "heading 'Page Not Found'" },
+    { "step_id": "err-02", "trigger": "Navigate to /products/business-cards/<slug that is not a product>", "expected_ui_response": "getProductBySlug returns null → notFound(); the same 404 page renders. Document title 'Product Not Found | Urgent Printers'.", "selector": "heading 'Page Not Found'" },
+    { "step_id": "err-03", "trigger": "Search the catalog for a term that matches nothing on /products", "expected_ui_response": "EmptyState with title 'No products found' and description 'No results for \"zzzznomatchxyz\". Try a different search term.'; the toolbar reads '0 products for “zzzznomatchxyz”'.", "selector": "heading 'No products found'" },
+    { "step_id": "err-04", "trigger": "Apply a filter combination that matches nothing (tag 'Eco Friendly' — no product carries the 'eco' tag)", "expected_ui_response": "EmptyState with title 'No products found' and the non-search description 'Try adjusting your filters or search for something else.'; the count reads '0 products'.", "selector": "heading 'No products found'" },
+    { "step_id": "err-05", "trigger": "Open /search?q=<term that matches nothing>", "expected_ui_response": "EmptyState with title 'No results for \"<term>\"' and description 'Try a different search term, or browse by category below.'; the sub-line reads '0 products found'.", "selector": "heading 'No results for \"zzzznomatchxyz\"'" },
+    { "step_id": "err-06", "trigger": "Focus the header instant search with an empty query", "expected_ui_response": "aria-expanded becomes true and the panel shows 'Popular Searches'; no role='listbox' is rendered, since there are no options to own.", "selector": "input aria-label 'Search products'" },
+    { "step_id": "err-07", "trigger": "Type a term into the header instant search that matches nothing", "expected_ui_response": "The debounced query fires and returns no documents.", "selector": "input aria-label 'Search products'" },
+    { "step_id": "err-08", "trigger": "Observe the header instant search's no-results state", "expected_ui_response": "'No results for “<term>”' followed by 'Try one of these instead:' and up to 5 suggestion buttons from the POPULAR list, excluding an exact case-insensitive match of the typed term. Still no role='listbox'.", "selector": "text 'Try one of these instead:'" },
+    { "step_id": "err-09", "trigger": "Open a product detail page and inspect the delivery check", "expected_ui_response": "The pincode field carries placeholder 'Enter 6-digit pincode' and the 'Check' button starts disabled.", "selector": "input aria-label 'Pincode'" },
+    { "step_id": "err-10", "trigger": "Type fewer than six digits into the pincode field", "expected_ui_response": "The value is accepted as typed.", "selector": "input aria-label 'Pincode'" },
+    { "step_id": "err-11", "trigger": "Attempt to submit with fewer than six digits", "expected_ui_response": "PINCODE_RE (/^\\d{6}$/) fails, so 'Check' stays disabled and no request fires. There is deliberately no inline error message for this state — the disabled button is the entire validation affordance.", "selector": "button 'Check'[disabled]" },
+    { "step_id": "err-12", "trigger": "Type letters and punctuation into the pincode field", "expected_ui_response": "The input accepts the keystrokes only up to its own maxLength.", "selector": "input aria-label 'Pincode'" },
+    { "step_id": "err-13", "trigger": "Inspect the value after typing non-digits", "expected_ui_response": "Two rules compose in order: maxLength={6} truncates the typed string before React sees it, then handlePincodeChange applies value.replace(/\\D/g,'').slice(0,6). Typing 'ab12cd34ef' therefore leaves '12'. No error message is shown; the field silently sanitises.", "selector": "input aria-label 'Pincode'" },
+    { "step_id": "err-14", "trigger": "Type more than six digits into the pincode field", "expected_ui_response": "Only the first six characters are ever entered.", "selector": "input aria-label 'Pincode'" },
+    { "step_id": "err-15", "trigger": "Inspect the value after typing more than six digits", "expected_ui_response": "The value is '123456' and 'Check' becomes enabled.", "selector": "input aria-label 'Pincode'" },
+    { "step_id": "err-16", "trigger": "Enter a pincode the courier does not serve", "expected_ui_response": "The field accepts it and 'Check' enables — serviceability is a server decision, not a format one.", "selector": "input aria-label 'Pincode'" },
+    { "step_id": "err-17", "trigger": "Submit a non-serviceable pincode", "expected_ui_response": "A destructive badge reading exactly 'Not deliverable to this pincode' appears below the form.", "selector": "text 'Not deliverable to this pincode'" },
+    { "step_id": "err-18", "trigger": "Serviceability request fails (network/API error)", "expected_ui_response": "The catch branch renders \"Couldn't check delivery right now. Please try again in a bit.\" in destructive text. Note this string uses &apos; (U+0027), unlike the &rsquo; used elsewhere in the app.", "selector": "text \"Couldn't check delivery right now.\"" },
+    { "step_id": "err-19", "trigger": "Open a product whose customization_mode requires personalisation details", "expected_ui_response": "A 'Personalise Your Print' section renders one field per template field, each label carrying a red '*' when required.", "selector": "text 'Personalise Your Print'" },
+    { "step_id": "err-20", "trigger": "Blur a required personalisation field without filling it", "expected_ui_response": "TemplateForm renders '<field.label> is required' — literally 'test is required' for the dev DB's one template product — under the field and switches its border to the destructive colour.", "selector": "text 'test is required'" },
+    { "step_id": "err-21", "trigger": "Press Add to Cart with a required personalisation field left blank", "expected_ui_response": "A sonner error toast titled 'Please fill in your print details', with the missing field labels as its description; onBlockedByTemplate scrolls the section into view and force-shows every required-field error.", "selector": "text 'Please fill in your print details'" },
+    { "step_id": "err-22", "trigger": "Request a catalog URL with a non-numeric price bound, e.g. /products?min=abc", "expected_ui_response": "Number('abc') is NaN → min_price=NaN reaches the backend, which rejects it with 422 → getProducts' catch returns an empty page. The UI shows '0 products' and the EmptyState 'No products found' / 'Try adjusting your filters or search for something else.' rather than an error screen. No client-side validation exists for this.", "selector": "heading 'No products found'" },
+    { "step_id": "err-23", "trigger": "Request a catalog URL with an unknown badge value, e.g. /products?badge=bogus", "expected_ui_response": "The backend's ProductBadge enum rejects it with 422 → the same silent empty catalog ('0 products', 'No products found'). No client-side allowlist exists.", "selector": "heading 'No products found'" }
+  ],
+  "edge_cases": [
+    {
+      "case": "A one-character search query (/products?q=a) — edge-01",
+      "existing_validation": "ProductsPage: isSearching = query.length >= 2; useProductFilters.isSearching uses the same threshold",
+      "risk_note": "Below the threshold the page must behave exactly like the unfiltered catalog — no 'Results for' heading, no search chip, filters still enabled. A mismatch between the server's threshold and the hook's would make the UI claim it is searching while the server returned the plain listing."
+    },
+    {
+      "case": "A page number past the end of the result set (/products?page=999) — edge-02",
+      "existing_validation": "no validation found — potential gap. The page param is passed through as Number(params.page)",
+      "risk_note": "The backend returns an empty data array with total still 10, so the toolbar says '10 products' while the grid renders 'No products found'. Contradictory, though not fatal, and there is no upper bound or clamp on the page number."
+    },
+    {
+      "case": "Result set smaller than one page (10 products, PAGE_SIZE 12) so infinite scroll never arms — edge-03",
+      "existing_validation": "ProductsPageShell: hasMore = products.length < total",
+      "risk_note": "The end-of-list line 'You’ve seen all 10 products.' renders and the IntersectionObserver sentinel does not. The load-more path and its 'Loading more…' indicator are therefore unexercised by this run — see gaps."
+    },
+    {
+      "case": "Every catalog card must resolve to a real product page — edge-04, edge-05",
+      "existing_validation": "backend ProductService.list_products now excludes category_id IS NULL, alongside the existing is_active filter",
+      "risk_note": "FIXED THIS RUN. Previously an active product with no category (CNProd0f5f98194a) was returned by the public listing and, because ROUTES.product interpolates an empty category segment, rendered as the first card with href '/products//cn-prod-0f5f98194a' — a 308 to a non-existent category, i.e. a 404 — and 'From ₹0.00' (priceFrom undefined → ?? 0). Category deletion nullifies its products' category_id, so this state recurs from an ordinary admin action; the guard is what stops it reaching customers."
+    },
+    {
+      "case": "A product detail URL pairing a real product with the wrong real category (/products/business-cards/photo-mugs) — edge-06",
+      "existing_validation": "the detail page now 404s unless product.categorySlug === categorySlug (page body and generateMetadata)",
+      "risk_note": "FIXED THIS RUN. Previously both lookups succeeded independently, so every product was reachable at 8 URLs — one per category — each returning 200 with identical content under a wrong breadcrumb. An empty categorySlug is treated as never matching."
+    },
+    {
+      "case": "Price sort ordering versus the price the card displays — edge-07, edge-08",
+      "existing_validation": "product_repository's price_asc/price_desc keys now compute the same value as schemas/product.py _display_price()",
+      "risk_note": "FIXED THIS RUN. Previously the sort key was pricing_tiers->0 (index 0 is the most expensive per-unit tier, since tiers are stored ascending by quantity) while the card shows the is_best_value tier — sort_by=price_asc produced 1.80, 4.50, 12.00, 5.50, 6.00, 22.00… The two expressions now cross-reference each other in comments; if the pricing-tier selection rule changes, both must move together."
+    },
+    {
+      "case": "A category tile's product count versus the number of products its page lists — edge-09",
+      "existing_validation": "CategoryRepository's count subquery takes active_only, and the public categories route passes active_only=True",
+      "risk_note": "FIXED THIS RUN. Previously the count included inactive products (Business Cards advertised 4 and listed 3; Banners & Flex advertised 2 and listed 1). The admin response deliberately keeps the all-inclusive count, because the admin delete dialog warns how many products will be orphaned — same field name, intentionally different semantics per consumer."
+    },
+    {
+      "case": "A stray ?category= query param on a path-scoped category route — edge-10, edge-11",
+      "existing_validation": "useProductFilters.setParam deletes `category` whenever pathCategorySlug is defined; current.category prefers the path segment",
+      "risk_note": "An old bookmark must not show one category's products under another's hero and breadcrumb. Note the stripping only happens on the next filter interaction — the initial render is served by the path segment alone, so the param lingers in the URL bar until then."
+    },
+    {
+      "case": "A search query issued from a category page (/products/business-cards?q=flyer) — edge-12",
+      "existing_validation": "CategoryPage redirects to /products?q=<encoded> before the category lookup runs",
+      "risk_note": "The redirect deliberately precedes notFound(), so even a bogus category slug plus ?q= lands on search rather than 404. Ordering-sensitive: moving the lookup earlier would silently change this."
+    },
+    {
+      "case": "Products with zero uploaded images fall back to a picsum.photos placeholder — edge-13",
+      "existing_validation": "lib/api/products.ts mapCard/mapDetail: thumbnail_url ?? `https://picsum.photos/seed/<slug>/600/400`; next.config.ts allowlists picsum.photos",
+      "risk_note": "Most dev-DB products have no images, so the catalog is mostly placeholders — and a broken placeholder looks identical to a broken real image. Asserted on the network (no failed image requests) rather than on pixels."
+    },
+    {
+      "case": "Zustand-persisted wishlist state on a product card before hydration",
+      "existing_validation": "WishlistButton uses useMounted(); isWishlisted = mounted && wishlisted",
+      "risk_note": "The SSR pass always renders aria-label 'Add to wishlist'. A capture step that screenshots before hydration records the default rather than the user's real wishlist — the documented frontend hydration trap."
+    },
+    {
+      "case": "notFound() returns HTTP 200 under the dev server because loading.tsx opens a Suspense boundary that flushes the shell first",
+      "existing_validation": "notFound() renders the correct 404 UI and metadata",
+      "risk_note": "Visually correct, but a crawler sees 200 for a soft 404. Needs verifying against a production build before being treated as a defect; this run's tests assert the rendered UI, not the status code."
+    },
+    {
+      "case": "min greater than max in the price filter (?min=500&max=10)",
+      "existing_validation": "no validation found — potential gap. The backend ANDs 'some tier >= min' with 'some tier <= max' independently",
+      "risk_note": "Yields 0 results with no explanation; the UI shows the generic 'Try adjusting your filters' empty state. Not wrong, but the range is never sanity-checked, swapped, or surfaced as an input error."
+    }
+  ],
+  "gaps": [
+    "The only product in the dev DB with an empty turnaround_options array (CNProd0f5f98194a) is also the only uncategorised one, so the configurator's 'Turnaround options aren’t available for this product yet. Please contact support to place an order.' branch — and the 'Please select all required options' / 'Some print options are missing a selection. Please try again.' toast it triggers — has no reachable URL now that uncategorised products are excluded from the catalog. Untestable through the UI until a categorised product with no turnaround options exists.",
+    "err-18 (serviceability failure) has no deterministic server-side trigger, so it is exercised by aborting the /shipping/serviceability request from the test rather than by real provider behaviour. err-17 uses a genuinely non-serviceable pincode (999999) and needs no interception.",
+    "The catalog has no pagination controls — discovery is infinite-scroll only — and the dev DB (10 products) is smaller than one page (12), so loadMore(), its 'Loading more…' indicator, the IntersectionObserver sentinel, and the generation-guard that discards a stale in-flight page are all unexercised. Testing them needs more seed products than this run creates.",
+    "The 'Eco Friendly' tag offered in FilterControls matches no product in the dev DB, so it can only be tested as an empty-result case (err-04).",
+    "Color contrast was measured under the admin-selected `plum` theme, which is what the storefront is currently serving. lib/themes.ts defines six selectable themes and the contrast of a Badge or price-delta chip differs per theme, so a11y numbers from this run describe one theme, not the product.",
+    "The backend agent flagged two pre-existing search-index gaps outside this feature's scope: TypesenseSearchProvider._to_doc() does int(product.get('category_id', 0)), which raises TypeError on a product whose category_id is None (latent, since dev uses the fake provider); and CategoryRepository.nullify_products() does not re-index or remove affected products from the search provider, so a category delete can leave stale documents until a manual reindex."
+  ]
+}

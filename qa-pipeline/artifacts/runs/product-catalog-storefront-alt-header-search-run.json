@@ -1,0 +1,200 @@
+{
+  "feature_name": "Product Catalog Storefront Alt Header Search",
+  "plan_path": "qa-pipeline/artifacts/plans/product-catalog-storefront-plan.json",
+  "run_timestamp": "2026-08-11T07:49:54.414Z",
+  "trace_path": "qa-pipeline/artifacts/traces/product-catalog-storefront-alt-header-search-trace.zip",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "alt-04",
+      "action": "Open the storefront and focus the header search",
+      "selector": null,
+      "route": "/products",
+      "bounding_box": null,
+      "timestamp_ms": 1685,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-alt-header-search/alt-04.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 4
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-05",
+      "action": "Type a query into the header search",
+      "selector": "getByLabel('Search products')",
+      "route": "/products",
+      "bounding_box": {
+        "x": 608,
+        "y": 10,
+        "width": 448,
+        "height": 36
+      },
+      "timestamp_ms": 1998,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-alt-header-search/alt-05.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "business",
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-06",
+      "action": "Observe the instant-search results",
+      "selector": "getByRole('listbox', { name: 'Search results' })",
+      "route": "/products",
+      "bounding_box": {
+        "x": 609,
+        "y": 87,
+        "width": 446,
+        "height": 248
+      },
+      "timestamp_ms": 2349,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-alt-header-search/alt-06.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-07",
+      "action": "Click 'See all results'",
+      "selector": "getByRole('button', { name: /^See all results for/ })",
+      "route": "/search",
+      "bounding_box": {
+        "x": 609,
+        "y": 336,
+        "width": 446,
+        "height": 44
+      },
+      "timestamp_ms": 3126,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-alt-header-search/alt-07.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-08",
+      "action": "Type into the header search again to keyboard-navigate it",
+      "selector": "getByLabel('Search products')",
+      "route": "/search",
+      "bounding_box": {
+        "x": 608,
+        "y": 10,
+        "width": 448,
+        "height": 36
+      },
+      "timestamp_ms": 3532,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-alt-header-search/alt-08.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "business",
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-09",
+      "action": "ArrowDown then Enter opens the highlighted product",
+      "selector": "getByLabel('Search products')",
+      "route": "/products/business-cards/premium-foil-business-cards",
+      "bounding_box": {
+        "x": 608,
+        "y": 10,
+        "width": 448,
+        "height": 36
+      },
+      "timestamp_ms": 4641,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-alt-header-search/alt-09.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 10
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-10",
+      "action": "Escape closes the instant-search dropdown",
+      "selector": "getByLabel('Search products')",
+      "route": "/products/business-cards/premium-foil-business-cards",
+      "bounding_box": {
+        "x": 608,
+        "y": 10,
+        "width": 448,
+        "height": 36
+      },
+      "timestamp_ms": 5190,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-alt-header-search/alt-10.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 10
+        }
+      ],
+      "console_errors": []
+    }
+  ],
+  "lighthouse": {
+    "initial_load": null,
+    "final_state": null
+  }
+}

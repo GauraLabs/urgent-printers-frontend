@@ -1,0 +1,113 @@
+{
+  "feature_name": "Product Catalog (Storefront)",
+  "run_path": "qa-pipeline/artifacts/runs/product-catalog-storefront-run.json",
+  "plan_path": "qa-pipeline/artifacts/plans/product-catalog-storefront-plan.json",
+  "pass_count": 85,
+  "fail_count": 0,
+  "failures": [],
+  "accessibility_summary": {
+    "critical": [],
+    "serious": [
+      "color-contrast — the single remaining serious finding, on every catalog route: /products (4 nodes), /products/business-cards (2), /search (3), and each product detail page (10). Three distinct offenders, all at 10px type: the `success` Badge (#f8f8f8 on #479c4d, ratio 3.22), the `default`/brand Badge (#f8f8f8 on #e356a2, ratio 3.23), and the configurator's price-delta chips (#e356a2 on #fce6ec, ratio 2.88). WCAG 2 AA requires 4.5:1 at this size. This is a design-token decision, not a component bug — the storefront is currently serving the admin-selected `plum` theme and lib/themes.ts defines six selectable themes, so every ratio here describes one theme only and a fix has to be evaluated across all six. Deliberately left unfixed in this run and escalated for a human brand/design call.",
+      "Attribution note: axe runs per navigation, so each finding above belongs to the route the step landed on, not to the element that step touched."
+    ],
+    "moderate": [
+      "heading-order — 1 node on /products. The catalog page's heading levels skip a level somewhere between the h1 page title and the product cards' h2 names. Low user impact, cheap to fix, worth folding into the next pass on that page."
+    ],
+    "coverage_caveat": "automated scan only — manual/screen-reader review still needed. Automated scanning typically catches only 30-40% of real accessibility issues, so a clean critical row here does not mean this feature is accessible; the combobox rewrite in particular (aria-activedescendant, option ownership, Escape handling) should be confirmed with an actual screen reader before anyone claims conformance."
+  },
+  "performance_summary": {
+    "initial_load": "/products, Next.js dev server, warm cache: performance 0.56, accessibility 0.97, best-practices 0.96. FCP 1116ms, LCP 2760ms, Speed Index 1396ms, CLS 0, TBT 695ms, TTI 6532ms. url_mismatch is false, so these numbers do describe the route under test.",
+    "final_state": "/products after the full filter/sort/detail/clear journey: performance 0.65, accessibility 0.97, best-practices 0.96. Recorded with warm_cache: true, i.e. an in-session measurement — it is not comparable to a cold first load, and the improvement over initial_load is mostly cache, not a real speed-up.",
+    "concerns": [
+      "These are Next.js dev-server numbers, not a production build. Dev mode ships unminified bundles and compiles routes on demand, so the absolute scores are not shippable figures — their value is as a run-over-run baseline for this feature. Re-measure against `next build && next start` before treating 0.56 as a real regression or a real target.",
+      "TBT 695ms and TTI 6.5s are the weakest signals in the set and are the ones most worth re-checking on a production build: the catalog page hydrates several client components at once (ProductsPageShell, FilterControls, SortDropdown, HeaderSearch, a WishlistButton per card).",
+      "CLS is 0 and LCP 2.76s even in dev, which is the encouraging half — layout stability on a grid of image cards is the thing most likely to regress, and it currently does not.",
+      "No performance budget is defined for this feature anywhere in the repo, so 'good' here is a judgement, not a threshold check. Catalog browsing is discovery-stage, not checkout-adjacent, so it can tolerate a slower bar than payment — but it is also the most-visited surface on the storefront, which pulls the other way."
+    ]
+  },
+  "ux_gaps": [
+    {
+      "issue": "A page number past the end of the result set (/products?page=999) renders the 'No products found' empty state while the toolbar above it still reads '10 products'. The two disagree on screen. There is no clamp, upper bound, or redirect-to-last-page on the page param.",
+      "related_edge_case": "A page number past the end of the result set (/products?page=999) — edge-02"
+    },
+    {
+      "issue": "A malformed catalog URL degrades to a silently empty catalog rather than an explained one. /products?min=abc sends min_price=NaN and /products?badge=bogus sends an invalid enum; both get a 422, which getProducts swallows into an empty page. The customer sees '0 products' and 'Try adjusting your filters or search for something else' with no indication that their URL was invalid. Confirmed behaviour, not a crash — but there is no client-side validation of either param.",
+      "related_edge_case": "err-22 / err-23 (malformed price bound and unknown badge)"
+    },
+    {
+      "issue": "An inverted price range (?min=500&max=10) is never sanity-checked, swapped, or surfaced as an input error. The backend ANDs 'some tier >= min' with 'some tier <= max' independently, so the result is silently zero products with the generic empty state. Not generated as a test, because asserting behaviour no code implements would be a failing test rather than a finding.",
+      "related_edge_case": "min greater than max in the price filter (?min=500&max=10)"
+    },
+    {
+      "issue": "Infinite scroll is entirely unexercised by this run. The dev DB holds 10 catalogued products and PAGE_SIZE is 12, so hasMore is always false: loadMore(), the 'Loading more…' indicator, the IntersectionObserver sentinel, and the generation-guard that discards a stale in-flight page after a filter change have no coverage at all. This is the largest untested surface in the feature, and the generation-guard in particular is the kind of race that only shows up under real data volume.",
+      "related_edge_case": "Result set smaller than one page (10 products, PAGE_SIZE 12) so infinite scroll never arms — edge-03"
+    },
+    {
+      "issue": "The configurator's 'Turnaround options aren’t available for this product yet. Please contact support to place an order.' branch, and the 'Please select all required options' / 'Some print options are missing a selection. Please try again.' toast it gates, are now unreachable through the UI. The only product with an empty turnaround_options array was also the only uncategorised one, and uncategorised products are now correctly excluded from the catalog. The code path is still live for any future categorised product missing turnaround options — it just has no fixture.",
+      "related_edge_case": null
+    },
+    {
+      "issue": "notFound() returns HTTP 200 under the dev server, because each route's loading.tsx opens a Suspense boundary that flushes the shell before the 404 is thrown. The rendered UI and the document title are both correct (asserted in err-01/err-02), so this is invisible to a human but a soft 404 to a crawler. Needs confirming against a production build before being called a defect.",
+      "related_edge_case": "notFound() returns HTTP 200 under the dev server because loading.tsx opens a Suspense boundary that flushes the shell first"
+    },
+    {
+      "issue": "A stray ?category= param on a path-scoped category route is only stripped on the next filter interaction, not on load. The rendered page is correct throughout (the path segment always wins), but the misleading param sits in the URL bar and in anything the customer copies or shares until they touch a filter.",
+      "related_edge_case": "A stray ?category= query param on a path-scoped category route — edge-10, edge-11"
+    },
+    {
+      "issue": "The desktop filter sidebar is position: sticky and, with all filter groups rendered, is 731px tall against a 720px viewport. Everything remains reachable — the container's bottom edge pushes the panel up near the end of the page — but reaching the Tags group requires scrolling most of the catalog, and a single programmatic scrollIntoView does not land on it. On a shorter viewport, or if another filter group is added, this becomes a real reachability problem rather than an awkward one.",
+      "related_edge_case": null
+    },
+    {
+      "issue": "The 'Eco Friendly' tag is offered in the filter sidebar but matches no product in the catalog, so selecting it can only ever produce an empty result. FilterControls' AVAILABLE_TAGS is a hand-curated list because the backend exposes no tag-facet endpoint, so nothing keeps the offered tags in sync with the tags products actually carry.",
+      "related_edge_case": "The 'Eco Friendly' tag offered in FilterControls matches no product in the dev DB"
+    },
+    {
+      "issue": "Most catalog products have no uploaded image and fall back to a picsum.photos placeholder. Every image request resolves (asserted in edge-13), so this is not a defect — but it does mean the catalog's visual quality in this environment is not representative, and a genuinely broken product image would be visually indistinguishable from the placeholder.",
+      "related_edge_case": "Products with zero uploaded images fall back to a picsum.photos placeholder — edge-13"
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": "high",
+      "action": "Seed enough products (30+ across several categories) to make infinite scroll testable, then extend this suite to cover loadMore(), the 'Loading more…' indicator, and — most importantly — the generation-guard that discards a stale in-flight page when a filter changes mid-fetch. That guard exists because someone anticipated a real race; it currently has zero coverage, and a regression in it would append the wrong products to a filtered list, which is exactly the kind of bug customers report as 'the filters don't work'."
+    },
+    {
+      "priority": "high",
+      "action": "Make a deliberate decision on the catalog's colour contrast across all six themes in lib/themes.ts, rather than per-theme spot fixes. Three token pairs fail WCAG AA at 10px (success Badge 3.22, default/brand Badge 3.23, price-delta chips 2.88 under the currently-selected `plum` theme). Because the theme is admin-switchable, contrast is effectively a product decision that ships with whichever theme staff pick, so the check belongs in the theme definition — ideally as a contrast assertion over lib/themes.ts, not a one-off CSS change."
+    },
+    {
+      "priority": "medium",
+      "action": "Validate catalog query params client-side before they reach the API. Ignore a non-numeric min/max instead of forwarding NaN, allowlist badge against the four values FilterControls actually offers, clamp page to the available range, and swap or reject an inverted price range. Today all four produce the same undifferentiated empty catalog, and the page=999 case additionally contradicts its own '10 products' count line."
+    },
+    {
+      "priority": "medium",
+      "action": "Confirm the soft-404 behaviour against a production build (`next build && next start`) for /products/[categorySlug] and /products/[categorySlug]/[productSlug]. If notFound() still returns 200 because loading.tsx flushes the shell first, decide whether the streaming benefit is worth the SEO cost on these two routes specifically — they are the ones most likely to be crawled with stale slugs."
+    },
+    {
+      "priority": "medium",
+      "action": "Give the desktop filter sidebar its own scroll context (a max-height plus overflow-y-auto on the sticky child) so its lower groups are reachable without scrolling the whole catalog. It is 731px against a 720px viewport today, which is the narrowest possible margin, and any new filter group pushes it over."
+    },
+    {
+      "priority": "medium",
+      "action": "Verify the rebuilt header-search combobox with a real screen reader. The automated critical findings are gone and aria-activedescendant/option ownership are asserted structurally, but keyboard-plus-AT behaviour — particularly whether the 'See all results' button is discoverable now that it correctly sits outside the listbox — is exactly what automated scanning cannot judge."
+    },
+    {
+      "priority": "medium",
+      "action": "Re-measure Lighthouse against a production build before treating 0.56 performance as either a problem or a baseline, and pay particular attention to TBT (695ms) and TTI (6.5s). If they stay high in production, the candidate is the number of client components hydrating at once on /products — a WishlistButton per card is the most obviously reducible."
+    },
+    {
+      "priority": "low",
+      "action": "Derive the filter sidebar's tag list from tags products actually carry rather than the hand-curated AVAILABLE_TAGS constant, or drop 'Eco Friendly' until something uses it. Offering a filter that can only return zero results is a small but repeated trust cost, and the constant's own comment already acknowledges it is a manually verified subset."
+    },
+    {
+      "priority": "low",
+      "action": "Fix the single heading-order violation on /products, and strip the stray ?category= param on load rather than on the next filter interaction so shared URLs are clean."
+    },
+    {
+      "priority": "low",
+      "action": "Add a categorised product with no turnaround options to the seed data so the configurator's 'not orderable yet' branch and its accompanying toast regain a reachable fixture. The code path is still live; only the fixture disappeared when uncategorised products were excluded from the catalog."
+    }
+  ]
+}

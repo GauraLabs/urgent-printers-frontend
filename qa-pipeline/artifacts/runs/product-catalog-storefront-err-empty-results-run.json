@@ -1,0 +1,63 @@
+{
+  "feature_name": "Product Catalog Storefront Err Empty Results",
+  "plan_path": "qa-pipeline/artifacts/plans/product-catalog-storefront-plan.json",
+  "run_timestamp": "2026-08-11T07:51:22.259Z",
+  "trace_path": "qa-pipeline/artifacts/traces/product-catalog-storefront-err-empty-results-trace.zip",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "err-03",
+      "action": "Search the catalog for a term that matches nothing",
+      "selector": null,
+      "route": "/products",
+      "bounding_box": null,
+      "timestamp_ms": 1122,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-err-empty-results/err-03.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>\n      <RedirectBoundary>\n        <RedirectErrorBoundary router={{...}}>\n          <InnerLayoutRouter url=\"/products?...\" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} ...>\n            <SegmentViewNode type=\"page\" pagePath=\"products/p...\">\n              <SegmentTrieNode>\n              <ProductsPage>\n                <section>\n                  <div>\n                  <ProductsPageShell products={[...]} total={0} categories={[...]} showCategoryFilter={true} ...>\n                    <Suspense fallback={<div>}>\n                      <ShellInner products={[...]} total={0} categories={[...]} showCategoryFilter={true} pageSize={12}>\n                        <div className=\"max-w-7xl ...\">\n                          <div className=\"relative m...\">\n                            <Search>\n                            <input\n                              type=\"search\"\n                              value=\"zzzznomatchxyz\"\n                              onChange={function onChange}\n                              placeholder=\"Search this catalog…\"\n                              autoComplete=\"off\"\n                              aria-label=\"Search this catalog\"\n                              className=\"w-full h-10 rounded-full border border-border bg-card pl-10 pr-9 text-sm plac...\"\n-                             style={{caret-color:\"transparent\"}}\n                            >\n                            ...\n                          ...\n            ...\n          ...\n"
+      ]
+    },
+    {
+      "step_id": "err-04",
+      "action": "Apply a filter that matches nothing (the Eco Friendly tag)",
+      "selector": null,
+      "route": "/products",
+      "bounding_box": null,
+      "timestamp_ms": 3446,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-err-empty-results/err-04.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-05",
+      "action": "Open the search page with a term that matches nothing",
+      "selector": null,
+      "route": "/search",
+      "bounding_box": null,
+      "timestamp_ms": 4146,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-err-empty-results/err-05.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    }
+  ],
+  "lighthouse": {
+    "initial_load": null,
+    "final_state": null
+  }
+}

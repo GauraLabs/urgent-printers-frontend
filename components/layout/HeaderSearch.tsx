@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useId } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -28,6 +28,11 @@ export function HeaderSearch() {
 
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const uid = useId();
+  const panelId = `${uid}-search-panel`;
+  const listboxId = `${uid}-search-listbox`;
+  const optionId = (index: number) => `${uid}-search-option-${index}`;
 
   const debouncedQuery = useDebounce(query.trim(), 320);
 
@@ -76,12 +81,18 @@ export function HeaderSearch() {
         submit();
       }
     } else if (e.key === "Escape") {
+      // type="search" clears its value natively on Escape, which would refire
+      // onChange and reopen the dropdown right after we close it.
+      e.preventDefault();
       setIsOpen(false);
       inputRef.current?.blur();
     }
   }
 
   const showDropdown = isOpen && (query.trim().length >= 2 || query.trim() === "");
+  const hasOptions = !isFetching && results.length > 0;
+  const activeOptionId =
+    hasOptions && activeIndex >= 0 && activeIndex < results.length ? optionId(activeIndex) : undefined;
 
   return (
     <div ref={containerRef} className="relative hidden md:flex items-center w-full max-w-sm lg:max-w-md">
@@ -100,9 +111,12 @@ export function HeaderSearch() {
           onKeyDown={handleKeyDown}
           placeholder="Search products…"
           autoComplete="off"
+          role="combobox"
+          aria-autocomplete="list"
           aria-label="Search products"
           aria-expanded={showDropdown}
-          aria-haspopup="listbox"
+          aria-controls={panelId}
+          aria-activedescendant={activeOptionId}
           className={cn(
             "w-full h-9 rounded-full border border-border bg-muted/50 pl-9 pr-8 text-sm",
             "placeholder:text-muted-foreground",
@@ -128,7 +142,7 @@ export function HeaderSearch() {
       {/* Dropdown */}
       {showDropdown && (
         <div
-          role="listbox"
+          id={panelId}
           className={cn(
             "absolute top-full left-0 right-0 mt-2 z-50",
             "bg-popover border border-border rounded-2xl shadow-xl overflow-hidden",
@@ -138,20 +152,21 @@ export function HeaderSearch() {
           {/* Loading */}
           {isFetching && query.length >= 2 && (
             <div className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground">
-              <Loader2 size={14} className="animate-spin shrink-0" />
+              <Loader2 size={14} className="animate-spin shrink-0" aria-hidden="true" />
               Searching…
             </div>
           )}
 
-          {/* Results */}
-          {!isFetching && results.length > 0 && (
+          {/* Results — the listbox owns ONLY role="option" children; the group
+              label and "see all" action sit outside it so it stays ARIA-valid. */}
+          {hasOptions && (
             <>
               <div className="px-3 py-2 border-b border-border">
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
                   Products
                 </p>
               </div>
-              <ul className="py-1">
+              <div id={listboxId} role="listbox" aria-label="Search results" className="py-1">
                 {results.map((product, i) => {
                   // "From" price merchandises the best-value tier, not the
                   // mathematically cheapest per-unit price (usually the
@@ -164,54 +179,54 @@ export function HeaderSearch() {
                       ? Math.min(...product.pricingTiers.map((t) => t.pricePerUnit))
                       : product.priceFrom;
                   return (
-                    <li key={product.id}>
-                      <Link
-                        href={ROUTES.product(product.categorySlug, product.slug)}
-                        onClick={() => { setIsOpen(false); setQuery(""); }}
-                        role="option"
-                        aria-selected={activeIndex === i}
-                        className={cn(
-                          "flex items-center gap-3 px-3 py-2.5 transition-colors",
-                          activeIndex === i ? "bg-muted" : "hover:bg-muted/70"
-                        )}
-                      >
-                        <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-muted border border-border shrink-0">
-                          <Image
-                            src={product.images[0]}
-                            alt={product.name}
-                            fill
-                            className="object-cover"
-                            sizes="40px"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium line-clamp-1">{product.name}</p>
-                          <p className="text-xs text-muted-foreground">{product.categoryName}</p>
-                        </div>
-                        {unitPrice !== undefined && (
-                          <p className="text-xs font-semibold text-primary shrink-0">
-                            from {formatPricePerUnit(unitPrice)}/unit
-                          </p>
-                        )}
-                      </Link>
-                    </li>
+                    <Link
+                      key={product.id}
+                      id={optionId(i)}
+                      href={ROUTES.product(product.categorySlug, product.slug)}
+                      onClick={() => { setIsOpen(false); setQuery(""); }}
+                      role="option"
+                      aria-selected={activeIndex === i}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2.5 transition-colors",
+                        activeIndex === i ? "bg-muted" : "hover:bg-muted/70"
+                      )}
+                    >
+                      <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-muted border border-border shrink-0">
+                        <Image
+                          src={product.images[0]}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                          sizes="40px"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium line-clamp-1">{product.name}</p>
+                        <p className="text-xs text-muted-foreground">{product.categoryName}</p>
+                      </div>
+                      {unitPrice !== undefined && (
+                        <p className="text-xs font-semibold text-primary shrink-0">
+                          from {formatPricePerUnit(unitPrice)}/unit
+                        </p>
+                      )}
+                    </Link>
                   );
                 })}
-              </ul>
+              </div>
 
-              {/* See all */}
+              {/* See all — not a listbox option: it triggers a full search
+                  navigation rather than selecting a value. */}
               <div className="border-t border-border">
                 <button
+                  type="button"
                   onClick={() => submit()}
-                  role="option"
-                  aria-selected={activeIndex === results.length}
                   className={cn(
                     "w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-primary hover:bg-muted transition-colors",
                     activeIndex === results.length && "bg-muted"
                   )}
                 >
                   See all results for &ldquo;{query}&rdquo;
-                  <ArrowRight size={14} />
+                  <ArrowRight size={14} aria-hidden="true" />
                 </button>
               </div>
             </>
