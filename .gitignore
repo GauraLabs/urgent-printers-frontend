@@ -59,5 +59,7 @@ qa-pipeline/artifacts/screenshots
 qa-pipeline/artifacts/traces
 qa-pipeline/artifacts/video
 qa-pipeline/artifacts/narration/**/*.mp3
+qa-pipeline/playwright/fixtures/oversized*
+qa-pipeline/artifacts/docs/**/*.pdf
 playwright-report
 test-results
