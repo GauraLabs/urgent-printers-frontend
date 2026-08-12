@@ -1,0 +1,31 @@
+{
+  "feature_name": "Category Storefront Visibility",
+  "total_estimated_duration_ms": 5600,
+  "shots": [
+    { "step_id": "hp-02", "emphasis": "zoom", "duration_ms": 1400, "callout_text": "Find products by category", "callout_position": "bottom", "transition_in": "cut" },
+    { "step_id": "hp-03", "emphasis": "cut", "duration_ms": 1000, "callout_text": null, "callout_position": "none", "transition_in": "cut" },
+    { "step_id": "hp-04", "emphasis": "highlight", "duration_ms": 2200, "callout_text": "Only what's in this category", "callout_position": "top", "transition_in": "cut" },
+    { "step_id": "hp-06", "emphasis": "zoom", "duration_ms": 1000, "callout_text": "Or filter from any listing", "callout_position": "left", "transition_in": "whip-pan" }
+  ],
+  "flagged_for_review": [
+    { "step_id": "hp-01", "reason": "A React hydration-mismatch console warning was logged on this step (homepage). Not a broken-functionality failure — the page renders and functions normally — but per this pipeline's rule, any step carrying a console error is excluded from the public cut rather than judged fit by a human after the fact. The same warning shape was independently found on the admin panel's login page (unrelated codebase), which makes environment noise a plausible, though unconfirmed, explanation. Excluding this step means the video does not open on the homepage category grid, which a human reviewer may want to override once the warning is understood." },
+    { "step_id": "hp-05", "reason": "Same class of hydration-mismatch console warning, logged on the general product listing page. Excluded for the same reason as hp-01." }
+  ],
+  "page_findings": [
+    { "route": "/", "violations": [
+        { "id": "aria-allowed-attr", "impact": "critical", "nodes": 1 },
+        { "id": "aria-prohibited-attr", "impact": "serious", "nodes": 12 },
+        { "id": "color-contrast", "impact": "serious", "nodes": 10 }
+      ], "blocks_public_cut": true },
+    { "route": "/products/business-cards", "violations": [
+        { "id": "aria-allowed-attr", "impact": "critical", "nodes": 1 },
+        { "id": "document-title", "impact": "serious", "nodes": 1 },
+        { "id": "page-has-heading-one", "impact": "moderate", "nodes": 1 }
+      ], "blocks_public_cut": true },
+    { "route": "/products", "violations": [
+        { "id": "aria-allowed-attr", "impact": "critical", "nodes": 1 },
+        { "id": "aria-prohibited-attr", "impact": "serious", "nodes": 12 },
+        { "id": "color-contrast", "impact": "serious", "nodes": 4 }
+      ], "blocks_public_cut": true }
+  ]
+}

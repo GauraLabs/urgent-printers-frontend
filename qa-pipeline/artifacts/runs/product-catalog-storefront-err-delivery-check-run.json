@@ -1,0 +1,210 @@
+{
+  "feature_name": "Product Catalog Storefront Err Delivery Check",
+  "plan_path": "qa-pipeline/artifacts/plans/product-catalog-storefront-plan.json",
+  "run_timestamp": "2026-08-11T07:51:29.123Z",
+  "trace_path": "qa-pipeline/artifacts/traces/product-catalog-storefront-err-delivery-check-trace.zip",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "err-09",
+      "action": "Open a product detail page",
+      "selector": null,
+      "route": "/products/business-cards/standard-business-cards",
+      "bounding_box": null,
+      "timestamp_ms": 1505,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-err-delivery-check/err-09.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <RedirectBoundary>\n      <RedirectErrorBoundary router={{...}}>\n        <InnerLayoutRouter url=\"/products/...\" tree={[...]} params={{...}} cacheNode={{rsc:{...}, ...}} ...>\n          <SegmentViewNode type=\"page\" pagePath=\"products/[...\">\n            <SegmentTrieNode>\n            <ProductDetailPage>\n              <script>\n              <div className=\"max-w-7xl ...\">\n                <nav>\n                <div className=\"grid grid-...\">\n                  <div>\n                  <div>\n                    <div>\n                    <ProductDetailClient product={{id:\"12\",slug:\"...\", ...}}>\n                      ...\n                        <div className=\"rounded-2x...\">\n                          <p>\n                          <form onSubmit={function handleSubmit} className=\"flex gap-2\">\n                            <Input value=\"\" onValueChange={function onValueChange} inputMode=\"numeric\" maxLength={6} ...>\n                              <Input type={undefined} data-slot=\"input\" className=\"w-full min...\" value=\"\" ...>\n                                <FieldControl ref={null} type={undefined} data-slot=\"input\" className=\"w-full min...\" ...>\n                                  <input\n                                    id=\"base-ui-_R_526iklritpesndelb_\"\n                                    disabled={false}\n                                    name={undefined}\n                                    ref={function}\n                                    aria-labelledby={undefined}\n                                    autoFocus={false}\n                                    value=\"\"\n                                    onChange={function}\n                                    onFocus={function}\n                                    onBlur={function}\n                                    onKeyDown={function}\n                                    type={undefined}\n                                    data-slot=\"input\"\n                                    inputMode=\"numeric\"\n                                    maxLength={6}\n                                    placeholder=\"Enter 6-digit pincode\"\n                                    aria-label=\"Pincode\"\n                                    className=\"w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-...\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                            ...\n                      <div className=\"mt-8 pt-6 ...\">\n                        <ArtworkUpload onChange={function ProductDetailClient.useCallback[handleArtworkChange]}>\n                          <div className=\"flex flex-...\">\n                            <div>\n                            <div onKeyDown={function} onFocus={function} onBlur={function} onClick={function} ...>\n                              <input\n                                accept=\"application/pdf,.pdf,application/postscript,.ai,image/vnd.adobe.photoshop,.psd...\"\n                                multiple={true}\n                                type=\"file\"\n                                style={{\n+                                 border: 0\n+                                 clip: \"rect(0, 0, 0, 0)\"\n-                                 clip: \"rect(0px, 0px, 0px, 0px)\"\n+                                 clipPath: \"inset(50%)\"\n+                                 height: \"1px\"\n-                                 height: \"1px\"\n+                                 margin: \"0 -1px -1px 0\"\n+                                 overflow: \"hidden\"\n+                                 padding: 0\n+                                 position: \"absolute\"\n-                                 position: \"absolute\"\n+                                 width: \"1px\"\n-                                 width: \"1px\"\n+                                 whiteSpace: \"nowrap\"\n-                                 border-top-width: \"0px\"\n-                                 border-right-width: \"0px\"\n-                                 border-bottom-width: \"0px\"\n-                                 border-left-width: \"0px\"\n-                                 border-top-style: \"none\"\n-                                 border-right-style: \"none\"\n-                                 border-bottom-style: \"none\"\n-                                 border-left-style: \"none\"\n-                                 border-top-color: \"currentcolor\"\n-                                 border-right-color: \"currentcolor\"\n-                                 border-bottom-color: \"currentcolor\"\n-                                 border-left-color: \"currentcolor\"\n-                                 border-image-source: \"none\"\n-                                 border-image-slice: \"100%\"\n-                                 border-image-width: \"1\"\n-                                 border-image-outset: \"0\"\n-                                 border-image-repeat: \"stretch\"\n-                                 clip-path: \"inset(50%)\"\n-                                 margin-top: \"0px\"\n-                                 margin-right: \"-1px\"\n-                                 margin-bottom: \"-1px\"\n-                                 margin-left: \"0px\"\n-                                 overflow-x: \"hidden\"\n-                                 overflow-y: \"hidden\"\n-                                 padding-top: \"0px\"\n-                                 padding-right: \"0px\"\n-                                 padding-bottom: \"0px\"\n-                                 padding-left: \"0px\"\n-                                 white-space-collapse: \"collapse\"\n-                                 text-wrap-mode: \"nowrap\"\n-                                 caret-color: \"transparent\"\n                                }}\n                                onChange={function}\n                                onClick={function}\n                                tabIndex={-1}\n                                ref={{current:null}}\n                                aria-label=\"Upload artwork file\"\n                              >\n                              ...\n                            ...\n                        ...\n                      ...\n                ...\n          ...\n        ...\n"
+      ]
+    },
+    {
+      "step_id": "err-10",
+      "action": "Type fewer than six digits",
+      "selector": "getByLabel('Pincode')",
+      "route": "/products/business-cards/standard-business-cards",
+      "bounding_box": {
+        "x": 689,
+        "y": 459,
+        "width": 459,
+        "height": 40
+      },
+      "timestamp_ms": 1978,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-err-delivery-check/err-10.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "1100",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-11",
+      "action": "Confirm the Check button stays disabled below six digits",
+      "selector": "getByRole('button', { name: 'Check', exact: true })",
+      "route": "/products/business-cards/standard-business-cards",
+      "bounding_box": {
+        "x": 1156,
+        "y": 459,
+        "width": 75,
+        "height": 40
+      },
+      "timestamp_ms": 2331,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-err-delivery-check/err-11.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-12",
+      "action": "Type letters and punctuation into the pincode field",
+      "selector": "getByLabel('Pincode')",
+      "route": "/products/business-cards/standard-business-cards",
+      "bounding_box": {
+        "x": 689,
+        "y": 459,
+        "width": 459,
+        "height": 40
+      },
+      "timestamp_ms": 2631,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-err-delivery-check/err-12.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "ab12cd34ef",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-13",
+      "action": "Confirm non-digits are stripped",
+      "selector": "getByLabel('Pincode')",
+      "route": "/products/business-cards/standard-business-cards",
+      "bounding_box": {
+        "x": 689,
+        "y": 459,
+        "width": 459,
+        "height": 40
+      },
+      "timestamp_ms": 2926,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-err-delivery-check/err-13.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-14",
+      "action": "Type more than six digits",
+      "selector": "getByLabel('Pincode')",
+      "route": "/products/business-cards/standard-business-cards",
+      "bounding_box": {
+        "x": 689,
+        "y": 459,
+        "width": 459,
+        "height": 40
+      },
+      "timestamp_ms": 3228,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-err-delivery-check/err-14.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "1234567890",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-15",
+      "action": "Confirm the value is truncated to six digits",
+      "selector": "getByLabel('Pincode')",
+      "route": "/products/business-cards/standard-business-cards",
+      "bounding_box": {
+        "x": 689,
+        "y": 459,
+        "width": 459,
+        "height": 40
+      },
+      "timestamp_ms": 3542,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-err-delivery-check/err-15.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-16",
+      "action": "Enter a pincode the courier does not serve",
+      "selector": "getByLabel('Pincode')",
+      "route": "/products/business-cards/standard-business-cards",
+      "bounding_box": {
+        "x": 689,
+        "y": 459,
+        "width": 459,
+        "height": 40
+      },
+      "timestamp_ms": 3862,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-err-delivery-check/err-16.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "999999",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-17",
+      "action": "Submit the non-serviceable pincode",
+      "selector": "getByRole('button', { name: 'Check', exact: true })",
+      "route": "/products/business-cards/standard-business-cards",
+      "bounding_box": {
+        "x": 1156,
+        "y": 459,
+        "width": 75,
+        "height": 40
+      },
+      "timestamp_ms": 4515,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-err-delivery-check/err-17.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-18",
+      "action": "Force the serviceability request to fail",
+      "selector": null,
+      "route": "/products/business-cards/standard-business-cards",
+      "bounding_box": null,
+      "timestamp_ms": 4941,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-err-delivery-check/err-18.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": [
+        "Failed to load resource: net::ERR_FAILED"
+      ]
+    }
+  ],
+  "lighthouse": {
+    "initial_load": null,
+    "final_state": null
+  }
+}

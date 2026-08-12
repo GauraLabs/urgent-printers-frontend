@@ -1,0 +1,41 @@
+{
+  "feature_name": "Category Storefront Visibility",
+  "run_path": "qa-pipeline/artifacts/runs/category-storefront-visibility-run.json",
+  "plan_path": "qa-pipeline/artifacts/plans/category-storefront-visibility-plan.json",
+  "pass_count": 6,
+  "fail_count": 0,
+  "failures": [],
+  "accessibility_summary": {
+    "critical": [
+      "aria-allowed-attr: 1 node on every page in this flow (homepage, category page, general listing, filtered listing) — some element carries an ARIA attribute not valid for its role. Not previously seen in the admin-panel's category-management scan; this is a storefront-specific finding."
+    ],
+    "serious": [
+      "aria-prohibited-attr: up to 12 nodes on the homepage and general listing — related to the aria-allowed-attr finding above, likely the same underlying component(s) since both fired together on the same pages.",
+      "color-contrast: 4-10 nodes on the homepage and listing pages."
+    ],
+    "moderate": [
+      "document-title: 1 node on the category page (Business Cards) — axe flagged a missing/empty document title at scan time, despite generateMetadata setting title: category.name in source; possibly a timing artifact of when axe sampled relative to the client-side title update, not necessarily a real gap. Worth a manual check rather than assuming either way.",
+      "page-has-heading-one: 1 node on the category page — same page as the document-title finding above; the plan's own hp-03 step confirmed an <h1> with the category name IS present and visible at that point in the flow, so this is likely the same sampling-timing question, not a contradiction to take at face value."
+    ],
+    "coverage_caveat": "automated scan only — manual/screen-reader review still needed"
+  },
+  "performance_summary": {
+    "initial_load": null,
+    "final_state": null,
+    "concerns": [
+      "Lighthouse was deliberately left off for every run in this suite to keep CPU usage down on a resource-constrained environment — no performance numbers were collected."
+    ]
+  },
+  "ux_gaps": [
+    {
+      "issue": "A React hydration mismatch (server/client-mismatched attributes, 'won't be patched up') is logged as a console error on both the homepage and the general product listing. This is structurally the same class of warning independently found on the admin panel's login page (see category-management-analysis.json) — two separate Next.js codebases showing the same warning shape raises the odds this is environment/headless-browser noise (the warning's own text names a browser extension as one possible cause) rather than two coincidentally-identical app bugs, but that's a hypothesis, not a conclusion.",
+      "related_edge_case": null
+    }
+  ],
+  "recommendations": [
+    { "priority": "high", "action": "Investigate the aria-allowed-attr (critical) and aria-prohibited-attr (serious) violations recurring across every storefront page in this flow — a shared component is the likely single source given how consistently they co-occur." },
+    { "priority": "medium", "action": "Audit the shared color-contrast tokens (likely overlaps with the same audit recommended for the admin panel)." },
+    { "priority": "low", "action": "Manually verify the document-title / page-has-heading-one findings on the category page in a real browser — the plan's own live-run evidence (a visible, correct <h1>) suggests these may be axe-sampling-timing artifacts rather than real gaps, but that needs eyes-on confirmation, not an assumption either way." },
+    { "priority": "low", "action": "Manually verify the hydration-mismatch console warning on a real browser (both here and on the admin panel's login page) before assuming it's test-environment noise." }
+  ]
+}

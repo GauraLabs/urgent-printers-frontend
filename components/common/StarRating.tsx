@@ -24,12 +24,12 @@ export function StarRating({
 
   return (
     <div className={cn("flex items-center gap-1", className)}>
-      <div className="flex items-center gap-0.5" aria-label={`${rating} out of ${max} stars`}>
+      <div className="flex items-center gap-0.5" role="img" aria-label={`${rating} out of ${max} stars`}>
         {Array.from({ length: max }).map((_, i) => {
           const filled = i < Math.floor(rating);
           const partial = !filled && i < rating;
           return (
-            <span key={i} className="relative inline-flex">
+            <span key={i} className="relative inline-flex" aria-hidden="true">
               <Star size={px} className="text-border fill-border" />
               {(filled || partial) && (
                 <span

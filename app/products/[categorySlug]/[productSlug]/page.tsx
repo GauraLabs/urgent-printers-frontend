@@ -22,9 +22,11 @@ interface PageProps {
 export const revalidate = 60;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { productSlug } = await params;
+  const { categorySlug, productSlug } = await params;
   const product = await getProductBySlug(productSlug);
-  if (!product) return { title: "Product Not Found" };
+  if (!product || !product.categorySlug || product.categorySlug !== categorySlug) {
+    return { title: "Product Not Found" };
+  }
 
   const lowestPrice = product.pricingTiers[0].pricePerUnit;
 
@@ -60,6 +62,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
   ]);
 
   if (!product || !category) notFound();
+  // A product resolves independently of the category segment in the URL —
+  // without this check, e.g. /products/business-cards/photo-mugs (a
+  // mugs-promotional product) would 200 with a breadcrumb pointing at a
+  // category the product isn't in. An empty categorySlug (no category)
+  // must never be treated as matching every segment.
+  if (!product.categorySlug || product.categorySlug !== categorySlug) notFound();
 
   // Tiers are ordered by ascending quantity, not ascending price — per-unit
   // price falls as quantity rises, so index 0 is the *most* expensive tier

@@ -1,0 +1,70 @@
+{
+  "feature_name": "Product Catalog Storefront Alt Detail Sections",
+  "plan_path": "qa-pipeline/artifacts/plans/product-catalog-storefront-plan.json",
+  "run_timestamp": "2026-08-11T07:50:52.562Z",
+  "trace_path": "qa-pipeline/artifacts/traces/product-catalog-storefront-alt-detail-sections-trace.zip",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "alt-31",
+      "action": "Open a product that has an uploaded image",
+      "selector": null,
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": null,
+      "timestamp_ms": 1422,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-alt-detail-sections/alt-31.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 10
+        }
+      ],
+      "console_errors": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <RedirectBoundary>\n      <RedirectErrorBoundary router={{...}}>\n        <InnerLayoutRouter url=\"/products/...\" tree={[...]} params={{...}} cacheNode={{rsc:{...}, ...}} ...>\n          <SegmentViewNode type=\"page\" pagePath=\"products/[...\">\n            <SegmentTrieNode>\n            <ProductDetailPage>\n              <script>\n              <div className=\"max-w-7xl ...\">\n                <nav>\n                <div className=\"grid grid-...\">\n                  <div>\n                  <div>\n                    <div>\n                    <ProductDetailClient product={{id:\"10\",slug:\"...\", ...}}>\n                      ...\n                        <div className=\"rounded-2x...\">\n                          <p>\n                          <form onSubmit={function handleSubmit} className=\"flex gap-2\">\n                            <Input value=\"\" onValueChange={function onValueChange} inputMode=\"numeric\" maxLength={6} ...>\n                              <Input type={undefined} data-slot=\"input\" className=\"w-full min...\" value=\"\" ...>\n                                <FieldControl ref={null} type={undefined} data-slot=\"input\" className=\"w-full min...\" ...>\n                                  <input\n                                    id=\"base-ui-_R_526iklritpesndelb_\"\n                                    disabled={false}\n                                    name={undefined}\n                                    ref={function}\n                                    aria-labelledby={undefined}\n                                    autoFocus={false}\n                                    value=\"\"\n                                    onChange={function}\n                                    onFocus={function}\n                                    onBlur={function}\n                                    onKeyDown={function}\n                                    type={undefined}\n                                    data-slot=\"input\"\n                                    inputMode=\"numeric\"\n                                    maxLength={6}\n                                    placeholder=\"Enter 6-digit pincode\"\n                                    aria-label=\"Pincode\"\n                                    className=\"w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-...\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                            ...\n                      <div className=\"mt-8 pt-6 ...\">\n                        <ArtworkUpload onChange={function ProductDetailClient.useCallback[handleArtworkChange]}>\n                          <div className=\"flex flex-...\">\n                            <div>\n                            <div onKeyDown={function} onFocus={function} onBlur={function} onClick={function} ...>\n                              <input\n                                accept=\"application/pdf,.pdf,application/postscript,.ai,image/vnd.adobe.photoshop,.psd...\"\n                                multiple={true}\n                                type=\"file\"\n                                style={{\n+                                 border: 0\n+                                 clip: \"rect(0, 0, 0, 0)\"\n-                                 clip: \"rect(0px, 0px, 0px, 0px)\"\n+                                 clipPath: \"inset(50%)\"\n+                                 height: \"1px\"\n-                                 height: \"1px\"\n+                                 margin: \"0 -1px -1px 0\"\n+                                 overflow: \"hidden\"\n+                                 padding: 0\n+                                 position: \"absolute\"\n-                                 position: \"absolute\"\n+                                 width: \"1px\"\n-                                 width: \"1px\"\n+                                 whiteSpace: \"nowrap\"\n-                                 border-top-width: \"0px\"\n-                                 border-right-width: \"0px\"\n-                                 border-bottom-width: \"0px\"\n-                                 border-left-width: \"0px\"\n-                                 border-top-style: \"none\"\n-                                 border-right-style: \"none\"\n-                                 border-bottom-style: \"none\"\n-                                 border-left-style: \"none\"\n-                                 border-top-color: \"currentcolor\"\n-                                 border-right-color: \"currentcolor\"\n-                                 border-bottom-color: \"currentcolor\"\n-                                 border-left-color: \"currentcolor\"\n-                                 border-image-source: \"none\"\n-                                 border-image-slice: \"100%\"\n-                                 border-image-width: \"1\"\n-                                 border-image-outset: \"0\"\n-                                 border-image-repeat: \"stretch\"\n-                                 clip-path: \"inset(50%)\"\n-                                 margin-top: \"0px\"\n-                                 margin-right: \"-1px\"\n-                                 margin-bottom: \"-1px\"\n-                                 margin-left: \"0px\"\n-                                 overflow-x: \"hidden\"\n-                                 overflow-y: \"hidden\"\n-                                 padding-top: \"0px\"\n-                                 padding-right: \"0px\"\n-                                 padding-bottom: \"0px\"\n-                                 padding-left: \"0px\"\n-                                 white-space-collapse: \"collapse\"\n-                                 text-wrap-mode: \"nowrap\"\n-                                 caret-color: \"transparent\"\n                                }}\n                                onChange={function}\n                                onClick={function}\n                                tabIndex={-1}\n                                ref={{current:null}}\n                                aria-label=\"Upload artwork file\"\n                              >\n                              ...\n                            ...\n                        ...\n                      ...\n                ...\n          ...\n        ...\n"
+      ]
+    },
+    {
+      "step_id": "alt-32",
+      "action": "Read the full product description and tag chips",
+      "selector": null,
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": null,
+      "timestamp_ms": 1667,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-alt-detail-sections/alt-32.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-33",
+      "action": "Scroll to related products",
+      "selector": null,
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": null,
+      "timestamp_ms": 2073,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-alt-detail-sections/alt-33.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    }
+  ],
+  "lighthouse": {
+    "initial_load": null,
+    "final_state": null
+  }
+}

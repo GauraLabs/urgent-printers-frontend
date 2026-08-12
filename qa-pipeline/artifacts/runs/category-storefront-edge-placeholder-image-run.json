@@ -1,0 +1,31 @@
+{
+  "feature_name": "Category Storefront Edge Placeholder Image",
+  "plan_path": "qa-pipeline/artifacts/plans/category-storefront-visibility-plan.json",
+  "run_timestamp": "2026-08-09T20:16:30.296Z",
+  "trace_path": "qa-pipeline/artifacts/traces/category-storefront-edge-placeholder-image-trace.zip",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "edg-01",
+      "action": "Load the homepage and check every category tile image request",
+      "selector": null,
+      "route": "/",
+      "bounding_box": null,
+      "timestamp_ms": 4669,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/category-storefront-edge-placeholder-image/edg-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    }
+  ],
+  "lighthouse": {
+    "initial_load": null,
+    "final_state": null
+  }
+}

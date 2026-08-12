@@ -1,0 +1,270 @@
+{
+  "feature_name": "Product Catalog Storefront Alt Filters",
+  "plan_path": "qa-pipeline/artifacts/plans/product-catalog-storefront-plan.json",
+  "run_timestamp": "2026-08-11T07:50:33.911Z",
+  "trace_path": "qa-pipeline/artifacts/traces/product-catalog-storefront-alt-filters-trace.zip",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "alt-21",
+      "action": "Open the catalog listing",
+      "selector": null,
+      "route": "/products",
+      "bounding_box": null,
+      "timestamp_ms": 1303,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-alt-filters/alt-21.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 4
+        }
+      ],
+      "console_errors": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <link>\n    <script>\n    <script>\n    <script>\n    <script>\n    <script>\n    <script>\n    <script>\n    <script>\n    <RootLayout>\n      <html lang=\"en-IN\" className=\"cormorant_...\" suppressHydrationWarning={true}>\n        <body className=\"min-h-full...\">\n          <script>\n          <script>\n          <Script>\n          <Script>\n          <ConsentedScripts>\n          <QueryProvider>\n            <QueryClientProvider client={{}}>\n              <TokenRefreshProvider>\n                <CartSyncProvider>\n                  <WishlistSyncProvider>\n                    <DegradedStatusBanner>\n                    <Header>\n                      <header className=\"sticky top...\">\n                        <div className=\"max-w-7xl ...\">\n                          <div className=\"flex h-14 ...\">\n                            <MobileNavDrawer>\n                            <LinkComponent>\n                            <nav>\n                            <div>\n                            <HeaderSearch>\n                              <div ref={{current:null}} className=\"relative h...\">\n                                <form onSubmit={function onSubmit} className=\"relative w...\">\n                                  <Search>\n                                  <input\n                                    ref={{current:null}}\n                                    type=\"search\"\n                                    value=\"\"\n                                    onChange={function onChange}\n                                    onFocus={function onFocus}\n                                    onKeyDown={function handleKeyDown}\n                                    placeholder=\"Search products…\"\n                                    autoComplete=\"off\"\n                                    role=\"combobox\"\n                                    aria-autocomplete=\"list\"\n                                    aria-label=\"Search products\"\n                                    aria-expanded={false}\n                                    aria-controls=\"_R_l6lb_-search-panel\"\n                                    aria-activedescendant={undefined}\n                                    className=\"w-full h-9 rounded-full border border-border bg-muted/50 pl-9 pr-8 text...\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                            ...\n                    ...\n",
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>\n      <RedirectBoundary>\n        <RedirectErrorBoundary router={{...}}>\n          <InnerLayoutRouter url=\"/products\" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>\n            <SegmentViewNode type=\"page\" pagePath=\"products/p...\">\n              <SegmentTrieNode>\n              <ProductsPage>\n                <section>\n                  <div>\n                  <ProductsPageShell products={[...]} total={10} categories={[...]} showCategoryFilter={true} ...>\n                    <Suspense fallback={<div>}>\n                      <ShellInner products={[...]} total={10} categories={[...]} showCategoryFilter={true} pageSize={12}>\n                        <div className=\"max-w-7xl ...\">\n                          <div className=\"relative m...\">\n                            <Search>\n                            <input\n                              type=\"search\"\n                              value=\"\"\n                              onChange={function onChange}\n                              placeholder=\"Search this catalog…\"\n                              autoComplete=\"off\"\n                              aria-label=\"Search this catalog\"\n                              className=\"w-full h-10 rounded-full border border-border bg-card pl-10 pr-9 text-sm plac...\"\n-                             style={{caret-color:\"transparent\"}}\n                            >\n                          <div>\n                          <div>\n                          ...\n                            <div className=\"flex flex-...\">\n                              <div>\n                              <div>\n                                <p>\n                                <div className=\"flex flex-...\">\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={true}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  ...\n                              ...\n                              <div>\n                                <p>\n                                <div className=\"flex items...\">\n                                  <input\n                                    type=\"number\"\n                                    placeholder=\"Min\"\n                                    value=\"\"\n                                    onChange={function onChange}\n                                    onBlur={function applyPrice}\n                                    onKeyDown={function onKeyDown}\n                                    min={0}\n                                    className=\"w-full h-8 rounded-md border border-border bg-background px-3 text-sm f...\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  <span>\n                                  <input\n                                    type=\"number\"\n                                    placeholder=\"Max\"\n                                    value=\"\"\n                                    onChange={function onChange}\n                                    onBlur={function applyPrice}\n                                    onKeyDown={function onKeyDown}\n                                    min={0}\n                                    className=\"w-full h-8 rounded-md border border-border bg-background px-3 text-sm f...\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                              <Separator>\n                              <div>\n                                <p>\n                                <div className=\"flex flex-...\">\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                              <Separator>\n                              <div>\n                                <p>\n                                <div className=\"flex flex-...\">\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n            ...\n          ...\n"
+      ]
+    },
+    {
+      "step_id": "alt-22",
+      "action": "Tick the 'Bestseller' highlight",
+      "selector": "locator('aside').getByLabel('Bestseller')",
+      "route": "/products",
+      "bounding_box": {
+        "x": 32,
+        "y": 537,
+        "width": 14,
+        "height": 14
+      },
+      "timestamp_ms": 1867,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-alt-filters/alt-22.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-23",
+      "action": "Untick the same highlight",
+      "selector": "locator('aside').getByLabel('Bestseller')",
+      "route": "/products",
+      "bounding_box": {
+        "x": 32,
+        "y": 300,
+        "width": 14,
+        "height": 14
+      },
+      "timestamp_ms": 2549,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-alt-filters/alt-23.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 4
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-24",
+      "action": "Tick the 'Events' tag",
+      "selector": "locator('aside').getByLabel('Events')",
+      "route": "/products",
+      "bounding_box": {
+        "x": 32,
+        "y": 642,
+        "width": 14,
+        "height": 14
+      },
+      "timestamp_ms": 3527,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-alt-filters/alt-24.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-25",
+      "action": "Add a second tag on top of the first",
+      "selector": "locator('aside').getByLabel('Corporate')",
+      "route": "/products",
+      "bounding_box": {
+        "x": 32,
+        "y": 237,
+        "width": 14,
+        "height": 14
+      },
+      "timestamp_ms": 3837,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-alt-filters/alt-25.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "heading-order",
+          "impact": "moderate",
+          "description": "Ensure the order of headings is semantically correct",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-26",
+      "action": "Clear the tag filters",
+      "selector": "locator('aside').getByRole('button', { name: /^Clear all \\(\\d+\\)$/ })",
+      "route": "/products",
+      "bounding_box": {
+        "x": 175,
+        "y": 300,
+        "width": 81,
+        "height": 16
+      },
+      "timestamp_ms": 4525,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-alt-filters/alt-26.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 4
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-27",
+      "action": "Enter a minimum price per unit",
+      "selector": "locator('aside').getByPlaceholder('Min')",
+      "route": "/products",
+      "bounding_box": {
+        "x": 32,
+        "y": 609,
+        "width": 98,
+        "height": 32
+      },
+      "timestamp_ms": 4934,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-alt-filters/alt-27.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "200",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-28",
+      "action": "Commit the price range with Enter",
+      "selector": "locator('aside').getByPlaceholder('Min')",
+      "route": "/products",
+      "bounding_box": {
+        "x": 32,
+        "y": 609,
+        "width": 98,
+        "height": 32
+      },
+      "timestamp_ms": 5473,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-alt-filters/alt-28.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-29",
+      "action": "Enter a maximum price per unit",
+      "selector": "locator('aside').getByPlaceholder('Max')",
+      "route": "/products",
+      "bounding_box": {
+        "x": 158,
+        "y": 651,
+        "width": 98,
+        "height": 32
+      },
+      "timestamp_ms": 5894,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-alt-filters/alt-29.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "400",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-30",
+      "action": "Commit the maximum by blurring the field",
+      "selector": "locator('aside').getByPlaceholder('Max')",
+      "route": "/products",
+      "bounding_box": {
+        "x": 158,
+        "y": 651,
+        "width": 98,
+        "height": 32
+      },
+      "timestamp_ms": 6384,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/product-catalog-storefront-alt-filters/alt-30.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    }
+  ],
+  "lighthouse": {
+    "initial_load": null,
+    "final_state": null
+  }
+}

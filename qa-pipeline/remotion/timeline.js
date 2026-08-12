@@ -293,8 +293,19 @@ export function buildTimeline(shotlist, run, fps, options = {}) {
       : shot.durationFrames + outroFrames;
   });
 
+  // The intro card's own Sequence duration, extended (like every shot's sequenceFrames
+  // extends into the NEXT shot's plateDelayFrames) to cover shot 0's plate delay. Shot 0 has
+  // no shot -1 whose held plate can cover its own delay window, and unlike the fade-out this
+  // card already does, the delay ramp for shot 0's plate genuinely needs *something* on
+  // screen — the card's own fade-out is retimed against this longer duration too (see the
+  // `frames` prop passed alongside it), so it holds rather than leaving a blank frame. Caught
+  // by pulling real frames from a render, not from the contact sheet's one-sample-per-shot
+  // view, which never lands inside this specific gap.
+  const introSequenceFrames = introFrames + (shots[0] ? shots[0].plateDelayFrames + shots[0].plateFadeFrames : 0);
+
   return {
     introFrames,
+    introSequenceFrames,
     outroFrames,
     shots,
     groups,
