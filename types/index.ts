@@ -22,6 +22,7 @@ export interface Category {
   productCount: number;
   // Fields populated when fetched from the real backend (absent in mock data)
   thumbnailUrl?: string | null;
+  mediumUrl?: string | null;
   bannerUrl?: string | null;
   videoUrl?: string | null;
   videoThumbnailUrl?: string | null;

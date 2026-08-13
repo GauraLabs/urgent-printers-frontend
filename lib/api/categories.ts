@@ -19,6 +19,7 @@ interface BackendCategory {
   sort_order: number;
   product_count: number;
   thumbnail_url: string | null;
+  medium_url: string | null;
   banner_url: string | null;
   video_url: string | null;
   video_thumbnail_url: string | null;
@@ -34,6 +35,9 @@ function mapCategory(c: BackendCategory): Category {
     imageUrl: c.thumbnail_url ?? `https://picsum.photos/seed/${c.slug}/600/400`,
     productCount: c.product_count,
     thumbnailUrl: c.thumbnail_url,
+    // 800px, aspect-preserving — sized for the home category grid tiles (thumbnail_url is a
+    // 300x300 hard crop that blurs when stretched to fill ~475px+ tiles)
+    mediumUrl: c.medium_url ?? c.banner_url ?? `https://picsum.photos/seed/${c.slug}/800/600`,
     bannerUrl: c.banner_url,
     // Optional on the backend response (absent from stale cached Redis dicts) — coalesce defensively
     videoUrl: c.video_url ?? null,
