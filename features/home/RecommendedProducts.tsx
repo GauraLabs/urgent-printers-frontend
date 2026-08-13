@@ -34,7 +34,10 @@ export function RecommendedProducts({ products }: RecommendedProductsProps) {
         <div className="flex sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6 overflow-x-auto sm:overflow-visible snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 pb-2">
           {products.map((p) => (
             <div key={p.id} className="w-[62%] sm:w-auto shrink-0 snap-start">
-              <ProductCard product={p} />
+              <ProductCard
+                product={p}
+                sizes="(max-width: 639px) 62vw, (max-width: 767px) 50vw, (max-width: 1023px) 33vw, 224px"
+              />
             </div>
           ))}
         </div>

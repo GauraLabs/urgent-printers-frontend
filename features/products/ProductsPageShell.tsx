@@ -200,7 +200,11 @@ function ShellInner({
             <>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 lg:gap-5">
                 {items.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    sizes="(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 306px"
+                  />
                 ))}
               </div>
 

@@ -106,6 +106,9 @@ export interface Product {
   description: string;
   shortDescription: string;
   images: string[];
+  // 800px, aspect-preserving — populated from the backend for grid tiles rendered
+  // above the 300x300 thumbnail crop's native size (absent in mock data)
+  mediumUrl?: string | null;
   // Absent in mock data; populated from the backend when the product has an uploaded video
   videoUrl?: string | null;
   videoThumbnailUrl?: string | null;

@@ -14,9 +14,13 @@ import type { Product } from "@/types";
 interface ProductCardProps {
   product: Product;
   className?: string;
+  /** Must match the calling grid's real column layout — see next/image `sizes` docs. */
+  sizes?: string;
 }
 
-export function ProductCard({ product, className }: ProductCardProps) {
+const DEFAULT_SIZES = "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw";
+
+export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: ProductCardProps) {
   const href = ROUTES.product(product.categorySlug, product.slug);
   // "From" price merchandises the best-value tier, not the mathematically
   // cheapest per-unit price (usually the highest-quantity tier). Falls back
@@ -41,11 +45,11 @@ export function ProductCard({ product, className }: ProductCardProps) {
       {/* Image */}
       <Link href={href} className="relative block aspect-square overflow-hidden bg-muted">
         <Image
-          src={product.images[0]}
+          src={product.mediumUrl ?? product.images[0]}
           alt={product.name}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          sizes={sizes}
         />
         {product.badge && product.badge !== "none" && (
           <Badge

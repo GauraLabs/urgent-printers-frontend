@@ -29,6 +29,7 @@ interface BackendProductCard {
   is_featured: boolean;
   tags: string[];
   thumbnail_url: string | null;
+  medium_url: string | null;
   price_from: number | null;
   rating: number;
   review_count: number;
@@ -79,6 +80,9 @@ interface BackendSearchDoc {
   tags: string[];
   base_price: number | null;
   thumbnail_url: string | null;
+  // Not indexed by Typesense yet — treated as optional/absent, same posture as
+  // category_slug/category_name below, until search results carry it too.
+  medium_url?: string | null;
 }
 
 // ─── Default print spec (used for card-shape products that lack full specs) ───
@@ -106,6 +110,9 @@ function mapCard(c: BackendProductCard): Product {
     description: "",
     shortDescription: c.short_description ?? "",
     images: [imageUrl],
+    // 800px, aspect-preserving — sized for grid tiles (listing/search/related/
+    // featured) rendered wider than thumbnail_url's 300x300 hard crop
+    mediumUrl: c.medium_url ?? c.thumbnail_url ?? `https://picsum.photos/seed/${c.slug}/800/600`,
     printSpec: EMPTY_PRINT_SPEC,
     pricingTiers: [],
     turnaroundOptions: [],
@@ -194,6 +201,7 @@ function mapDetail(d: BackendProductDetail): Product {
     description: d.description ?? "",
     shortDescription: d.short_description ?? "",
     images,
+    mediumUrl: d.medium_url ?? d.images[0]?.md ?? d.thumbnail_url ?? `https://picsum.photos/seed/${d.slug}/800/600`,
     videoUrl: d.video_url,
     videoThumbnailUrl: d.video_thumbnail_url,
     printSpec,
@@ -236,6 +244,7 @@ function mapSearchDoc(
     description: d.description ?? "",
     shortDescription: d.short_description ?? "",
     images: [imageUrl],
+    mediumUrl: d.medium_url ?? d.thumbnail_url ?? `https://picsum.photos/seed/${d.slug}/800/600`,
     printSpec: EMPTY_PRINT_SPEC,
     pricingTiers: [],
     turnaroundOptions: [],

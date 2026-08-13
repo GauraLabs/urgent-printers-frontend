@@ -17,7 +17,11 @@ export async function RelatedProducts({ productId, categorySlug }: RelatedProduc
       </h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {products.map((p) => (
-          <ProductCard key={p.id} product={p} />
+          <ProductCard
+            key={p.id}
+            product={p}
+            sizes="(max-width: 767px) 50vw, (max-width: 1279px) 25vw, 292px"
+          />
         ))}
       </div>
     </section>
