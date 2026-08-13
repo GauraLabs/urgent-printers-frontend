@@ -65,11 +65,15 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
               )}
             >
               <Image
-                src={cat.imageUrl}
+                src={index === 0 ? (cat.bannerUrl ?? cat.imageUrl) : (cat.mediumUrl ?? cat.imageUrl)}
                 alt={cat.name}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
-                sizes="(max-width: 768px) 50vw, 33vw"
+                sizes={
+                  index === 0
+                    ? "(max-width: 767px) 50vw, (max-width: 1279px) 66vw, 800px"
+                    : "(max-width: 767px) 50vw, (max-width: 1279px) 33vw, 390px"
+                }
               />
               {/* Gradient */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />

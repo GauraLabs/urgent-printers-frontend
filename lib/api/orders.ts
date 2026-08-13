@@ -1,7 +1,7 @@
 import type {
   Order, OrderCard, OrderItem, OrderListItem,
   OrderPricing, OrderShippingAddress, OrderStatusEvent,
-  OrderStatus, CreateOrderRequest, CreatedOrder,
+  OrderStatus, ShipmentStatus, CreateOrderRequest, CreatedOrder,
   OrderPreview, OrderPreviewItem,
   ProofInfo, ProofApprovalResult, ItemProofInfo,
 } from "@/types";
@@ -79,7 +79,10 @@ interface BackendOrderDetail {
   pricing: BackendPricing;
   totalAmount: string | number;
   notes?: string;
-  trackingNumber?: string;
+  trackingNumber?: string | null;
+  courier?: string | null;
+  trackingUrl?: string | null;
+  shipmentStatus?: string | null;
   estimatedDelivery?: string;
   statusHistory: { status: string; note?: string; createdBy?: string; timestamp: string }[];
   placedAt: string;
@@ -173,7 +176,10 @@ function mapOrderDetail(b: BackendOrderDetail): Order {
     pricing,
     totalAmount:   n(b.totalAmount),
     notes:         b.notes,
-    trackingNumber: b.trackingNumber,
+    trackingNumber: b.trackingNumber ?? undefined,
+    courier:        b.courier ?? undefined,
+    trackingUrl:    b.trackingUrl ?? undefined,
+    shipmentStatus: (b.shipmentStatus as ShipmentStatus | null | undefined) ?? undefined,
     estimatedDelivery: b.estimatedDelivery,
     statusHistory,
     placedAt:  b.placedAt,

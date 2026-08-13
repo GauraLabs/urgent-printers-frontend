@@ -13,7 +13,8 @@ import { OrderStatusTracker } from "@/features/account/OrderStatusTracker";
 import { Separator } from "@/components/ui/separator";
 import { ROUTES } from "@/lib/constants/routes";
 import { formatPrice, formatPricePerUnit } from "@/lib/utils";
-import { ORDER_STATUS_LABELS } from "@/lib/constants/print-specs";
+import { ORDER_STATUS_LABELS, SHIPMENT_STATUS_LABELS } from "@/lib/constants/print-specs";
+import { SHIPMENT_STATUS_COLORS } from "@/lib/constants/order-status";
 import { RAZORPAY_THEME_COLOR } from "@/lib/constants/payment";
 import { toast } from "sonner";
 import type { Order } from "@/types";
@@ -233,15 +234,6 @@ export default function OrderDetailPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {order.trackingNumber && (
-            <a
-              href={`https://www.delhivery.com/track/package/${order.trackingNumber}`}
-              target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-xs font-semibold text-primary border border-primary/30 px-3 py-1.5 rounded-lg hover:bg-primary/5 transition-colors"
-            >
-              Track Shipment <ExternalLink size={12} />
-            </a>
-          )}
           <button
             onClick={handleDownload}
             disabled={downloading}
@@ -278,6 +270,47 @@ export default function OrderDetailPage() {
           </p>
         )}
       </div>
+
+      {/* Shipment tracking */}
+      {(order.courier || order.trackingNumber) && (
+        <div className="rounded-2xl border border-border overflow-hidden shadow-sm">
+          <div className="px-5 py-3 bg-muted/30 border-b border-border flex items-center justify-between gap-3 flex-wrap">
+            <p className="font-heading font-semibold text-sm">Shipment Tracking</p>
+            {order.shipmentStatus && (
+              <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${SHIPMENT_STATUS_COLORS[order.shipmentStatus] ?? "bg-muted text-muted-foreground"}`}>
+                {SHIPMENT_STATUS_LABELS[order.shipmentStatus] ?? order.shipmentStatus}
+              </span>
+            )}
+          </div>
+          <div className="p-5 space-y-3 text-sm">
+            {order.courier && (
+              <div className="flex justify-between items-center gap-3">
+                <span className="text-muted-foreground">Courier</span>
+                <span className="font-medium">{order.courier}</span>
+              </div>
+            )}
+            {order.trackingNumber && (
+              <div className="flex justify-between items-center gap-3">
+                <span className="text-muted-foreground">Tracking Number</span>
+                <span className="font-mono font-medium">{order.trackingNumber}</span>
+              </div>
+            )}
+            {order.trackingUrl ? (
+              <a
+                href={order.trackingUrl}
+                target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1.5 w-full h-10 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors mt-1"
+              >
+                Track your package <ExternalLink size={14} />
+              </a>
+            ) : (
+              <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2.5 mt-1">
+                Tracking updates aren&apos;t available for this courier — you&apos;ll be notified as soon as it&apos;s delivered.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Artwork pending action banner */}
       {order.status === "artwork_pending" && (
