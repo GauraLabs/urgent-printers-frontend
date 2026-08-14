@@ -136,6 +136,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
           <div className="lg:sticky lg:top-20 lg:self-start">
             <ProductGallery
               images={product.images}
+              imageThumbnails={product.imageThumbnails}
               productName={product.name}
               videoUrl={product.videoUrl}
               videoThumbnailUrl={product.videoThumbnailUrl}

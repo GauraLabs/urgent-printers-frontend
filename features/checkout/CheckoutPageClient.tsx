@@ -45,7 +45,7 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
       productSlug:     item.product.slug,
       productName:     item.product.name,
       categoryName:    item.product.categoryName || undefined,
-      thumbnailUrl:    item.product.images[0],
+      thumbnailUrl:    item.product.thumbnailUrl ?? item.product.images[0],
       sizeId:          item.config.sizeId,
       sizeLabel:       item.config.sizeLabel,
       paperId:         item.config.paperId,

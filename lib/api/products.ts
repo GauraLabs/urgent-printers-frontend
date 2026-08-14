@@ -110,6 +110,7 @@ function mapCard(c: BackendProductCard): Product {
     description: "",
     shortDescription: c.short_description ?? "",
     images: [imageUrl],
+    thumbnailUrl: c.thumbnail_url,
     // 800px, aspect-preserving — sized for grid tiles (listing/search/related/
     // featured) rendered wider than thumbnail_url's 300x300 hard crop
     mediumUrl: c.medium_url ?? c.thumbnail_url ?? `https://picsum.photos/seed/${c.slug}/800/600`,
@@ -201,7 +202,11 @@ function mapDetail(d: BackendProductDetail): Product {
     description: d.description ?? "",
     shortDescription: d.short_description ?? "",
     images,
+    thumbnailUrl: d.thumbnail_url ?? d.images[0]?.thumb ?? null,
     mediumUrl: d.medium_url ?? d.images[0]?.md ?? d.thumbnail_url ?? `https://picsum.photos/seed/${d.slug}/800/600`,
+    // Index-aligned with `images` (lg/1600px) — feeds the gallery thumbnail rail
+    // so it doesn't fetch the full-size slide image at ~120px.
+    imageThumbnails: d.images.map((i) => i.thumb),
     videoUrl: d.video_url,
     videoThumbnailUrl: d.video_thumbnail_url,
     printSpec,
@@ -244,6 +249,7 @@ function mapSearchDoc(
     description: d.description ?? "",
     shortDescription: d.short_description ?? "",
     images: [imageUrl],
+    thumbnailUrl: d.thumbnail_url,
     mediumUrl: d.medium_url ?? d.thumbnail_url ?? `https://picsum.photos/seed/${d.slug}/800/600`,
     printSpec: EMPTY_PRINT_SPEC,
     pricingTiers: [],

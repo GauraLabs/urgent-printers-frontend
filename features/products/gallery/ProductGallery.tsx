@@ -14,13 +14,17 @@ import "swiper/css/navigation";
 
 interface ProductGalleryProps {
   images: string[];
+  // Index-aligned with `images` — 300x300 thumb crop of each slide, used only by
+  // the thumbnail rail below so it doesn't fetch the full lg/1600px slide image
+  // at ~120px. Falls back to the slide's own src when absent (mock data).
+  imageThumbnails?: string[];
   productName: string;
   videoUrl?: string | null;
   videoThumbnailUrl?: string | null;
 }
 
 type GallerySlide =
-  | { type: "image"; src: string }
+  | { type: "image"; src: string; thumbSrc: string }
   | { type: "video"; src: string; poster?: string };
 
 interface GalleryVideoSlideProps {
@@ -78,14 +82,20 @@ function GalleryVideoSlide({ src, poster, productName }: GalleryVideoSlideProps)
   );
 }
 
-export function ProductGallery({ images, productName, videoUrl, videoThumbnailUrl }: ProductGalleryProps) {
+export function ProductGallery({ images, imageThumbnails, productName, videoUrl, videoThumbnailUrl }: ProductGalleryProps) {
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
+  const imageSlides: GallerySlide[] = images.map((src, i) => ({
+    type: "image",
+    src,
+    thumbSrc: imageThumbnails?.[i] ?? src,
+  }));
+
   // Video slide leads the gallery — it's the highest-intent asset when present.
   const slides: GallerySlide[] = videoUrl
-    ? [{ type: "video", src: videoUrl, poster: videoThumbnailUrl ?? undefined }, ...images.map((src): GallerySlide => ({ type: "image", src }))]
-    : images.map((src): GallerySlide => ({ type: "image", src }));
+    ? [{ type: "video", src: videoUrl, poster: videoThumbnailUrl ?? undefined }, ...imageSlides]
+    : imageSlides;
 
   return (
     <div className="flex flex-col gap-3">
@@ -188,7 +198,7 @@ export function ProductGallery({ images, productName, videoUrl, videoThumbnailUr
                     )
                   ) : (
                     <Image
-                      src={slide.src}
+                      src={slide.thumbSrc}
                       alt={`${productName} thumbnail ${i + 1}`}
                       fill
                       className="object-cover"

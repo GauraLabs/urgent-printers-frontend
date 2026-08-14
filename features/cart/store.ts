@@ -11,7 +11,7 @@ interface CartStore {
   appliedCoupon: AppliedCoupon | null;
 
   // Actions
-  addItem: (product: Pick<Product, "id" | "slug" | "name" | "images" | "categoryName" | "categorySlug">, config: CartItemConfig, pricePerUnit: number) => void;
+  addItem: (product: Pick<Product, "id" | "slug" | "name" | "images" | "thumbnailUrl" | "categoryName" | "categorySlug">, config: CartItemConfig, pricePerUnit: number) => void;
   removeItem: (cartItemId: string) => void;
   updateQuantity: (cartItemId: string, quantity: number) => void;
   setItems: (items: CartItem[]) => void;

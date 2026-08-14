@@ -32,9 +32,9 @@ export function CartDrawerItem({ item }: CartDrawerItemProps) {
         onClick={closeCart}
         className="relative shrink-0 w-16 h-16 rounded-lg overflow-hidden border border-border bg-muted"
       >
-        {item.product.images[0] ? (
+        {item.product.thumbnailUrl ?? item.product.images[0] ? (
           <Image
-            src={item.product.images[0]}
+            src={item.product.thumbnailUrl ?? item.product.images[0]}
             alt={item.product.name}
             fill
             className="object-cover"

@@ -219,7 +219,15 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
       };
 
       addItem(
-        { id: product.id, slug: product.slug, name: product.name, images: product.images, categoryName: product.categoryName, categorySlug: product.categorySlug },
+        {
+          id: product.id,
+          slug: product.slug,
+          name: product.name,
+          images: product.images,
+          thumbnailUrl: product.thumbnailUrl,
+          categoryName: product.categoryName,
+          categorySlug: product.categorySlug,
+        },
         config,
         pricePerUnit
       );
