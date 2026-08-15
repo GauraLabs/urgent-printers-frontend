@@ -94,13 +94,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
     description: product.description,
     image: product.images,
     brand: { "@type": "Brand", name: "Urgent Printers" },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: product.averageRating,
-      reviewCount: product.reviewCount,
-      bestRating: 5,
-      worstRating: 1,
-    },
+    ...(product.reviewCount > 0 && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: product.averageRating,
+        reviewCount: product.reviewCount,
+        bestRating: 5,
+        worstRating: 1,
+      },
+    }),
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: "INR",
@@ -154,12 +156,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 {product.name}
               </h1>
               <div className="flex items-center gap-3 mb-4">
-                <StarRating
-                  rating={product.averageRating}
-                  reviewCount={product.reviewCount}
-                  showCount
-                  size="sm"
-                />
+                {product.reviewCount > 0 ? (
+                  <StarRating
+                    rating={product.averageRating}
+                    reviewCount={product.reviewCount}
+                    showCount
+                    size="sm"
+                  />
+                ) : (
+                  <span className="text-xs font-medium text-muted-foreground">
+                    No reviews yet — be the first to try this product
+                  </span>
+                )}
                 <span className="text-xs text-muted-foreground">
                   From <span className="font-semibold text-foreground">{formatPricePerUnit(displayPrice)}</span> / unit
                 </span>

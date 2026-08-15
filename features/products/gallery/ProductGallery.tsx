@@ -2,15 +2,19 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
-import { Play, Pause, ChevronLeft, ChevronRight } from "lucide-react";
+import dynamic from "next/dynamic";
+import { Play, Pause, ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Navigation, Thumbs, A11y } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 import { cn } from "@/lib/utils";
+import { useSwiperArrowNav } from "./useSwiperArrowNav";
 
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
+
+const ProductGalleryLightbox = dynamic(() => import("./ProductGalleryLightbox"), { ssr: false });
 
 interface ProductGalleryProps {
   images: string[];
@@ -86,6 +90,9 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
   const [mainSwiper, setMainSwiper] = useState<SwiperType | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [hasOpenedLightbox, setHasOpenedLightbox] = useState(false);
 
   const imageSlides: GallerySlide[] = images.map((src, i) => ({
     type: "image",
@@ -100,20 +107,20 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
 
   const hasMultipleSlides = slides.length > 1;
 
-  function goToSlide(delta: 1 | -1) {
-    if (!hasMultipleSlides || !mainSwiper || mainSwiper.destroyed) return;
-    const nextIndex = (activeIndex + delta + slides.length) % slides.length;
-    mainSwiper.slideTo(nextIndex);
-  }
+  const { goToSlide, handleKeyDown: handleGalleryKeyDown } = useSwiperArrowNav(
+    mainSwiper,
+    activeIndex,
+    slides.length
+  );
 
-  function handleGalleryKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
-    if (e.key === "ArrowLeft") {
-      e.preventDefault();
-      goToSlide(-1);
-    } else if (e.key === "ArrowRight") {
-      e.preventDefault();
-      goToSlide(1);
-    }
+  // Lightbox only shows images (not the video slide), so translate a `slides`
+  // index into an `images` index — video, when present, always leads at 0.
+  const imageIndexOffset = videoUrl ? 1 : 0;
+
+  function openLightbox(slideIndex: number) {
+    setLightboxIndex(Math.max(0, slideIndex - imageIndexOffset));
+    setHasOpenedLightbox(true);
+    setLightboxOpen(true);
   }
 
   return (
@@ -144,6 +151,16 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
                     loading={i === 0 ? "eager" : "lazy"}
                     sizes="100vw"
                   />
+                  <button
+                    type="button"
+                    onClick={() => openLightbox(i)}
+                    aria-label={`Zoom into ${productName} image ${i + 1}`}
+                    className="absolute inset-0 cursor-zoom-in"
+                  >
+                    <span className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm">
+                      <ZoomIn size={16} />
+                    </span>
+                  </button>
                 </SwiperSlide>
               )
             )}
@@ -181,6 +198,16 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
                     loading={i === 0 ? "eager" : "lazy"}
                     sizes="(max-width: 1024px) 60vw, 500px"
                   />
+                  <button
+                    type="button"
+                    onClick={() => openLightbox(i)}
+                    aria-label={`Zoom into ${productName} image ${i + 1}`}
+                    className="absolute inset-0 cursor-zoom-in"
+                  >
+                    <span className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                      <ZoomIn size={16} />
+                    </span>
+                  </button>
                 </SwiperSlide>
               )
             )}
@@ -262,6 +289,16 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
             ))}
           </Swiper>
         </div>
+      )}
+
+      {hasOpenedLightbox && (
+        <ProductGalleryLightbox
+          images={images}
+          productName={productName}
+          initialIndex={lightboxIndex}
+          open={lightboxOpen}
+          onOpenChange={setLightboxOpen}
+        />
       )}
     </div>
   );
