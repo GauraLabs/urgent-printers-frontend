@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const selectableCardVariants = cva(
-  "rounded-2xl border text-left transition-all",
+  "rounded-2xl border text-left transition-[color,background-color,border-color,box-shadow] duration-200",
   {
     variants: {
       selected: {

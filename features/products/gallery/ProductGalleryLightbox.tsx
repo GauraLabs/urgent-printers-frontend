@@ -33,15 +33,30 @@ export default function ProductGalleryLightbox({
   const [activeIndex, setActiveIndex] = useState(initialIndex);
   const hasMultipleImages = images.length > 1;
 
+  // Tracks the (open, initialIndex) pair activeIndex was last synced to, so we
+  // can detect — during render, not in an effect — when a fresh open session
+  // (or an initialIndex change mid-session) needs activeIndex reset. This
+  // component instance persists across close/reopen (only the Dialog's Popup
+  // and the Swiper inside it unmount, via DialogPortal without keepMounted),
+  // so activeIndex can otherwise go stale: e.g. open on image 1, navigate to
+  // image 3, close, reopen on image 1 again — a fresh Swiper mounts correctly
+  // positioned via `initialSlide`, but if initialIndex equals the activeIndex
+  // already sitting in state from the previous session, Swiper's slideTo is a
+  // no-op and never fires onSlideChange to correct it.
+  const syncKey = open ? initialIndex : null;
+  const [syncedKey, setSyncedKey] = useState<number | null>(syncKey);
+  if (syncKey !== null && syncKey !== syncedKey) {
+    setSyncedKey(syncKey);
+    setActiveIndex(syncKey);
+  }
+
   const { goToSlide, handleKeyDown } = useSwiperArrowNav(swiperInstance, activeIndex, images.length);
 
-  // Re-sync to whatever slide was active in the main gallery every time the
-  // lightbox opens — the Swiper instance stays mounted between opens, so its
-  // own `initialSlide` prop only applies once.
+  // Position the Swiper instance itself to match — an imperative call on an
+  // external system, which is what effects are for. activeIndex correction
+  // above is independent of this and doesn't rely on onSlideChange firing.
   useEffect(() => {
     if (!open || !swiperInstance || swiperInstance.destroyed) return;
-    // slideTo triggers Swiper's own onSlideChange (wired to setActiveIndex below)
-    // when it actually moves; if the index is already correct it's a no-op.
     swiperInstance.slideTo(initialIndex, 0);
   }, [open, initialIndex, swiperInstance]);
 

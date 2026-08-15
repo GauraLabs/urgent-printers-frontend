@@ -144,7 +144,7 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
                 <SwiperSlide key={`img-${i}`} className="relative">
                   <Image
                     src={slide.src}
-                    alt={`${productName} — view ${i + 1}`}
+                    alt={`${productName} — view ${i - imageIndexOffset + 1}`}
                     fill
                     className="object-cover"
                     priority={i === 0}
@@ -154,8 +154,8 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
                   <button
                     type="button"
                     onClick={() => openLightbox(i)}
-                    aria-label={`Zoom into ${productName} image ${i + 1}`}
-                    className="absolute inset-0 cursor-zoom-in"
+                    aria-label={`Zoom into ${productName} image ${i - imageIndexOffset + 1}`}
+                    className="absolute inset-0 cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                   >
                     <span className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm">
                       <ZoomIn size={16} />
@@ -191,7 +191,7 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
                 <SwiperSlide key={`img-${i}`} className="relative">
                   <Image
                     src={slide.src}
-                    alt={`${productName} — view ${i + 1}`}
+                    alt={`${productName} — view ${i - imageIndexOffset + 1}`}
                     fill
                     className="object-cover"
                     priority={i === 0}
@@ -201,8 +201,8 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
                   <button
                     type="button"
                     onClick={() => openLightbox(i)}
-                    aria-label={`Zoom into ${productName} image ${i + 1}`}
-                    className="absolute inset-0 cursor-zoom-in"
+                    aria-label={`Zoom into ${productName} image ${i - imageIndexOffset + 1}`}
+                    className="absolute inset-0 cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                   >
                     <span className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
                       <ZoomIn size={16} />

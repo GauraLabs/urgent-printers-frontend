@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useId, forwardRef, useEffect } from "react";
+import { useState, forwardRef, useEffect } from "react";
 import { ShoppingBag, CheckCircle2, Info } from "lucide-react";
+import { motion, AnimatePresence, usePresence } from "motion/react";
 import { toast } from "sonner";
 import { PricingTable } from "./PricingTable";
 import { DeliveryCheck } from "../DeliveryCheck";
@@ -10,6 +11,7 @@ import { useCartStore } from "@/features/cart/store";
 import { makeCartItemId } from "@/features/cart/cartItemId";
 import { formatPrice, formatPricePerUnit, cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants/routes";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import Link from "next/link";
 import type { Product, SidesOption, TurnaroundOption, CartItemConfig } from "@/types";
 
@@ -48,7 +50,7 @@ function OptionButton({
     >
       <div className="flex items-center justify-between w-full gap-1.5">
         <div className="flex items-center gap-1.5 min-w-0">
-          <span className={cn("text-sm font-medium leading-snug truncate", selected && "text-primary")}>
+          <span className={cn("text-sm font-medium leading-snug truncate transition-colors duration-200", selected && "text-primary")}>
             {label}
           </span>
           {isDefault && (
@@ -72,6 +74,76 @@ function OptionButton({
         <span className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{description}</span>
       )}
     </SelectableCard>
+  );
+}
+
+// Crossfades to a new price whenever `value` actually changes (key === value,
+// so re-renders with an unchanged price never re-trigger the animation).
+// Reduced-motion users get an instant swap instead, matching the
+// window.matchMedia gating pattern used in HeroBannerSection/CategoryVideoOverlay.
+//
+// mode is intentionally the default "overlapping" (not "wait" — that caused a
+// blank-frame flicker, fixed in a prior pass) so outgoing and incoming <p>s
+// are both mounted during the crossfade. To stop that from doubling the
+// block's height, the outgoing one is pulled out of flow (position: absolute)
+// via usePresence so only the incoming, in-flow one sizes the container.
+function PriceValue({
+  value,
+  formatted,
+  className,
+  prefersReducedMotion,
+}: {
+  value: number;
+  formatted: string;
+  className: string;
+  prefersReducedMotion: boolean;
+}) {
+  return (
+    <div className="relative">
+      <AnimatePresence initial={false}>
+        <PriceValueFrame
+          key={value}
+          formatted={formatted}
+          className={className}
+          prefersReducedMotion={prefersReducedMotion}
+        />
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function PriceValueFrame({
+  formatted,
+  className,
+  prefersReducedMotion,
+}: {
+  formatted: string;
+  className: string;
+  prefersReducedMotion: boolean;
+}) {
+  const [isPresent, safeToRemove] = usePresence();
+
+  // Reduced-motion has no exit animation, so onAnimationComplete below never
+  // fires for it — remove the outgoing node the moment it stops being
+  // present instead of waiting on an animation that won't run.
+  useEffect(() => {
+    if (!isPresent && prefersReducedMotion) safeToRemove?.();
+  }, [isPresent, prefersReducedMotion, safeToRemove]);
+
+  return (
+    <motion.p
+      initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.96 }}
+      transition={{ duration: 0.18 }}
+      onAnimationComplete={() => {
+        if (!isPresent && !prefersReducedMotion) safeToRemove?.();
+      }}
+      style={!isPresent ? { position: "absolute", inset: 0 } : undefined}
+      className={className}
+    >
+      {formatted}
+    </motion.p>
   );
 }
 
@@ -105,6 +177,8 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     const [selectedTurnaround, setSelectedTurnaround] = useState<TurnaroundOption | undefined>(
       () => turnaroundOptions[0]
     );
+
+    const prefersReducedMotion = usePrefersReducedMotion();
 
     const addItem    = useCartStore((s) => s.addItem);
     const cartItems  = useCartStore((s) => s.items);
@@ -246,13 +320,23 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
           <div className="flex items-end justify-between">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Price per unit</p>
-              <p className="font-heading font-bold text-3xl">{formatPricePerUnit(pricePerUnit)}</p>
+              <PriceValue
+                value={pricePerUnit}
+                formatted={formatPricePerUnit(pricePerUnit)}
+                className="font-heading font-bold text-3xl tabular-nums"
+                prefersReducedMotion={prefersReducedMotion}
+              />
             </div>
             <div className="text-right">
               <p className="text-xs text-muted-foreground mb-1">
                 Total for {selectedQuantity.toLocaleString("en-IN")} units
               </p>
-              <p className="font-heading font-bold text-xl text-primary">{formatPrice(totalPrice)}</p>
+              <PriceValue
+                value={totalPrice}
+                formatted={formatPrice(totalPrice)}
+                className="font-heading font-bold text-xl text-primary tabular-nums"
+                prefersReducedMotion={prefersReducedMotion}
+              />
             </div>
           </div>
           <p className="text-[11px] text-muted-foreground mt-2 flex items-center gap-1">
@@ -371,7 +455,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
                     className="flex items-center justify-between px-4 py-3 rounded-xl"
                   >
                     <div>
-                      <p className={cn("text-sm font-medium", selectedTurnaround?.id === opt.id && "text-primary")}>
+                      <p className={cn("text-sm font-medium transition-colors duration-200", selectedTurnaround?.id === opt.id && "text-primary")}>
                         {opt.label}
                       </p>
                       <p className="text-[11px] text-muted-foreground">{opt.businessDays} business days</p>
