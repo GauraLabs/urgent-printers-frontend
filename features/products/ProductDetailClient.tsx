@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { ProductConfigurator } from "./configurator/ProductConfigurator";
 import { StickyAddToCart } from "./StickyAddToCart";
 import { ArtworkUpload } from "./artwork/ArtworkUpload";
 import { SavedArtworks } from "./artwork/SavedArtworks";
 import { TemplateForm } from "./template/TemplateForm";
+import { useRecentlyViewedStore } from "./recentlyViewed/store";
 import { formatPrice } from "@/lib/utils";
 import type { Product } from "@/types";
 
@@ -25,6 +26,30 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
     isInCart:   false,
     totalPrice: product.pricingTiers[0]?.totalPrice ?? product.priceFrom ?? 0,
   });
+
+  const recordView = useRecentlyViewedStore((s) => s.recordView);
+
+  useEffect(() => {
+    // Mirrors ProductCard's "From" price logic: merchandise the best-value
+    // tier, not the mathematically cheapest per-unit price, falling back to
+    // the true lowest price then priceFrom if no tier is flagged.
+    const bestValueTier = product.pricingTiers.find((t) => t.isBestValue);
+    const pricePerUnit = bestValueTier
+      ? bestValueTier.pricePerUnit
+      : product.pricingTiers.length > 0
+        ? Math.min(...product.pricingTiers.map((t) => t.pricePerUnit))
+        : (product.priceFrom ?? 0);
+
+    recordView({
+      productId: product.id,
+      productSlug: product.slug,
+      categorySlug: product.categorySlug,
+      productName: product.name,
+      productImage: product.mediumUrl ?? product.images[0],
+      pricePerUnit,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id]);
 
   const handleArtworkChange = useCallback((fileKey: string, fileName: string) => {
     setArtworkFileKey(fileKey);

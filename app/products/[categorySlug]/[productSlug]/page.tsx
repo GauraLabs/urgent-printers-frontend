@@ -9,6 +9,7 @@ import { ProductGallery } from "@/features/products/gallery/ProductGallery";
 import { ProductDetailClient } from "@/features/products/ProductDetailClient";
 import { ReviewsSection } from "@/features/products/ReviewsSection";
 import { RelatedProducts } from "@/features/products/RelatedProducts";
+import { RecentlyViewedCarousel } from "@/features/products/recentlyViewed/RecentlyViewedCarousel";
 import { ROUTES } from "@/lib/constants/routes";
 import { formatPricePerUnit } from "@/lib/utils";
 
@@ -224,6 +225,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
         <Suspense fallback={null}>
           <RelatedProducts productId={product.id} categorySlug={product.categorySlug} />
         </Suspense>
+
+        {/* Recently viewed — client-only, hydrated from localStorage */}
+        <RecentlyViewedCarousel currentProductId={product.id} />
       </div>
     </>
   );

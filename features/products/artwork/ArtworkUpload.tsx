@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import Image from "next/image";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { UploadCloud, FileCheck2, X, AlertCircle, ExternalLink, Info, Loader2 } from "lucide-react";
 import { PRINT_SPECS } from "@/lib/constants/print-specs";
@@ -8,9 +9,12 @@ import { formatFileSize, cn } from "@/lib/utils";
 import { presignArtwork } from "@/lib/api/artwork";
 import { useAuthStore } from "@/features/auth/store";
 
+const PREVIEWABLE_IMAGE_MIMES = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp"]);
+
 interface UploadedFile {
   name: string;
   size: number;
+  previewUrl: string | null;
 }
 
 interface ArtworkUploadProps {
@@ -23,6 +27,19 @@ export function ArtworkUpload({ onChange }: ArtworkUploadProps) {
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  // Tracks the currently-active blob: URL so it can be revoked on unmount
+  // even if a stale closure holds an outdated `file` value.
+  const previewUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
+      }
+    };
+  }, []);
+
   const onDrop = useCallback(
     async (accepted: File[], rejected: FileRejection[]) => {
       setError(null);
@@ -32,6 +49,11 @@ export function ArtworkUpload({ onChange }: ArtworkUploadProps) {
       }
       const picked = accepted[0];
       if (!picked) return;
+
+      const previewUrl = PREVIEWABLE_IMAGE_MIMES.has(picked.type)
+        ? URL.createObjectURL(picked)
+        : null;
+      previewUrlRef.current = previewUrl;
 
       setUploading(true);
       try {
@@ -47,9 +69,13 @@ export function ArtworkUpload({ onChange }: ArtworkUploadProps) {
         });
         if (!putRes.ok) throw new Error("Upload to storage failed");
 
-        setFile({ name: picked.name, size: picked.size });
+        setFile({ name: picked.name, size: picked.size, previewUrl });
         onChange?.(file_key, picked.name);
       } catch (err) {
+        if (previewUrl) {
+          URL.revokeObjectURL(previewUrl);
+          previewUrlRef.current = null;
+        }
         setError(err instanceof Error ? err.message : "Upload failed. Please try again.");
       } finally {
         setUploading(false);
@@ -73,6 +99,10 @@ export function ArtworkUpload({ onChange }: ArtworkUploadProps) {
   });
 
   function handleRemove() {
+    if (file?.previewUrl) {
+      URL.revokeObjectURL(file.previewUrl);
+      previewUrlRef.current = null;
+    }
     setFile(null);
     setError(null);
     onChange?.("", "");
@@ -126,9 +156,16 @@ export function ArtworkUpload({ onChange }: ArtworkUploadProps) {
         </div>
       ) : (
         <div className="flex items-center gap-3 p-4 rounded-2xl border border-success/40 bg-success/5 shadow-sm">
-          <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center shrink-0">
-            <FileCheck2 size={18} className="text-success" />
-          </div>
+          {file.previewUrl ? (
+            <div className="relative w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-success/40">
+              {/* blob: object URL — next/image auto-marks these unoptimized, no remotePattern needed */}
+              <Image src={file.previewUrl} alt={file.name} fill sizes="40px" className="object-cover" />
+            </div>
+          ) : (
+            <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center shrink-0">
+              <FileCheck2 size={18} className="text-success" />
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{file.name}</p>
             <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>

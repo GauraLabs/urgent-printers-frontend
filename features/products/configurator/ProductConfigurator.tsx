@@ -6,6 +6,8 @@ import { motion, AnimatePresence, usePresence } from "motion/react";
 import { toast } from "sonner";
 import { PricingTable } from "./PricingTable";
 import { DeliveryCheck } from "../DeliveryCheck";
+import { SizeSpecGuide } from "./SizeSpecGuide";
+import { ProductTrustBadges } from "../ProductTrustBadges";
 import { SelectableCard } from "@/components/ui/selectable-card";
 import { useCartStore } from "@/features/cart/store";
 import { makeCartItemId } from "@/features/cart/cartItemId";
@@ -151,11 +153,14 @@ function getDefault<T extends { isDefault: boolean }>(options: T[]): T | undefin
   return options.find((o) => o.isDefault) ?? options[0];
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2.5">
-      {children}
-    </p>
+    <div className="flex items-center justify-between gap-2 mb-2.5">
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+        {children}
+      </p>
+      {action}
+    </div>
   );
 }
 
@@ -345,12 +350,16 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
           </p>
         </div>
 
-        <DeliveryCheck />
+        <DeliveryCheck turnaroundDays={selectedTurnaround?.businessDays} />
 
         {/* Size — category omitted entirely when not applicable to this product */}
         {printSpec.sizes.length > 0 && (
           <div>
-            <SectionLabel>Size</SectionLabel>
+            <SectionLabel
+              action={<SizeSpecGuide sizes={printSpec.sizes} papers={printSpec.papers} />}
+            >
+              Size
+            </SectionLabel>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {printSpec.sizes.map((size) => (
                 <OptionButton
@@ -367,10 +376,21 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
           </div>
         )}
 
-        {/* Paper */}
+        {/* Paper — the size/paper comparison guide is anchored to the Size
+            section above; when a product has no sizes (empty printSpec.sizes,
+            same legacy/seed-data case noted on turnaround below) it's
+            anchored here instead so the guide never silently disappears. */}
         {printSpec.papers.length > 0 && (
           <div>
-            <SectionLabel>Paper / Material</SectionLabel>
+            <SectionLabel
+              action={
+                printSpec.sizes.length === 0 ? (
+                  <SizeSpecGuide sizes={printSpec.sizes} papers={printSpec.papers} />
+                ) : undefined
+              }
+            >
+              Paper / Material
+            </SectionLabel>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {printSpec.papers.map((paper) => (
                 <OptionButton
@@ -482,6 +502,8 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
             </div>
           </div>
         )}
+
+        <ProductTrustBadges />
 
         {/* Add to Cart / Update Cart button */}
         <div className="flex flex-col gap-2">
