@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, ChevronLeft, ChevronRight } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Navigation, Thumbs, A11y } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
@@ -84,6 +84,7 @@ function GalleryVideoSlide({ src, poster, productName }: GalleryVideoSlideProps)
 
 export function ProductGallery({ images, imageThumbnails, productName, videoUrl, videoThumbnailUrl }: ProductGalleryProps) {
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
+  const [mainSwiper, setMainSwiper] = useState<SwiperType | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
   const imageSlides: GallerySlide[] = images.map((src, i) => ({
@@ -96,6 +97,24 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
   const slides: GallerySlide[] = videoUrl
     ? [{ type: "video", src: videoUrl, poster: videoThumbnailUrl ?? undefined }, ...imageSlides]
     : imageSlides;
+
+  const hasMultipleSlides = slides.length > 1;
+
+  function goToSlide(delta: 1 | -1) {
+    if (!hasMultipleSlides || !mainSwiper || mainSwiper.destroyed) return;
+    const nextIndex = (activeIndex + delta + slides.length) % slides.length;
+    mainSwiper.slideTo(nextIndex);
+  }
+
+  function handleGalleryKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      goToSlide(-1);
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      goToSlide(1);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -132,11 +151,18 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
         </div>
 
         {/* Desktop: thumbnail-controlled */}
-        <div className="hidden md:block relative h-full">
+        <div
+          className="hidden md:block relative h-full outline-none group"
+          tabIndex={hasMultipleSlides ? 0 : undefined}
+          role="group"
+          aria-label={`${productName} image gallery`}
+          onKeyDown={handleGalleryKeyDown}
+        >
           <Swiper
             modules={[Navigation, Thumbs, A11y]}
             thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
             onSlideChange={(s) => setActiveIndex(s.activeIndex)}
+            onSwiper={setMainSwiper}
             className="h-full"
           >
             {slides.map((slide, i) =>
@@ -159,6 +185,27 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
               )
             )}
           </Swiper>
+
+          {hasMultipleSlides && (
+            <>
+              <button
+                type="button"
+                onClick={() => goToSlide(-1)}
+                aria-label="Previous image"
+                className="absolute left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm opacity-0 transition-all group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-black/60 hover:scale-110"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <button
+                type="button"
+                onClick={() => goToSlide(1)}
+                aria-label="Next image"
+                className="absolute right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm opacity-0 transition-all group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-black/60 hover:scale-110"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </>
+          )}
         </div>
       </div>
 
