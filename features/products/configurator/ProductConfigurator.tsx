@@ -29,6 +29,7 @@ function OptionButton({
   onClick,
   delta,
   isDefault,
+  showPriceDelta = true,
 }: {
   label: string;
   description?: string;
@@ -36,8 +37,9 @@ function OptionButton({
   onClick: () => void;
   delta?: number;
   isDefault?: boolean;
+  showPriceDelta?: boolean;
 }) {
-  const showDelta = delta !== undefined && Math.abs(delta) >= 0.01;
+  const showDelta = showPriceDelta && delta !== undefined && Math.abs(delta) >= 0.01;
   return (
     <SelectableCard
       selected={selected}
@@ -274,6 +276,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
                   onClick={() => setSelectedSize(size)}
                   delta={sizeDelta(size.priceMultiplier)}
                   isDefault={size.isDefault}
+                  showPriceDelta={false}
                 />
               ))}
             </div>
