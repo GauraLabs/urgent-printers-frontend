@@ -4,12 +4,11 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { ArrowRight, Star } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, A11y } from "swiper/modules";
 import { motion } from "motion/react";
 import { buttonVariants } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { HeroBanner } from "@/types";
 
@@ -56,7 +55,7 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
                         initial={{ opacity: 0, y: -12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: 0.1 }}
-                        className="inline-block mb-3 px-3 py-1 rounded-full bg-white/15 text-white text-xs font-semibold tracking-wide"
+                        className="inline-block mb-2 lg:mb-3 px-3 py-1 rounded-full bg-white/15 text-white text-xs font-semibold tracking-wide"
                       >
                         {banner.badgeText}
                       </motion.span>
@@ -65,7 +64,7 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: 0.2 }}
-                      className="font-heading font-bold text-white text-2xl sm:text-3xl lg:text-5xl leading-tight mb-3 line-clamp-2"
+                      className="font-heading font-bold text-white text-2xl sm:text-3xl lg:text-5xl leading-tight mb-2 lg:mb-4 line-clamp-2"
                     >
                       {banner.headline}
                     </motion.h1>
@@ -73,7 +72,7 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
                       initial={{ opacity: 0, y: 16 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: 0.35 }}
-                      className="text-white/85 text-sm sm:text-base lg:text-lg mb-6 leading-relaxed line-clamp-2"
+                      className="text-white/85 text-sm sm:text-base lg:text-lg mb-6 lg:mb-8 leading-relaxed line-clamp-2"
                     >
                       {banner.subheading}
                     </motion.p>
@@ -86,11 +85,11 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
                         href={banner.ctaHref}
                         className={cn(
                           buttonVariants({ size: "lg" }),
-                          "bg-brand-orange hover:bg-brand-orange/90 text-brand-orange-foreground font-semibold gap-2"
+                          "h-12 lg:h-14 px-7 lg:px-9 gap-2.5 text-base lg:text-lg bg-brand-orange hover:bg-brand-orange/90 text-brand-orange-foreground font-semibold"
                         )}
                       >
                         {banner.ctaText}
-                        <ArrowRight size={16} />
+                        <ArrowRight size={18} />
                       </Link>
                     </motion.div>
                   </div>
@@ -106,20 +105,6 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
           <HeroSparkles />
         </div>
       )}
-
-      <div className="hidden sm:block absolute bottom-4 right-4 lg:bottom-6 lg:right-6 z-10">
-        <Card className="flex-row items-center gap-3 px-4 py-3 rounded-2xl shadow-lg">
-          <div className="flex items-center gap-1 text-brand-orange">
-            <Star size={16} className="fill-brand-orange" />
-            <span className="font-heading font-bold text-foreground text-base">4.8</span>
-          </div>
-          <div className="h-8 w-px bg-border" />
-          <div className="text-xs text-muted-foreground leading-tight">
-            <p className="font-semibold text-foreground">10,000+ orders</p>
-            <p>delivered across India</p>
-          </div>
-        </Card>
-      </div>
     </section>
   );
 }

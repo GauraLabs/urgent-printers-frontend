@@ -9,11 +9,13 @@ import {
 import { HeroBannerSection } from "@/features/home/HeroBannerSection";
 import { CategoryGrid } from "@/features/home/CategoryGrid";
 import { FeaturedProducts } from "@/features/home/FeaturedProducts";
+import { CampaignBanner } from "@/features/home/CampaignBanner";
 import { RecommendedProducts } from "@/features/home/RecommendedProducts";
 import { HowItWorks } from "@/features/home/HowItWorks";
 import { PromoBanner } from "@/features/home/PromoBanner";
 import { TrustBadges } from "@/features/home/TrustBadges";
 import { TestimonialsSection } from "@/features/home/TestimonialsSection";
+import { ROUTES } from "@/lib/constants/routes";
 
 export const revalidate = 60;
 
@@ -70,6 +72,11 @@ export default async function HomePage() {
   ]);
   const recommended = await getRecommendedProducts(featured.map((p) => p.id), 10);
   const totalProducts = categories.reduce((sum, c) => sum + c.productCount, 0);
+  // Source the magazine-style campaign spread from a category, not the hero
+  // banners array: banners[0] already led the hero carousel seconds earlier,
+  // and banners[1] is dev seed/test data. Index 2 skips CategoryGrid's own
+  // featured tile (index 0, shown just above) so nothing repeats on the page.
+  const campaignCategory = categories[2];
 
   return (
     <>
@@ -81,6 +88,15 @@ export default async function HomePage() {
       <TrustBadges totalProducts={totalProducts > 0 ? totalProducts : undefined} />
       <CategoryGrid categories={categories.slice(0, HOMEPAGE_CATEGORY_LIMIT)} />
       <FeaturedProducts products={featured} />
+      {campaignCategory && (
+        <CampaignBanner
+          imageUrl={campaignCategory.bannerUrl ?? campaignCategory.mediumUrl ?? campaignCategory.imageUrl}
+          headline={`Explore ${campaignCategory.name}`}
+          subheading={campaignCategory.description || undefined}
+          ctaText={`Shop ${campaignCategory.name}`}
+          ctaHref={ROUTES.category(campaignCategory.slug)}
+        />
+      )}
       <RecommendedProducts products={recommended} />
       <PromoBanner />
       <TestimonialsSection testimonials={testimonials} />
