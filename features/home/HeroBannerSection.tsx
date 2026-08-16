@@ -139,7 +139,7 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.2 }}
-                        className="font-sans font-black uppercase text-brand-orange text-3xl sm:text-4xl lg:text-6xl leading-[0.95] tracking-tight mb-3 lg:mb-4 line-clamp-2"
+                        className="font-sans font-black uppercase text-white text-3xl sm:text-4xl lg:text-6xl leading-[0.95] tracking-tight mb-3 lg:mb-4 line-clamp-2"
                       >
                         {banner.headline}
                       </motion.h1>
@@ -153,7 +153,7 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
                           href={banner.ctaHref}
                           className={cn(
                             buttonVariants({ size: "sm" }),
-                            "shrink-0 h-9 px-4 gap-1.5 text-sm rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+                            "shrink-0 h-9 px-4 gap-1.5 text-sm rounded-full bg-white hover:bg-white/90 text-neutral-900 font-semibold"
                           )}
                         >
                           {banner.ctaText}
