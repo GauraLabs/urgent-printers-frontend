@@ -236,7 +236,7 @@ export function ProductsPageShell(props: ProductsPageShellProps) {
   return (
     <Suspense fallback={
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <ProductGridSkeleton count={12} />
+        <ProductGridSkeleton count={12} gridClassName="lg:grid-cols-3" />
       </div>
     }>
       <ShellInner {...props} />
