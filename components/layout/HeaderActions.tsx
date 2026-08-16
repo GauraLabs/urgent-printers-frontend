@@ -1,16 +1,20 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ShoppingBag, User, LogIn } from "lucide-react";
+import { motion, useAnimationControls } from "motion/react";
 import { buttonVariants } from "@/components/ui/button";
 import { useCartStore } from "@/features/cart/store";
 import { useAuthStore } from "@/features/auth/store";
 import { useMounted } from "@/hooks/useMounted";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { ROUTES } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils";
 
 export function HeaderActions() {
   const mounted = useMounted();
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const itemCount = useCartStore((s) => s.itemCount());
   const openCart = useCartStore((s) => s.openCart);
@@ -20,6 +24,49 @@ export function HeaderActions() {
   // Suppress client-only values until after hydration to prevent mismatch.
   const displayCount = mounted ? itemCount : 0;
   const displayAuth = mounted ? isAuthenticated : false;
+
+  // Bump the badge only on a genuine increase (add-to-cart from any entry
+  // point — PDP, cart-sync merge on login, etc. all flow through itemCount),
+  // never on the mount-time reveal of a persisted count or on a decrease.
+  // prevCountRef starts at null so the first post-mount value is only
+  // recorded as a baseline, not treated as an "increase" from 0.
+  //
+  // Gated on the cart store's own persist hydration (not just `mounted`) —
+  // relying on effect-ordering between zustand's rehydration promise and
+  // React's passive effects is an implementation detail of two libraries'
+  // scheduling, not a guarantee. `useCartStore.persist.hasHydrated()` is
+  // zustand's explicit signal for this.
+  //
+  // Guarded with `typeof window !== "undefined"`: on the server, the
+  // persist middleware's default storage getter touches
+  // `window.localStorage`, throws, and the middleware bails out *before*
+  // attaching `.persist` to the store at all — reading `.persist` during
+  // SSR (e.g. unconditionally, from this useState initializer, which also
+  // runs server-side) throws "Cannot read properties of undefined (reading
+  // 'hasHydrated')". The `&&` short-circuits before touching `.persist` on
+  // the server; on the client `.persist` is always attached.
+  const badgeControls = useAnimationControls();
+  const prevCountRef = useRef<number | null>(null);
+  const [cartHydrated, setCartHydrated] = useState(
+    () => typeof window !== "undefined" && useCartStore.persist.hasHydrated()
+  );
+
+  useEffect(() => {
+    if (cartHydrated) return;
+    return useCartStore.persist.onFinishHydration(() => setCartHydrated(true));
+  }, [cartHydrated]);
+
+  useEffect(() => {
+    if (!mounted || !cartHydrated) return;
+    const prevCount = prevCountRef.current;
+    if (prevCount !== null && displayCount > prevCount && !prefersReducedMotion) {
+      void badgeControls.start({
+        scale: [1, 1.35, 1],
+        transition: { duration: 0.24, ease: "easeOut" },
+      });
+    }
+    prevCountRef.current = displayCount;
+  }, [displayCount, mounted, cartHydrated, prefersReducedMotion, badgeControls]);
 
   return (
     <div className="flex items-center gap-1">
@@ -34,7 +81,9 @@ export function HeaderActions() {
       >
         <ShoppingBag size={20} />
         {displayCount > 0 && (
-          <span
+          <motion.span
+            initial={false}
+            animate={badgeControls}
             className={cn(
               "absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1",
               "flex items-center justify-center rounded-full",
@@ -42,7 +91,7 @@ export function HeaderActions() {
             )}
           >
             {displayCount > 99 ? "99+" : displayCount}
-          </span>
+          </motion.span>
         )}
       </button>
 

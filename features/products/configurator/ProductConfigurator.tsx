@@ -2,7 +2,7 @@
 
 import { useState, forwardRef, useEffect } from "react";
 import { ShoppingBag, CheckCircle2, Info } from "lucide-react";
-import { motion, AnimatePresence, usePresence } from "motion/react";
+import { motion, AnimatePresence, usePresence, useAnimationControls } from "motion/react";
 import { toast } from "sonner";
 import { PricingTable } from "./PricingTable";
 import { DeliveryCheck } from "../DeliveryCheck";
@@ -184,6 +184,10 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     );
 
     const prefersReducedMotion = usePrefersReducedMotion();
+    // Transient click-confirmation pulse on the Add to Cart button content —
+    // separate from `isInCart`, which drives the persistent "Update Cart"
+    // relabel below and must keep working unchanged.
+    const addPulseControls = useAnimationControls();
 
     const addItem    = useCartStore((s) => s.addItem);
     const cartItems  = useCartStore((s) => s.items);
@@ -316,6 +320,15 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
       toast.success(`${product.name} added to cart`, {
         description: `${selectedQuantity.toLocaleString("en-IN")} units · ${formatPrice(totalPrice)}`,
       });
+
+      // Transient confirmation pulse — layered on top of the toast and the
+      // persistent isInCart relabel, not a replacement for either.
+      if (!prefersReducedMotion) {
+        void addPulseControls.start({
+          scale: [1, 1.06, 1],
+          transition: { duration: 0.2, ease: "easeOut" },
+        });
+      }
     }
 
     return (
@@ -518,8 +531,14 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
                 : "bg-brand-orange hover:bg-brand-orange/90 text-brand-orange-foreground shadow-brand-orange/20"
             )}
           >
-            {isInCart ? <CheckCircle2 size={18} /> : <ShoppingBag size={18} />}
-            {isInCart ? "Update Cart" : "Add to Cart"} · {formatPrice(totalPrice)}
+            <motion.span
+              initial={false}
+              animate={addPulseControls}
+              className="flex items-center justify-center gap-2"
+            >
+              {isInCart ? <CheckCircle2 size={18} /> : <ShoppingBag size={18} />}
+              {isInCart ? "Update Cart" : "Add to Cart"} · {formatPrice(totalPrice)}
+            </motion.span>
           </button>
 
           {isInCart && (

@@ -7,7 +7,7 @@ import { ArtworkUpload } from "./artwork/ArtworkUpload";
 import { SavedArtworks } from "./artwork/SavedArtworks";
 import { TemplateForm } from "./template/TemplateForm";
 import { useRecentlyViewedStore } from "./recentlyViewed/store";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, getDisplayPricePerUnit } from "@/lib/utils";
 import type { Product } from "@/types";
 
 interface ProductDetailClientProps {
@@ -30,15 +30,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const recordView = useRecentlyViewedStore((s) => s.recordView);
 
   useEffect(() => {
-    // Mirrors ProductCard's "From" price logic: merchandise the best-value
-    // tier, not the mathematically cheapest per-unit price, falling back to
-    // the true lowest price then priceFrom if no tier is flagged.
-    const bestValueTier = product.pricingTiers.find((t) => t.isBestValue);
-    const pricePerUnit = bestValueTier
-      ? bestValueTier.pricePerUnit
-      : product.pricingTiers.length > 0
-        ? Math.min(...product.pricingTiers.map((t) => t.pricePerUnit))
-        : (product.priceFrom ?? 0);
+    const pricePerUnit = getDisplayPricePerUnit(product);
 
     recordView({
       productId: product.id,

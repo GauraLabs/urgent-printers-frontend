@@ -5,13 +5,15 @@ import { getProductBySlug, getCategoryBySlug } from "@/lib/api";
 import { Breadcrumb } from "@/components/common/Breadcrumb";
 import { StarRating } from "@/components/common/StarRating";
 import { ReviewSkeleton } from "@/components/common/ProductCardSkeleton";
+import { ScrollReveal } from "@/components/common/ScrollReveal";
 import { ProductGallery } from "@/features/products/gallery/ProductGallery";
 import { ProductDetailClient } from "@/features/products/ProductDetailClient";
+import { ProductDetailTabs } from "@/features/products/ProductDetailTabs";
 import { ReviewsSection } from "@/features/products/ReviewsSection";
 import { RelatedProducts } from "@/features/products/RelatedProducts";
 import { RecentlyViewedCarousel } from "@/features/products/recentlyViewed/RecentlyViewedCarousel";
 import { ROUTES } from "@/lib/constants/routes";
-import { formatPricePerUnit } from "@/lib/utils";
+import { formatPricePerUnit, getDisplayPricePerUnit } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ categorySlug: string; productSlug: string }>;
@@ -80,12 +82,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
   // The customer-facing "From" price merchandises the best-value tier, not
   // the mathematically cheapest per-unit price (usually the highest-quantity
-  // tier) — falls back to the true lowest price if no tier is flagged.
-  // JSON-LD below intentionally keeps using true lowestPrice/highestPrice:
-  // schema.org AggregateOffer.lowPrice/highPrice describe the actual price
-  // range across all offers for search engines, independent of merchandising.
-  const bestValueTier = product.pricingTiers.find((t) => t.isBestValue);
-  const displayPrice = bestValueTier?.pricePerUnit ?? lowestPrice;
+  // tier) — falls back to the true lowest price, then priceFrom, if no tier
+  // is flagged. JSON-LD below intentionally keeps using true
+  // lowestPrice/highestPrice: schema.org AggregateOffer.lowPrice/highPrice
+  // describe the actual price range across all offers for search engines,
+  // independent of merchandising.
+  const displayPrice = getDisplayPricePerUnit(product);
 
   // JSON-LD structured data
   const jsonLd = {
@@ -183,51 +185,70 @@ export default async function ProductDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Full description */}
-        <section aria-labelledby="description-heading" className="mt-14 pt-10 border-t border-border">
-          <h2 id="description-heading" className="font-heading font-bold text-xl mb-4">
-            Product Details
-          </h2>
-          <div
-            className="prose prose-sm prose-neutral dark:prose-invert max-w-3xl text-muted-foreground [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
-            dangerouslySetInnerHTML={{ __html: product.description }}
-          />
+        {/* Description + Reviews — combined into one tabbed unit (Phase 3).
+            Both panels render with `keepMounted`, so Reviews' Suspense
+            boundary is present and streaming from first paint regardless of
+            which tab is active — only visibility (via the `hidden`
+            attribute) is client-driven, and the active tab itself defaults
+            server-side via `defaultValue`, so there's no pre-hydration
+            flash. Renders immediately (no ScrollReveal) — this is the
+            page's primary, SEO-relevant product content, previously a
+            plain always-visible section; a scroll-reveal wrapper would
+            leave it at opacity:0 in the raw SSR HTML until JS hydrates and
+            an IntersectionObserver entry fires. */}
+        <ProductDetailTabs
+          reviewCount={product.reviewCount}
+          description={
+            <section aria-labelledby="description-heading">
+              <h2 id="description-heading" className="font-heading font-bold text-xl mb-4">
+                Product Details
+              </h2>
+              <div
+                className="prose prose-sm prose-neutral dark:prose-invert max-w-3xl text-muted-foreground [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+                dangerouslySetInnerHTML={{ __html: product.description }}
+              />
 
-          {/* Tags */}
-          <div className="flex flex-wrap gap-2 mt-4">
-            {product.tags.map((tag) => (
-              <span
-                key={tag}
-                className="px-3 py-1 rounded-full text-xs bg-secondary text-secondary-foreground border border-border capitalize"
-              >
-                {tag.replace("-", " ")}
-              </span>
-            ))}
-          </div>
-        </section>
+              {/* Tags */}
+              <div className="flex flex-wrap gap-2 mt-4">
+                {product.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-3 py-1 rounded-full text-xs bg-secondary text-secondary-foreground border border-border capitalize"
+                  >
+                    {tag.replace("-", " ")}
+                  </span>
+                ))}
+              </div>
+            </section>
+          }
+          reviews={
+            <Suspense fallback={
+              <div className="space-y-1 divide-y divide-border">
+                {Array.from({ length: 3 }).map((_, i) => <ReviewSkeleton key={i} />)}
+              </div>
+            }>
+              <ReviewsSection
+                productSlug={product.slug}
+                averageRating={product.averageRating}
+                reviewCount={product.reviewCount}
+              />
+            </Suspense>
+          }
+        />
 
-        {/* Reviews */}
-        <section className="mt-14 pt-10 border-t border-border">
-          <Suspense fallback={
-            <div className="space-y-1 divide-y divide-border">
-              {Array.from({ length: 3 }).map((_, i) => <ReviewSkeleton key={i} />)}
-            </div>
-          }>
-            <ReviewsSection
-              productSlug={product.slug}
-              averageRating={product.averageRating}
-              reviewCount={product.reviewCount}
-            />
+        {/* Related products — same wrap-the-boundary reasoning as Reviews. */}
+        <ScrollReveal>
+          <Suspense fallback={null}>
+            <RelatedProducts productId={product.id} categorySlug={product.categorySlug} />
           </Suspense>
-        </section>
+        </ScrollReveal>
 
-        {/* Related products */}
-        <Suspense fallback={null}>
-          <RelatedProducts productId={product.id} categorySlug={product.categorySlug} />
-        </Suspense>
-
-        {/* Recently viewed — client-only, hydrated from localStorage */}
-        <RecentlyViewedCarousel currentProductId={product.id} />
+        {/* Recently viewed — client-only, hydrated from localStorage. Renders
+            null until mounted/populated; ScrollReveal's wrapper persists
+            across that null-to-content swap, so no remount/double-reveal. */}
+        <ScrollReveal>
+          <RecentlyViewedCarousel currentProductId={product.id} />
+        </ScrollReveal>
       </div>
     </>
   );

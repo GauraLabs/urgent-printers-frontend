@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { motion } from "motion/react";
 import { useMounted } from "@/hooks/useMounted";
 import { ROUTES } from "@/lib/constants/routes";
 import { formatPricePerUnit, cn } from "@/lib/utils";
@@ -11,6 +12,10 @@ interface RecentlyViewedCarouselProps {
   /** Excluded from its own list — a product doesn't show up in its own "recently viewed". */
   currentProductId: string;
 }
+
+// Module scope so identity is stable across renders — recreating it per
+// render would remount the link (and drop hover/animation state) every time.
+const MotionLink = motion.create(Link);
 
 export function RecentlyViewedCarousel({ currentProductId }: RecentlyViewedCarouselProps) {
   const mounted = useMounted();
@@ -30,9 +35,11 @@ export function RecentlyViewedCarousel({ currentProductId }: RecentlyViewedCarou
       </h2>
       <div className="flex sm:grid sm:grid-cols-2 md:grid-cols-4 gap-4 overflow-x-auto sm:overflow-visible snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 pb-2">
         {otherItems.map((item) => (
-          <Link
+          <MotionLink
             key={item.productId}
             href={ROUTES.product(item.categorySlug, item.productSlug)}
+            whileHover={{ y: -4, boxShadow: "0 12px 32px -4px rgba(159,66,43,0.18)" }}
+            transition={{ type: "spring", stiffness: 300, damping: 24 }}
             className={cn(
               "group w-[45%] sm:w-auto shrink-0 snap-start flex flex-col rounded-2xl overflow-hidden",
               "border border-border bg-card hover:border-primary/30 transition-colors duration-300"
@@ -55,7 +62,7 @@ export function RecentlyViewedCarousel({ currentProductId }: RecentlyViewedCarou
                 From <span className="font-semibold text-foreground">{formatPricePerUnit(item.pricePerUnit)}</span>
               </p>
             </div>
-          </Link>
+          </MotionLink>
         ))}
       </div>
     </section>

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { StarRating } from "@/components/common/StarRating";
 import { WishlistButton } from "./WishlistButton";
 import { ROUTES } from "@/lib/constants/routes";
-import { formatPricePerUnit, cn } from "@/lib/utils";
+import { formatPricePerUnit, getDisplayPricePerUnit, cn } from "@/lib/utils";
 import type { Product } from "@/types";
 
 interface ProductCardProps {
@@ -22,15 +22,7 @@ const DEFAULT_SIZES = "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw";
 
 export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: ProductCardProps) {
   const href = ROUTES.product(product.categorySlug, product.slug);
-  // "From" price merchandises the best-value tier, not the mathematically
-  // cheapest per-unit price (usually the highest-quantity tier). Falls back
-  // to the true lowest price, then priceFrom, if no tier is flagged.
-  const bestValueTier = product.pricingTiers.find((t) => t.isBestValue);
-  const displayPrice = bestValueTier
-    ? bestValueTier.pricePerUnit
-    : product.pricingTiers.length > 0
-      ? Math.min(...product.pricingTiers.map((t) => t.pricePerUnit))
-      : (product.priceFrom ?? 0);
+  const displayPrice = getDisplayPricePerUnit(product);
 
   return (
     <motion.article
