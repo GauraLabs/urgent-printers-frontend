@@ -45,7 +45,7 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
       >
         {banners.map((banner) => (
           <SwiperSlide key={banner.id}>
-            <div className="relative w-full h-[340px] sm:h-[420px] lg:h-[520px]">
+            <div className="relative w-full h-[290px] sm:h-[320px] lg:h-[380px]">
               <Image src={banner.imageUrl} alt={banner.headline} fill priority loading="eager" className="object-cover" sizes="100vw" />
               <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/40 to-transparent" />
               <div className="absolute inset-0 z-10 flex items-center">
@@ -56,7 +56,7 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
                         initial={{ opacity: 0, y: -12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4, delay: 0.1 }}
-                        className="inline-block mb-3 px-3 py-1 rounded-full bg-brand-orange text-brand-orange-foreground text-xs font-semibold tracking-wide"
+                        className="inline-block mb-3 px-3 py-1 rounded-full bg-white/15 text-white text-xs font-semibold tracking-wide"
                       >
                         {banner.badgeText}
                       </motion.span>
@@ -65,7 +65,7 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: 0.2 }}
-                      className="font-heading font-bold text-white text-2xl sm:text-3xl lg:text-5xl leading-tight mb-3"
+                      className="font-heading font-bold text-white text-2xl sm:text-3xl lg:text-5xl leading-tight mb-3 line-clamp-2"
                     >
                       {banner.headline}
                     </motion.h1>
@@ -73,7 +73,7 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
                       initial={{ opacity: 0, y: 16 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: 0.35 }}
-                      className="text-white/85 text-sm sm:text-base lg:text-lg mb-6 leading-relaxed"
+                      className="text-white/85 text-sm sm:text-base lg:text-lg mb-6 leading-relaxed line-clamp-2"
                     >
                       {banner.subheading}
                     </motion.p>

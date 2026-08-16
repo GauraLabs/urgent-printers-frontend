@@ -69,6 +69,7 @@ export default async function HomePage() {
     getTestimonials(),
   ]);
   const recommended = await getRecommendedProducts(featured.map((p) => p.id), 10);
+  const totalProducts = categories.reduce((sum, c) => sum + c.productCount, 0);
 
   return (
     <>
@@ -77,13 +78,13 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
       />
       <HeroBannerSection banners={banners} />
-      <TrustBadges />
+      <TrustBadges totalProducts={totalProducts > 0 ? totalProducts : undefined} />
       <CategoryGrid categories={categories.slice(0, HOMEPAGE_CATEGORY_LIMIT)} />
       <FeaturedProducts products={featured} />
       <RecommendedProducts products={recommended} />
-      <HowItWorks />
       <PromoBanner />
       <TestimonialsSection testimonials={testimonials} />
+      <HowItWorks />
     </>
   );
 }

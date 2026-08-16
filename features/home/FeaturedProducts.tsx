@@ -12,7 +12,7 @@ interface FeaturedProductsProps {
 
 export function FeaturedProducts({ products }: FeaturedProductsProps) {
   return (
-    <section aria-labelledby="featured-heading" className="relative overflow-hidden py-12 lg:py-16 bg-secondary/30">
+    <section aria-labelledby="featured-heading" className="relative overflow-hidden py-12 lg:py-16 bg-secondary/60">
       <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-primary/10 blur-3xl -z-10" aria-hidden="true" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between mb-8">
@@ -38,13 +38,14 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
             description="We couldn't load these products. Please check back shortly."
           />
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+          <div className="flex flex-wrap justify-center gap-4 lg:gap-6">
             {products.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                sizes="(max-width: 1023px) 50vw, 286px"
-              />
+              <div key={p.id} className="w-[calc(50%-0.5rem)] lg:w-[calc(25%-1.125rem)]">
+                <ProductCard
+                  product={p}
+                  sizes="(max-width: 1023px) 50vw, 286px"
+                />
+              </div>
             ))}
           </div>
         )}

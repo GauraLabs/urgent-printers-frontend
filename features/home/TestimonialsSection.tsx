@@ -46,7 +46,7 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
 
 export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) {
   return (
-    <section aria-labelledby="testimonials-heading" className="relative overflow-hidden py-12 lg:py-16 bg-secondary/30">
+    <section aria-labelledby="testimonials-heading" className="relative overflow-hidden py-12 lg:py-16 bg-secondary/60">
       <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-brand-orange/10 blur-3xl -z-10" aria-hidden="true" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeading

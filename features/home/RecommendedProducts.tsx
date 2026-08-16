@@ -31,12 +31,12 @@ export function RecommendedProducts({ products }: RecommendedProductsProps) {
           </Link>
         </div>
 
-        <div className="flex sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6 overflow-x-auto sm:overflow-visible snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 pb-2">
+        <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-4 lg:gap-6 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pb-2">
           {products.map((p) => (
-            <div key={p.id} className="w-[62%] sm:w-auto shrink-0 snap-start">
+            <div key={p.id} className="w-[62%] sm:w-[38%] md:w-[28%] lg:w-[21%] shrink-0 snap-start">
               <ProductCard
                 product={p}
-                sizes="(max-width: 639px) 62vw, (max-width: 767px) 50vw, (max-width: 1023px) 33vw, 224px"
+                sizes="(max-width: 639px) 62vw, (max-width: 767px) 38vw, (max-width: 1023px) 28vw, 21vw"
               />
             </div>
           ))}
