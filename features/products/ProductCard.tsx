@@ -31,12 +31,13 @@ export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: Produ
 
   return (
     <motion.article
-      whileHover={{ y: -4, boxShadow: "0 12px 32px -4px rgba(159,66,43,0.18)" }}
+      whileHover={prefersReducedMotion ? undefined : { y: -6, scale: 1.015 }}
       whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
-      transition={{ type: "spring", stiffness: 300, damping: 24 }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
         "group relative flex flex-col rounded-2xl overflow-hidden border border-border bg-card",
-        "hover:border-primary/30 transition-colors duration-300",
+        "shadow-[var(--shadow-card-resting)] hover:shadow-[var(--shadow-card-hover)]",
+        "hover:border-primary/30 transition-[border-color,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
         className
       )}
     >
@@ -51,7 +52,7 @@ export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: Produ
           alt={product.name}
           fill
           className={cn(
-            "object-cover transition-all duration-500 group-hover:scale-105",
+            "object-cover transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110",
             "motion-reduce:transition-none motion-reduce:group-hover:scale-100",
             hoverImage && "md:group-hover:opacity-0"
           )}
@@ -64,7 +65,7 @@ export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: Produ
             aria-hidden="true"
             fill
             className={cn(
-              "hidden md:block object-cover opacity-0 scale-105 transition-opacity duration-500",
+              "hidden md:block object-cover opacity-0 scale-110 transition-opacity duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
               "md:group-hover:opacity-100 motion-reduce:transition-none"
             )}
             sizes={sizes}
@@ -104,13 +105,13 @@ export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: Produ
 
       {/* Content */}
       <div className="p-4 flex flex-col gap-1.5 md:gap-2 flex-1">
-        <p className="text-[11px] text-primary/70 uppercase tracking-wide font-semibold">
+        <p className="text-[10px] text-primary/70 uppercase tracking-[0.08em] font-semibold">
           {product.categoryName}
         </p>
-        <h2 className="font-heading font-semibold text-sm leading-snug group-hover:text-primary transition-colors line-clamp-2">
+        <h2 className="font-heading font-semibold text-base leading-[1.2] tracking-[-0.01em] group-hover:text-primary transition-colors line-clamp-2">
           {product.name}
         </h2>
-        <p className="hidden md:block text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+        <p className="hidden md:block text-xs text-muted-foreground/90 line-clamp-2 leading-normal">
           {product.shortDescription}
         </p>
 

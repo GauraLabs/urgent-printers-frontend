@@ -78,12 +78,21 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
               key={cat.id}
               href={ROUTES.category(cat.slug)}
               initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              whileInView={{ opacity: 1, y: 0, transition: { duration: 0.4, delay: index * 0.05 } }}
               viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.4, delay: index * 0.05 }}
+              whileHover={
+                prefersReducedMotion
+                  ? undefined
+                  : { y: -6, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] } }
+              }
+              whileTap={
+                prefersReducedMotion
+                  ? undefined
+                  : { scale: 0.98, transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] } }
+              }
               className={cn(
-                "group relative overflow-hidden rounded-2xl shadow-sm hover:shadow-md",
-                "ring-1 ring-border hover:ring-primary/40 transition-all duration-300",
+                "group relative overflow-hidden rounded-2xl shadow-[var(--shadow-card-resting)] hover:shadow-[var(--shadow-card-hover)]",
+                "ring-1 ring-border hover:ring-primary/40 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
                 index === 0
                   ? "aspect-square md:col-span-2 md:row-span-2"
                   : index === 1 || index === 2
@@ -95,7 +104,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
                 src={index === 0 ? (cat.bannerUrl ?? cat.imageUrl) : (cat.mediumUrl ?? cat.imageUrl)}
                 alt={cat.name}
                 fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                 sizes={
                   index === 0
                     ? "(max-width: 767px) 50vw, (max-width: 1279px) 66vw, 800px"
@@ -103,16 +112,24 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
                 }
               />
               {/* Gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent transition-all duration-300 group-hover:from-black/80" />
 
               {/* Label */}
               <div className="absolute bottom-0 inset-x-0 p-5 lg:p-6">
                 <h3 className={cn(
-                  "font-heading font-bold text-white leading-tight tracking-tight",
+                  "font-heading font-bold text-white leading-[1.05] tracking-[-0.01em]",
                   index === 0 ? "text-3xl sm:text-4xl lg:text-5xl" : "text-xl sm:text-2xl"
                 )}>
                   {cat.name}
                 </h3>
+                {cat.description && (
+                  <p className={cn(
+                    "font-sans text-white/70 mt-1.5 leading-snug",
+                    index === 0 ? "text-sm sm:text-base line-clamp-2 max-w-md" : "text-xs sm:text-sm line-clamp-1"
+                  )}>
+                    {cat.description}
+                  </p>
+                )}
               </div>
 
               {/* Hover arrow */}

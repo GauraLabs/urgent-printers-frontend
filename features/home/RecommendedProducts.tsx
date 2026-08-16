@@ -7,6 +7,8 @@ import { SectionHeading } from "@/components/common/SectionHeading";
 import { ProductCard } from "@/features/products/ProductCard";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { ROUTES } from "@/lib/constants/routes";
+import { useScrollRail } from "./useScrollRail";
+import { ScrollRailButtons } from "./ScrollRailButtons";
 import type { Product } from "@/types";
 
 interface RecommendedProductsProps {
@@ -15,6 +17,7 @@ interface RecommendedProductsProps {
 
 export function RecommendedProducts({ products }: RecommendedProductsProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
+  const { trackRef, canScrollLeft, canScrollRight, scrollByPage } = useScrollRail();
 
   if (products.length === 0) return null;
 
@@ -36,15 +39,25 @@ export function RecommendedProducts({ products }: RecommendedProductsProps) {
               align="left"
             />
           </motion.div>
-          <Link
-            href={ROUTES.products}
-            className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-          >
-            View all <ArrowRight size={14} />
-          </Link>
+          <div className="hidden sm:flex items-center gap-4">
+            <Link
+              href={ROUTES.products}
+              className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+            >
+              View all <ArrowRight size={14} />
+            </Link>
+            <ScrollRailButtons
+              canScrollLeft={canScrollLeft}
+              canScrollRight={canScrollRight}
+              onScroll={scrollByPage}
+            />
+          </div>
         </div>
 
-        <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-4 lg:gap-6 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pb-2">
+        <div
+          ref={trackRef}
+          className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-4 lg:gap-6 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pb-2"
+        >
           {products.map((p, i) => (
             <motion.div
               key={p.id}

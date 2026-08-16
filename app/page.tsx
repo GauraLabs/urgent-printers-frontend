@@ -8,6 +8,7 @@ import {
 } from "@/lib/api";
 import { HeroBannerSection } from "@/features/home/HeroBannerSection";
 import { CategoryGrid } from "@/features/home/CategoryGrid";
+import { CategoryRail } from "@/features/home/CategoryRail";
 import { FeaturedProducts } from "@/features/home/FeaturedProducts";
 import { CampaignBanner } from "@/features/home/CampaignBanner";
 import { RecommendedProducts } from "@/features/home/RecommendedProducts";
@@ -87,6 +88,7 @@ export default async function HomePage() {
       <HeroBannerSection banners={banners} />
       <TrustBadges totalProducts={totalProducts > 0 ? totalProducts : undefined} />
       <CategoryGrid categories={categories.slice(0, HOMEPAGE_CATEGORY_LIMIT)} />
+      <CategoryRail categories={categories} />
       <FeaturedProducts products={featured} />
       {campaignCategory && (
         <CampaignBanner
