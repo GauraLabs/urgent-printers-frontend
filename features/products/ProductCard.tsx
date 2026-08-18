@@ -86,14 +86,11 @@ export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: Produ
   // alongside `transform`/`translate`/`rotate` in this Tailwind version), so
   // the animation is identical to the old static-class version.
   const handleHoverStart = useCallback(() => {
-    // eslint-disable-next-line no-console
-    console.log("[DEBUG] handleHoverStart fired", { prefersReducedMotion, hasFrame: !!frameRef.current });
     if (prefersReducedMotion) return;
     const frame = frameRef.current;
     if (!frame) return;
     const safeScale = computeSafeHoverScale(frame, MAX_HOVER_SCALE);
     frame.style.scale = safeScale.toString();
-    console.log("[DEBUG] set scale to", safeScale, "actual style.scale now", frame.style.scale);
   }, [prefersReducedMotion]);
 
   const handleHoverEnd = useCallback(() => {
