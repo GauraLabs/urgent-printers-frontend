@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, LayoutGrid } from "lucide-react";
+import { LayoutGrid } from "lucide-react";
 import { motion } from "motion/react";
 import { EmptyState } from "@/components/common/EmptyState";
 import { SectionHeading } from "@/components/common/SectionHeading";
@@ -76,12 +76,15 @@ export function CategoryRail({ categories }: CategoryRailProps) {
             onScroll={scrollByPage}
           />
         </div>
+      </div>
 
-        <div
-          ref={trackRef}
-          className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 pb-2"
-        >
-          {categories.map((cat, index) => (
+      <div
+        ref={trackRef}
+        className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-4 py-8 pl-4 sm:pl-6 lg:pl-[max(1rem,calc((100vw-1280px)/2+2rem))] pr-4 scroll-pl-4 sm:scroll-pl-6 lg:scroll-pl-[max(1rem,calc((100vw-1280px)/2+2rem))] scroll-pr-4"
+      >
+        {categories.map((cat, index) => {
+          const inverted = index % 2 === 1;
+          return (
             <MotionLink
               key={cat.id}
               href={ROUTES.category(cat.slug)}
@@ -95,7 +98,7 @@ export function CategoryRail({ categories }: CategoryRailProps) {
               whileHover={
                 prefersReducedMotion
                   ? undefined
-                  : { y: -6, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] } }
+                  : { y: -4, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] } }
               }
               whileTap={
                 prefersReducedMotion
@@ -103,40 +106,47 @@ export function CategoryRail({ categories }: CategoryRailProps) {
                   : { scale: 0.98, transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] } }
               }
               className={cn(
-                "group relative shrink-0 snap-start overflow-hidden rounded-2xl shadow-[var(--shadow-card-resting)] hover:shadow-[var(--shadow-card-hover)]",
-                "ring-1 ring-border hover:ring-primary/40 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
-                "w-[220px] sm:w-[240px] lg:w-[260px] aspect-[3/4]"
+                "group flex flex-col shrink-0 snap-start overflow-hidden rounded-2xl transition-shadow duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                "shadow-[var(--shadow-rail-resting)] hover:shadow-[var(--shadow-rail-hover)]",
+                "w-[240px] sm:w-[260px] lg:w-[280px] h-[320px] sm:h-[340px] lg:h-[360px]",
+                inverted ? "bg-foreground text-background" : "bg-card text-card-foreground"
               )}
             >
-              <Image
-                src={cat.mediumUrl ?? cat.imageUrl}
-                alt={cat.name}
-                fill
-                className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-                sizes="(max-width: 640px) 220px, (max-width: 1024px) 240px, 260px"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent transition-all duration-300 group-hover:from-black/85" />
-
-              <div className="absolute bottom-0 inset-x-0 p-4">
-                <h3 className="font-heading font-bold text-white text-lg leading-[1.05] tracking-[-0.01em]">
+              <div className="flex flex-col gap-1 p-5 pb-3">
+                <h3 className="font-sans font-extrabold text-lg leading-[1.05] tracking-[-0.01em]">
                   {cat.name}
                 </h3>
-                <p className="font-sans text-white/70 text-xs mt-1 leading-snug line-clamp-1">
-                  {cat.description || `${cat.productCount} products`}
-                </p>
+                {cat.description && (
+                  <p className="font-sans text-xs opacity-70 leading-snug line-clamp-2">
+                    {cat.description}
+                  </p>
+                )}
+                <span className="font-sans text-[11px] opacity-50 mt-1.5">
+                  {cat.productCount} products
+                </span>
               </div>
 
               <div
                 className={cn(
-                  "absolute top-3 right-3 w-7 h-7 rounded-full bg-white/0 flex items-center justify-center",
-                  "group-hover:bg-white/20 transition-all duration-300"
+                  "relative flex-1 mx-4 mb-4 rounded-xl overflow-hidden",
+                  inverted ? "bg-foreground" : "bg-card"
                 )}
               >
-                <ArrowRight size={14} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Image
+                  src={cat.mediumUrl ?? cat.imageUrl}
+                  alt={cat.name}
+                  fill
+                  className={cn(
+                    "object-cover scale-[1.02] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform",
+                    "group-hover:scale-105",
+                    "motion-reduce:transition-none motion-reduce:scale-100 motion-reduce:group-hover:scale-100"
+                  )}
+                  sizes="(max-width: 640px) 240px, (max-width: 1024px) 260px, 280px"
+                />
               </div>
             </MotionLink>
-          ))}
-        </div>
+          );
+        })}
       </div>
     </section>
   );

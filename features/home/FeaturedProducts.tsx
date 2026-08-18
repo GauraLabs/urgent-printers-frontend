@@ -21,8 +21,13 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
   const { trackRef, canScrollLeft, canScrollRight, scrollByPage } = useScrollRail();
 
   return (
-    <section aria-labelledby="featured-heading" className="relative overflow-hidden py-12 lg:py-16 bg-secondary/60">
-      <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-primary/10 blur-3xl -z-10" aria-hidden="true" />
+    <section aria-labelledby="featured-heading" className="relative py-12 lg:py-16 bg-secondary/60">
+      <div
+        className="absolute top-0 right-0 w-[32rem] h-[28rem] overflow-hidden -z-10 pointer-events-none"
+        aria-hidden="true"
+      >
+        <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-primary/10 blur-3xl" />
+      </div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between mb-8">
           <motion.div

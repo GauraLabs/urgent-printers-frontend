@@ -98,99 +98,97 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
 
   return (
     <section ref={sectionRef} aria-label="Featured promotions" className="relative w-full pt-4 sm:pt-6 lg:pt-8">
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Swiper
-          modules={[Autoplay, A11y]}
-          autoplay={{ delay: 5500, disableOnInteraction: false, pauseOnMouseEnter: true }}
-          onSwiper={(swiper) => {
-            swiperRef.current = swiper;
-          }}
-          onSlideChange={(swiper) => {
-            if (banners.length > 0) setActiveIndex(swiper.realIndex % banners.length);
-            updateSparklesRect();
-          }}
-          loop={banners.length > 1}
-          centeredSlides
-          slidesPerView={1.15}
-          spaceBetween={12}
-          breakpoints={{
-            640: { slidesPerView: 1.2, spaceBetween: 16 },
-            1024: { slidesPerView: 1.22, spaceBetween: 20 },
-          }}
-          className="hero-banner-swiper w-full !pb-9"
-        >
-          {slides.map((banner, i) => (
-            <SwiperSlide key={`${banner.id}-${i}`}>
-              <div className="hero-slide-photo relative w-full h-[320px] sm:h-[360px] lg:h-[440px] rounded-xl overflow-hidden brightness-60 transition-[filter] duration-300 ease-out [.swiper-slide-active_&]:brightness-100">
-                <Image
-                  src={banner.imageUrl}
-                  alt={banner.headline}
-                  fill
-                  priority
-                  loading="eager"
-                  className="object-cover"
-                  sizes="(min-width: 1024px) 1216px, 100vw"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
-                <div className="absolute inset-0 z-10 flex items-end pb-6 sm:pb-8 lg:pb-10">
-                  <div className="w-full px-5 sm:px-8 lg:px-10">
-                    <div className="max-w-xl">
-                      <motion.h1
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
-                        className="font-sans font-black uppercase text-white text-3xl sm:text-4xl lg:text-6xl leading-[0.95] tracking-tight mb-3 lg:mb-4 line-clamp-2"
+      <Swiper
+        modules={[Autoplay, A11y]}
+        autoplay={{ delay: 5500, disableOnInteraction: false, pauseOnMouseEnter: true }}
+        onSwiper={(swiper) => {
+          swiperRef.current = swiper;
+        }}
+        onSlideChange={(swiper) => {
+          if (banners.length > 0) setActiveIndex(swiper.realIndex % banners.length);
+          updateSparklesRect();
+        }}
+        loop={banners.length > 1}
+        centeredSlides
+        slidesPerView={1.15}
+        spaceBetween={12}
+        breakpoints={{
+          640: { slidesPerView: 1.2, spaceBetween: 16 },
+          1024: { slidesPerView: 1.22, spaceBetween: 20 },
+        }}
+        className="hero-banner-swiper w-full !pb-9"
+      >
+        {slides.map((banner, i) => (
+          <SwiperSlide key={`${banner.id}-${i}`}>
+            <div className="hero-slide-photo relative w-full aspect-[4/3] sm:aspect-video lg:aspect-[9/4] max-h-[720px] rounded-xl overflow-hidden brightness-60 transition-[filter] duration-300 ease-out [.swiper-slide-active_&]:brightness-100">
+              <Image
+                src={banner.imageUrl}
+                alt={banner.headline}
+                fill
+                priority
+                loading="eager"
+                className="object-cover"
+                sizes="(min-width: 1024px) 82vw, (min-width: 640px) 83vw, 87vw"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+              <div className="absolute inset-0 z-10 flex items-end pb-6 sm:pb-8 lg:pb-10">
+                <div className="w-full px-5 sm:px-8 lg:px-10">
+                  <div className="max-w-xl">
+                    <motion.h1
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                      className="font-sans font-black uppercase text-white text-3xl sm:text-4xl lg:text-6xl leading-[0.95] tracking-tight mb-3 lg:mb-4 line-clamp-2"
+                    >
+                      {banner.headline}
+                    </motion.h1>
+                    <motion.div
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: 0.4 }}
+                      className="flex items-center gap-3"
+                    >
+                      <Link
+                        href={banner.ctaHref}
+                        className={cn(
+                          buttonVariants({ size: "sm" }),
+                          "shrink-0 h-9 px-4 gap-1.5 text-sm rounded-full bg-white hover:bg-white/90 text-neutral-900 font-semibold"
+                        )}
                       >
-                        {banner.headline}
-                      </motion.h1>
-                      <motion.div
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.4 }}
-                        className="flex items-center gap-3"
-                      >
-                        <Link
-                          href={banner.ctaHref}
-                          className={cn(
-                            buttonVariants({ size: "sm" }),
-                            "shrink-0 h-9 px-4 gap-1.5 text-sm rounded-full bg-white hover:bg-white/90 text-neutral-900 font-semibold"
-                          )}
-                        >
-                          {banner.ctaText}
-                        </Link>
-                        <p className="text-white/85 text-xs sm:text-sm leading-snug line-clamp-1">
-                          {banner.subheading}
-                        </p>
-                      </motion.div>
-                    </div>
+                        {banner.ctaText}
+                      </Link>
+                      <p className="text-white/85 text-xs sm:text-sm leading-snug line-clamp-1">
+                        {banner.subheading}
+                      </p>
+                    </motion.div>
                   </div>
                 </div>
               </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
+            </div>
+          </SwiperSlide>
+        ))}
+      </Swiper>
 
-        {banners.length > 1 && (
-          <nav
-            aria-label="Slide navigation"
-            className="absolute left-1/2 -translate-x-1/2 bottom-3 z-20 flex items-center gap-1.5"
-          >
-            {banners.map((banner, i) => (
-              <button
-                key={banner.id}
-                type="button"
-                aria-label={`Go to slide ${i + 1}`}
-                aria-current={i === activeIndex}
-                onClick={() => swiperRef.current?.slideToLoop(i)}
-                className={cn(
-                  "h-[7px] rounded-full transition-[width,background-color] duration-300",
-                  i === activeIndex ? "w-6 bg-primary" : "w-[7px] bg-primary/40 hover:bg-primary/70"
-                )}
-              />
-            ))}
-          </nav>
-        )}
-      </div>
+      {banners.length > 1 && (
+        <nav
+          aria-label="Slide navigation"
+          className="absolute left-1/2 -translate-x-1/2 bottom-3 z-20 flex items-center gap-1.5"
+        >
+          {banners.map((banner, i) => (
+            <button
+              key={banner.id}
+              type="button"
+              aria-label={`Go to slide ${i + 1}`}
+              aria-current={i === activeIndex}
+              onClick={() => swiperRef.current?.slideToLoop(i)}
+              className={cn(
+                "h-[7px] rounded-full transition-[width,background-color] duration-300",
+                i === activeIndex ? "w-6 bg-primary" : "w-[7px] bg-primary/40 hover:bg-primary/70"
+              )}
+            />
+          ))}
+        </nav>
+      )}
 
       {showSparkles && sparklesRect && (
         <div

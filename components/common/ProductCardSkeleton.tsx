@@ -13,8 +13,9 @@ export function ProductCardSkeleton({ className }: ProductCardSkeletonProps) {
         className
       )}
     >
-      {/* Image */}
-      <div className="relative aspect-square overflow-hidden bg-muted">
+      {/* Image — aspect-[19/20] + rounded-2xl + mb-3 must match ProductCard's real
+          image frame, otherwise the skeleton-to-real swap causes a visible jump. */}
+      <div className="relative aspect-[19/20] overflow-hidden rounded-2xl mb-3 bg-muted">
         <Skeleton className="absolute inset-0 rounded-none" />
         {/* Wishlist button placeholder */}
         <Skeleton className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full" />
