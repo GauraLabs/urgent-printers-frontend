@@ -25,7 +25,22 @@ function formatEta(dateStr: string): string {
   });
 }
 
-export function DeliveryCheck() {
+function formatDayRange(min: number, max: number): string {
+  return min === max ? `${min} day${min === 1 ? "" : "s"}` : `${min}–${max} days`;
+}
+
+interface DeliveryCheckProps {
+  // Production/turnaround days for the currently selected TurnaroundOption
+  // (already-selected in ProductConfigurator, "businessDays" field name
+  // notwithstanding — both this and the shipping min/max below are plain
+  // calendar-day counts, matching the backend's date.today() + timedelta(days=N)
+  // convention with no weekday/holiday skipping anywhere in that chain).
+  // Undefined for products with no turnaround concept — combined ETA is
+  // skipped in that case and this falls back to shipping-only display.
+  turnaroundDays?: number;
+}
+
+export function DeliveryCheck({ turnaroundDays }: DeliveryCheckProps) {
   const [pincode, setPincode] = useState("");
   const [state, setState] = useState<CheckState>({ status: "idle" });
 
@@ -75,11 +90,29 @@ export function DeliveryCheck() {
         </Button>
       </form>
 
-      {state.status === "success" && state.result.isServiceable && state.result.estimatedDeliveryDate && (
-        <Badge variant="success" className="mt-2.5">
-          Delivery by {formatEta(state.result.estimatedDeliveryDate)}
-        </Badge>
-      )}
+      {state.status === "success" &&
+        state.result.isServiceable &&
+        turnaroundDays !== undefined &&
+        state.result.minDays !== null &&
+        state.result.maxDays !== null && (
+          <div className="mt-2.5">
+            <Badge variant="success">
+              Arrives in {formatDayRange(turnaroundDays + state.result.minDays, turnaroundDays + state.result.maxDays)}
+            </Badge>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              {turnaroundDays} day{turnaroundDays === 1 ? "" : "s"} to print + {formatDayRange(state.result.minDays, state.result.maxDays)} to ship
+            </p>
+          </div>
+        )}
+
+      {state.status === "success" &&
+        state.result.isServiceable &&
+        (turnaroundDays === undefined || state.result.minDays === null || state.result.maxDays === null) &&
+        state.result.estimatedDeliveryDate && (
+          <Badge variant="success" className="mt-2.5">
+            Delivery by {formatEta(state.result.estimatedDeliveryDate)}
+          </Badge>
+        )}
 
       {state.status === "success" && !state.result.isServiceable && (
         <Badge variant="destructive" className="mt-2.5">

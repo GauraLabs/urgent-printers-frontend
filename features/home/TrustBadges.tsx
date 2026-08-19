@@ -1,33 +1,47 @@
-import { Zap, ShieldCheck, Headphones, Leaf, Award, Truck } from "lucide-react";
+import { Zap, ShieldCheck, Headphones, Leaf, Award, Truck, Package, ChevronRight } from "lucide-react";
 
 const BADGES = [
-  { icon: Zap, title: "Next-Day Delivery", description: "Order by 2 PM for overnight dispatch" },
-  { icon: ShieldCheck, title: "Quality Guarantee", description: "Not happy? We reprint or refund" },
-  { icon: Award, title: "Premium Materials", description: "Industry-leading paper and ink stocks" },
-  { icon: Truck, title: "Free Delivery Over ₹999", description: "Pan-India delivery, no code needed" },
-  { icon: Headphones, title: "Expert Support", description: "Real humans available Mon–Sat 9–6 IST" },
-  { icon: Leaf, title: "Eco-Friendly Options", description: "Recycled stocks and soy-based inks" },
+  { icon: Zap, title: "Next-Day Delivery" },
+  { icon: ShieldCheck, title: "Quality Guarantee" },
+  { icon: Award, title: "Premium Materials" },
+  { icon: Truck, title: "Free Delivery Over ₹999" },
+  { icon: Headphones, title: "Expert Support" },
+  { icon: Leaf, title: "Eco-Friendly Options" },
 ];
 
-export function TrustBadges() {
+interface TrustBadgesProps {
+  /** Sum of Category.productCount across the live catalog — omitted (not fabricated) when unavailable. */
+  totalProducts?: number;
+}
+
+export function TrustBadges({ totalProducts }: TrustBadgesProps) {
   return (
-    <section aria-label="Why choose Urgent Printers" className="py-10 border-y border-border bg-secondary/20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 lg:gap-4">
+    <section aria-label="Why choose Urgent Printers" className="border-y border-border bg-secondary/50">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-5 lg:gap-8 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-3 pr-9">
+          {totalProducts !== undefined && totalProducts > 0 && (
+            <div className="flex items-center gap-2 shrink-0 snap-start pr-5 border-r border-border">
+              <Package size={16} className="text-primary shrink-0" aria-hidden="true" />
+              <span className="text-xs font-semibold text-foreground whitespace-nowrap">
+                {totalProducts}+ products available
+              </span>
+            </div>
+          )}
           {BADGES.map((badge) => {
             const Icon = badge.icon;
             return (
-              <div key={badge.title} className="flex flex-col items-center text-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                  <Icon size={20} className="text-primary" />
-                </div>
-                <div>
-                  <p className="font-heading font-semibold text-xs leading-snug">{badge.title}</p>
-                  <p className="text-muted-foreground text-[11px] mt-0.5 leading-snug">{badge.description}</p>
-                </div>
+              <div key={badge.title} className="flex items-center gap-2 shrink-0 snap-start">
+                <Icon size={16} className="text-primary shrink-0" aria-hidden="true" />
+                <span className="text-xs font-medium text-foreground whitespace-nowrap">{badge.title}</span>
               </div>
             );
           })}
+        </div>
+        <div
+          className="pointer-events-none absolute right-1 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-full bg-background/80 shadow-sm"
+          aria-hidden="true"
+        >
+          <ChevronRight className="size-3.5 text-primary" />
         </div>
       </div>
     </section>

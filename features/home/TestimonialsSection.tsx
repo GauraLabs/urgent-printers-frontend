@@ -1,7 +1,11 @@
+"use client";
+
 import { Quote } from "lucide-react";
+import { motion } from "motion/react";
 import { SectionHeading } from "@/components/common/SectionHeading";
 import { StarRating } from "@/components/common/StarRating";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import type { Testimonial } from "@/types";
 
 interface TestimonialsSectionProps {
@@ -18,9 +22,23 @@ function getInitials(name: string): string {
     .toUpperCase();
 }
 
-function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
+function TestimonialCard({
+  testimonial,
+  delay,
+  prefersReducedMotion,
+}: {
+  testimonial: Testimonial;
+  delay: number;
+  prefersReducedMotion: boolean;
+}) {
   return (
-    <article className="flex flex-col gap-4 p-6 rounded-2xl bg-card border border-border">
+    <motion.article
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.4, delay }}
+      className="flex flex-col gap-4 p-6 rounded-2xl bg-card border border-border"
+    >
       <Quote size={20} className="text-primary/30 shrink-0" />
       <p className="text-sm leading-relaxed text-foreground/90 flex-1">
         &ldquo;{testimonial.quote}&rdquo;
@@ -40,27 +58,41 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
           <p className="text-muted-foreground text-xs">{testimonial.company}</p>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }
 
 export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) {
+  const prefersReducedMotion = usePrefersReducedMotion();
+
   return (
-    <section aria-labelledby="testimonials-heading" className="relative overflow-hidden py-12 lg:py-16 bg-secondary/30">
+    <section aria-labelledby="testimonials-heading" className="relative overflow-hidden py-12 lg:py-16 bg-secondary/60">
       <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-brand-orange/10 blur-3xl -z-10" aria-hidden="true" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionHeading
-          id="testimonials-heading"
-          eyebrow="Testimonials"
-          title="Loved by Businesses"
-          description="Join thousands of businesses who trust Urgent Printers"
-          align="center"
-          className="mb-10"
-        />
+        <motion.div
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5 }}
+        >
+          <SectionHeading
+            id="testimonials-heading"
+            eyebrow="Testimonials"
+            title="Loved by Businesses"
+            description="Join thousands of businesses who trust Urgent Printers"
+            align="center"
+            className="mb-10"
+          />
+        </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-          {testimonials.map((t) => (
-            <TestimonialCard key={t.id} testimonial={t} />
+          {testimonials.map((t, i) => (
+            <TestimonialCard
+              key={t.id}
+              testimonial={t}
+              delay={i * 0.1}
+              prefersReducedMotion={prefersReducedMotion}
+            />
           ))}
         </div>
       </div>

@@ -24,7 +24,7 @@ export default function ProductsLoading() {
             ))}
           </div>
           <div className="flex-1">
-            <ProductGridSkeleton count={9} />
+            <ProductGridSkeleton count={9} gridClassName="lg:grid-cols-3" />
           </div>
         </div>
       </div>

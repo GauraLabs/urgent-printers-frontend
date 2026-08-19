@@ -1,15 +1,19 @@
 "use client";
 
-import { useState, useId, forwardRef, useEffect } from "react";
+import { useState, forwardRef, useEffect } from "react";
 import { ShoppingBag, CheckCircle2, Info } from "lucide-react";
+import { motion, AnimatePresence, usePresence, useAnimationControls } from "motion/react";
 import { toast } from "sonner";
 import { PricingTable } from "./PricingTable";
 import { DeliveryCheck } from "../DeliveryCheck";
+import { SizeSpecGuide } from "./SizeSpecGuide";
+import { ProductTrustBadges } from "../ProductTrustBadges";
 import { SelectableCard } from "@/components/ui/selectable-card";
 import { useCartStore } from "@/features/cart/store";
 import { makeCartItemId } from "@/features/cart/cartItemId";
 import { formatPrice, formatPricePerUnit, cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants/routes";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import Link from "next/link";
 import type { Product, SidesOption, TurnaroundOption, CartItemConfig } from "@/types";
 
@@ -29,6 +33,7 @@ function OptionButton({
   onClick,
   delta,
   isDefault,
+  showPriceDelta = true,
 }: {
   label: string;
   description?: string;
@@ -36,8 +41,9 @@ function OptionButton({
   onClick: () => void;
   delta?: number;
   isDefault?: boolean;
+  showPriceDelta?: boolean;
 }) {
-  const showDelta = delta !== undefined && Math.abs(delta) >= 0.01;
+  const showDelta = showPriceDelta && delta !== undefined && Math.abs(delta) >= 0.01;
   return (
     <SelectableCard
       selected={selected}
@@ -46,7 +52,7 @@ function OptionButton({
     >
       <div className="flex items-center justify-between w-full gap-1.5">
         <div className="flex items-center gap-1.5 min-w-0">
-          <span className={cn("text-sm font-medium leading-snug truncate", selected && "text-primary")}>
+          <span className={cn("text-sm font-medium leading-snug truncate transition-colors duration-200", selected && "text-primary")}>
             {label}
           </span>
           {isDefault && (
@@ -73,15 +79,88 @@ function OptionButton({
   );
 }
 
+// Crossfades to a new price whenever `value` actually changes (key === value,
+// so re-renders with an unchanged price never re-trigger the animation).
+// Reduced-motion users get an instant swap instead, matching the
+// window.matchMedia gating pattern used in HeroBannerSection/CategoryVideoOverlay.
+//
+// mode is intentionally the default "overlapping" (not "wait" — that caused a
+// blank-frame flicker, fixed in a prior pass) so outgoing and incoming <p>s
+// are both mounted during the crossfade. To stop that from doubling the
+// block's height, the outgoing one is pulled out of flow (position: absolute)
+// via usePresence so only the incoming, in-flow one sizes the container.
+function PriceValue({
+  value,
+  formatted,
+  className,
+  prefersReducedMotion,
+}: {
+  value: number;
+  formatted: string;
+  className: string;
+  prefersReducedMotion: boolean;
+}) {
+  return (
+    <div className="relative">
+      <AnimatePresence initial={false}>
+        <PriceValueFrame
+          key={value}
+          formatted={formatted}
+          className={className}
+          prefersReducedMotion={prefersReducedMotion}
+        />
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function PriceValueFrame({
+  formatted,
+  className,
+  prefersReducedMotion,
+}: {
+  formatted: string;
+  className: string;
+  prefersReducedMotion: boolean;
+}) {
+  const [isPresent, safeToRemove] = usePresence();
+
+  // Reduced-motion has no exit animation, so onAnimationComplete below never
+  // fires for it — remove the outgoing node the moment it stops being
+  // present instead of waiting on an animation that won't run.
+  useEffect(() => {
+    if (!isPresent && prefersReducedMotion) safeToRemove?.();
+  }, [isPresent, prefersReducedMotion, safeToRemove]);
+
+  return (
+    <motion.p
+      initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.96 }}
+      transition={{ duration: 0.18 }}
+      onAnimationComplete={() => {
+        if (!isPresent && !prefersReducedMotion) safeToRemove?.();
+      }}
+      style={!isPresent ? { position: "absolute", inset: 0 } : undefined}
+      className={className}
+    >
+      {formatted}
+    </motion.p>
+  );
+}
+
 function getDefault<T extends { isDefault: boolean }>(options: T[]): T | undefined {
   return options.find((o) => o.isDefault) ?? options[0];
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2.5">
-      {children}
-    </p>
+    <div className="flex items-center justify-between gap-2 mb-2.5">
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+        {children}
+      </p>
+      {action}
+    </div>
   );
 }
 
@@ -103,6 +182,12 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     const [selectedTurnaround, setSelectedTurnaround] = useState<TurnaroundOption | undefined>(
       () => turnaroundOptions[0]
     );
+
+    const prefersReducedMotion = usePrefersReducedMotion();
+    // Transient click-confirmation pulse on the Add to Cart button content —
+    // separate from `isInCart`, which drives the persistent "Update Cart"
+    // relabel below and must keep working unchanged.
+    const addPulseControls = useAnimationControls();
 
     const addItem    = useCartStore((s) => s.addItem);
     const cartItems  = useCartStore((s) => s.items);
@@ -219,7 +304,15 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
       };
 
       addItem(
-        { id: product.id, slug: product.slug, name: product.name, images: product.images, categoryName: product.categoryName, categorySlug: product.categorySlug },
+        {
+          id: product.id,
+          slug: product.slug,
+          name: product.name,
+          images: product.images,
+          thumbnailUrl: product.thumbnailUrl,
+          categoryName: product.categoryName,
+          categorySlug: product.categorySlug,
+        },
         config,
         pricePerUnit
       );
@@ -227,6 +320,15 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
       toast.success(`${product.name} added to cart`, {
         description: `${selectedQuantity.toLocaleString("en-IN")} units · ${formatPrice(totalPrice)}`,
       });
+
+      // Transient confirmation pulse — layered on top of the toast and the
+      // persistent isInCart relabel, not a replacement for either.
+      if (!prefersReducedMotion) {
+        void addPulseControls.start({
+          scale: [1, 1.06, 1],
+          transition: { duration: 0.2, ease: "easeOut" },
+        });
+      }
     }
 
     return (
@@ -236,13 +338,23 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
           <div className="flex items-end justify-between">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Price per unit</p>
-              <p className="font-heading font-bold text-3xl">{formatPricePerUnit(pricePerUnit)}</p>
+              <PriceValue
+                value={pricePerUnit}
+                formatted={formatPricePerUnit(pricePerUnit)}
+                className="font-heading font-bold text-3xl tabular-nums"
+                prefersReducedMotion={prefersReducedMotion}
+              />
             </div>
             <div className="text-right">
               <p className="text-xs text-muted-foreground mb-1">
                 Total for {selectedQuantity.toLocaleString("en-IN")} units
               </p>
-              <p className="font-heading font-bold text-xl text-primary">{formatPrice(totalPrice)}</p>
+              <PriceValue
+                value={totalPrice}
+                formatted={formatPrice(totalPrice)}
+                className="font-heading font-bold text-xl text-primary tabular-nums"
+                prefersReducedMotion={prefersReducedMotion}
+              />
             </div>
           </div>
           <p className="text-[11px] text-muted-foreground mt-2 flex items-center gap-1">
@@ -251,12 +363,16 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
           </p>
         </div>
 
-        <DeliveryCheck />
+        <DeliveryCheck turnaroundDays={selectedTurnaround?.businessDays} />
 
         {/* Size — category omitted entirely when not applicable to this product */}
         {printSpec.sizes.length > 0 && (
           <div>
-            <SectionLabel>Size</SectionLabel>
+            <SectionLabel
+              action={<SizeSpecGuide sizes={printSpec.sizes} papers={printSpec.papers} />}
+            >
+              Size
+            </SectionLabel>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {printSpec.sizes.map((size) => (
                 <OptionButton
@@ -266,16 +382,28 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
                   onClick={() => setSelectedSize(size)}
                   delta={sizeDelta(size.priceMultiplier)}
                   isDefault={size.isDefault}
+                  showPriceDelta={false}
                 />
               ))}
             </div>
           </div>
         )}
 
-        {/* Paper */}
+        {/* Paper — the size/paper comparison guide is anchored to the Size
+            section above; when a product has no sizes (empty printSpec.sizes,
+            same legacy/seed-data case noted on turnaround below) it's
+            anchored here instead so the guide never silently disappears. */}
         {printSpec.papers.length > 0 && (
           <div>
-            <SectionLabel>Paper / Material</SectionLabel>
+            <SectionLabel
+              action={
+                printSpec.sizes.length === 0 ? (
+                  <SizeSpecGuide sizes={printSpec.sizes} papers={printSpec.papers} />
+                ) : undefined
+              }
+            >
+              Paper / Material
+            </SectionLabel>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {printSpec.papers.map((paper) => (
                 <OptionButton
@@ -360,7 +488,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
                     className="flex items-center justify-between px-4 py-3 rounded-xl"
                   >
                     <div>
-                      <p className={cn("text-sm font-medium", selectedTurnaround?.id === opt.id && "text-primary")}>
+                      <p className={cn("text-sm font-medium transition-colors duration-200", selectedTurnaround?.id === opt.id && "text-primary")}>
                         {opt.label}
                       </p>
                       <p className="text-[11px] text-muted-foreground">{opt.businessDays} business days</p>
@@ -388,6 +516,8 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
           </div>
         )}
 
+        <ProductTrustBadges />
+
         {/* Add to Cart / Update Cart button */}
         <div className="flex flex-col gap-2">
           <button
@@ -401,8 +531,14 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
                 : "bg-brand-orange hover:bg-brand-orange/90 text-brand-orange-foreground shadow-brand-orange/20"
             )}
           >
-            {isInCart ? <CheckCircle2 size={18} /> : <ShoppingBag size={18} />}
-            {isInCart ? "Update Cart" : "Add to Cart"} · {formatPrice(totalPrice)}
+            <motion.span
+              initial={false}
+              animate={addPulseControls}
+              className="flex items-center justify-center gap-2"
+            >
+              {isInCart ? <CheckCircle2 size={18} /> : <ShoppingBag size={18} />}
+              {isInCart ? "Update Cart" : "Add to Cart"} · {formatPrice(totalPrice)}
+            </motion.span>
           </button>
 
           {isInCart && (

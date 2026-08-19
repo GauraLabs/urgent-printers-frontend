@@ -106,6 +106,17 @@ export interface Product {
   description: string;
   shortDescription: string;
   images: string[];
+  // 300x300 hard crop — sized for small fixed-size chrome (cart line items, order
+  // thumbnails, search dropdown rows). Absent in mock data.
+  thumbnailUrl?: string | null;
+  // 800px, aspect-preserving — populated from the backend for grid tiles rendered
+  // above the 300x300 thumbnail crop's native size (absent in mock data)
+  mediumUrl?: string | null;
+  // Per-image 300x300 thumb crop, index-aligned with `images` (which carries the
+  // `lg`/1600px variant) — sized for the product gallery's thumbnail rail, not the
+  // main slide. Absent in mock data and card/search-derived products (they only
+  // ever have a single image, exposed via thumbnailUrl above).
+  imageThumbnails?: string[];
   // Absent in mock data; populated from the backend when the product has an uploaded video
   videoUrl?: string | null;
   videoThumbnailUrl?: string | null;
@@ -147,7 +158,7 @@ export interface CartItemConfig {
 
 export interface CartItem {
   cartItemId: string;
-  product: Pick<Product, "id" | "slug" | "name" | "images" | "categoryName" | "categorySlug">;
+  product: Pick<Product, "id" | "slug" | "name" | "images" | "thumbnailUrl" | "categoryName" | "categorySlug">;
   config: CartItemConfig;
   pricePerUnit: number;
   totalPrice: number;

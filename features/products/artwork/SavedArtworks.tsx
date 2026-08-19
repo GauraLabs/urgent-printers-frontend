@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Trash2, ImageIcon, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/features/auth/store";
 import { getSavedArtworks, deleteArtwork, type SavedArtwork } from "@/lib/api/artwork";
 import { formatFileSize, cn } from "@/lib/utils";
 import { selectableCardVariants } from "@/components/ui/selectable-card";
+
+const PREVIEWABLE_IMAGE_MIMES = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp"]);
 
 interface SavedArtworksProps {
   onSelect: (fileKey: string, fileName: string) => void;
@@ -75,12 +78,27 @@ export function SavedArtworks({ onSelect }: SavedArtworksProps) {
                 )}
                 onClick={() => handleSelect(artwork)}
               >
-                <div className={cn(
-                  "w-9 h-9 rounded-lg flex items-center justify-center shrink-0",
-                  isSelected ? "bg-primary/10" : "bg-muted"
-                )}>
-                  <ImageIcon size={16} className={isSelected ? "text-primary" : "text-muted-foreground"} />
-                </div>
+                {PREVIEWABLE_IMAGE_MIMES.has(artwork.mime_type) ? (
+                  <div className={cn(
+                    "relative w-9 h-9 rounded-lg overflow-hidden shrink-0 border",
+                    isSelected ? "border-primary" : "border-border"
+                  )}>
+                    <Image
+                      src={artwork.file_url}
+                      alt={artwork.original_filename}
+                      fill
+                      sizes="36px"
+                      className="object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className={cn(
+                    "w-9 h-9 rounded-lg flex items-center justify-center shrink-0",
+                    isSelected ? "bg-primary/10" : "bg-muted"
+                  )}>
+                    <ImageIcon size={16} className={isSelected ? "text-primary" : "text-muted-foreground"} />
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <p className={cn("text-sm font-medium truncate", isSelected && "text-primary")}>
                     {artwork.original_filename}

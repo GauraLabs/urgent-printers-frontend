@@ -1,6 +1,7 @@
 import { BadgeCheck } from "lucide-react";
 import { StarRating } from "@/components/common/StarRating";
 import { getReviewsByProduct } from "@/lib/api";
+import { NoReviewsState } from "./NoReviewsState";
 
 interface ReviewsSectionProps {
   productSlug: string;
@@ -14,28 +15,32 @@ export async function ReviewsSection({ productSlug, averageRating, reviewCount }
   return (
     <section aria-labelledby="reviews-heading">
       {/* Summary bar */}
-      <div className="flex items-center gap-5 mb-8 p-5 rounded-2xl bg-secondary/30 border border-border">
-        <div className="text-center shrink-0">
-          <p className="font-heading font-bold text-5xl leading-none">{averageRating.toFixed(1)}</p>
-          <StarRating rating={averageRating} size="sm" className="justify-center mt-2" />
-          <p className="text-xs text-muted-foreground mt-1">{reviewCount} reviews</p>
-        </div>
-        <div className="flex-1 space-y-1.5">
-          {[5, 4, 3, 2, 1].map((star) => {
-            const count = reviews.filter((r) => Math.round(r.rating) === star).length;
-            const pct = reviews.length > 0 ? Math.round((count / reviews.length) * 100) : 0;
-            return (
-              <div key={star} className="flex items-center gap-2 text-xs">
-                <span className="w-4 text-right text-muted-foreground">{star}</span>
-                <div className="flex-1 h-1.5 rounded-full bg-border overflow-hidden">
-                  <div className="h-full bg-yellow-400 rounded-full" style={{ width: `${pct}%` }} />
+      {reviewCount > 0 ? (
+        <div className="flex items-center gap-5 mb-8 p-5 rounded-2xl bg-secondary/30 border border-border">
+          <div className="text-center shrink-0">
+            <p className="font-heading font-bold text-5xl leading-none">{averageRating.toFixed(1)}</p>
+            <StarRating rating={averageRating} size="sm" className="justify-center mt-2" />
+            <p className="text-xs text-muted-foreground mt-1">{reviewCount} reviews</p>
+          </div>
+          <div className="flex-1 space-y-1.5">
+            {[5, 4, 3, 2, 1].map((star) => {
+              const count = reviews.filter((r) => Math.round(r.rating) === star).length;
+              const pct = reviews.length > 0 ? Math.round((count / reviews.length) * 100) : 0;
+              return (
+                <div key={star} className="flex items-center gap-2 text-xs">
+                  <span className="w-4 text-right text-muted-foreground">{star}</span>
+                  <div className="flex-1 h-1.5 rounded-full bg-border overflow-hidden">
+                    <div className="h-full bg-yellow-400 rounded-full" style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="w-7 text-muted-foreground">{pct}%</span>
                 </div>
-                <span className="w-7 text-muted-foreground">{pct}%</span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      ) : (
+        <NoReviewsState />
+      )}
 
       {/* Review list */}
       <h2 id="reviews-heading" className="font-heading font-bold text-lg mb-5">

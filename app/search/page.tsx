@@ -88,7 +88,11 @@ export default async function SearchPage({ searchParams }: PageProps) {
         <section aria-label="Search results">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
             {results.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                sizes="(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 289px"
+              />
             ))}
           </div>
         </section>

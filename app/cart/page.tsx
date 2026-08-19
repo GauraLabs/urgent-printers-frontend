@@ -140,9 +140,9 @@ export default function CartPage() {
                     href={ROUTES.product(item.product.categorySlug || slugify(item.product.categoryName) || "products", item.product.slug)}
                     className="relative shrink-0 w-20 h-20 rounded-xl overflow-hidden bg-muted border border-border"
                   >
-                    {item.product.images[0] ? (
+                    {item.product.thumbnailUrl ?? item.product.images[0] ? (
                       <Image
-                        src={item.product.images[0]}
+                        src={item.product.thumbnailUrl ?? item.product.images[0]}
                         alt={item.product.name}
                         fill
                         className="object-cover"

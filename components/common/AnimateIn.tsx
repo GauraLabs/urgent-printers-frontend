@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 interface AnimateInProps {
   children: React.ReactNode;
@@ -17,8 +18,20 @@ const directionMap = {
   none:  { y: 0, x: 0   },
 };
 
+/**
+ * When the user prefers reduced motion, motion is skipped entirely (plain
+ * `div`, no animation props) — same approach as ScrollReveal — rather than
+ * merely swapping props, so there's no dependency on motion/react's
+ * animation-skip semantics for correctness.
+ */
 export function AnimateIn({ children, className, delay = 0, direction = "up" }: AnimateInProps) {
+  const prefersReducedMotion = usePrefersReducedMotion();
   const offset = directionMap[direction];
+
+  if (prefersReducedMotion) {
+    return <div className={className}>{children}</div>;
+  }
+
   return (
     <motion.div
       className={className}
@@ -41,6 +54,12 @@ export function AnimateStagger({
   className?: string;
   staggerDelay?: number;
 }) {
+  const prefersReducedMotion = usePrefersReducedMotion();
+
+  if (prefersReducedMotion) {
+    return <div className={className}>{children}</div>;
+  }
+
   return (
     <div className={className}>
       {children.map((child, i) => (

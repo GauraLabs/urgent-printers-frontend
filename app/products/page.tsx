@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getProducts, getCategories, searchProductsPaged } from "@/lib/api";
 import { Breadcrumb } from "@/components/common/Breadcrumb";
+import { CategoryHero } from "@/features/categories/CategoryHero";
 import { ProductsPageShell } from "@/features/products/ProductsPageShell";
 import type { ProductFilters } from "@/types";
 
@@ -55,8 +56,18 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     getCategories(),
   ]);
 
+  // The sidebar category filter selects via `?category=` on this same route
+  // (rather than navigating to /products/[categorySlug]) — surface the same
+  // banner the path-scoped category landing page shows, sourced from the
+  // categories list already fetched above so no extra request is needed.
+  const activeCategory =
+    !isSearching && filters.categorySlug
+      ? categories.find((c) => c.slug === filters.categorySlug)
+      : undefined;
+
   return (
     <section>
+      {activeCategory && <CategoryHero category={activeCategory} />}
       {/* Page header */}
       <div className="border-b border-border bg-secondary/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -76,6 +87,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
         products={products}
         total={total}
         categories={categories}
+        categoryName={activeCategory?.name}
         showCategoryFilter
         pageSize={PAGE_SIZE}
       />

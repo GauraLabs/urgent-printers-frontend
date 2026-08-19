@@ -33,13 +33,13 @@ export function PricingTable({ tiers, selectedQuantity, onSelectQuantity }: Pric
               key={tier.quantity}
               onClick={() => onSelectQuantity(tier.quantity)}
               className={cn(
-                "w-full grid grid-cols-3 px-4 py-3 text-left transition-colors text-sm",
+                "w-full grid grid-cols-3 px-4 py-3 text-left border-l-2 border-transparent transition-colors duration-200 text-sm",
                 "hover:bg-muted/50",
-                isSelected && "bg-primary/5 border-l-2 border-primary",
+                isSelected && "bg-primary/5 border-primary",
                 isBest && !isSelected && "bg-brand-orange/5"
               )}
             >
-              <span className={cn("font-medium", isSelected && "text-primary")}>
+              <span className={cn("font-medium transition-colors duration-200", isSelected && "text-primary")}>
                 {tier.quantity.toLocaleString("en-IN")}
                 {isBest && (
                   <span className="ml-1.5 inline-flex items-center gap-0.5 text-[9px] font-bold text-brand-orange bg-brand-orange/10 px-1.5 py-0.5 rounded-full">
@@ -50,7 +50,7 @@ export function PricingTable({ tiers, selectedQuantity, onSelectQuantity }: Pric
               <span className="text-center text-muted-foreground">
                 {formatPricePerUnit(tier.pricePerUnit)}<span className="text-[10px]">/unit</span>
               </span>
-              <span className={cn("text-right font-semibold", isSelected && "text-primary")}>
+              <span className={cn("text-right font-semibold transition-colors duration-200", isSelected && "text-primary")}>
                 {formatPrice(tier.totalPrice)}
               </span>
             </button>
