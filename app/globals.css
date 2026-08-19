@@ -138,15 +138,11 @@
   --shadow-rail-resting: 2px 4px 12px rgb(0 0 0 / 8%);
   --shadow-rail-hover: 2px 4px 16px rgb(0 0 0 / 16%);
 
-  /* CategoryGrid spotlight cards only — soft pastel gradient backgrounds for
+  /* CategoryGrid spotlight cards only — soft pastel gradient background for
      the 3 featured category tiles (Google "Explore the latest phones."
-     style). Hues echo the existing --chart-1/3/4 family (rose/coral,
-     sage-green, plum-lavender) so they read as part of the brand rather than
-     a foreign accent, but stay theme-invariant (not redefined per
-     .theme-*) since they're deliberately neutral pastels, not primary-tinted. */
-  --category-spotlight-coral: linear-gradient(155deg, oklch(0.93 0.05 35) 0%, oklch(0.87 0.08 20) 100%);
-  --category-spotlight-lavender: linear-gradient(155deg, oklch(0.92 0.045 295) 0%, oklch(0.86 0.07 280) 100%);
-  --category-spotlight-sage: linear-gradient(155deg, oklch(0.92 0.05 145) 0%, oklch(0.86 0.07 155) 100%);
+     style). Theme-derived: tracks this theme's own --primary hue (see the
+     .theme-* blocks below for each theme's own value). */
+  --category-spotlight: linear-gradient(155deg, oklch(0.93 0.05 35) 0%, oklch(0.87 0.08 20) 100%);
 }
 
 .dark {
@@ -192,12 +188,10 @@
   --shadow-rail-resting: 2px 4px 12px rgb(0 0 0 / 22%);
   --shadow-rail-hover: 2px 4px 16px rgb(0 0 0 / 42%);
 
-  /* Darker/desaturated so they still read as color against the near-black
+  /* Darker/desaturated so it still reads as color against the near-black
      dark-mode background (L 0.14-0.20) without glaring — foreground text
-     flips to light in dark mode so contrast holds against these. */
-  --category-spotlight-coral: linear-gradient(155deg, oklch(0.32 0.05 35) 0%, oklch(0.26 0.06 20) 100%);
-  --category-spotlight-lavender: linear-gradient(155deg, oklch(0.31 0.045 295) 0%, oklch(0.25 0.06 280) 100%);
-  --category-spotlight-sage: linear-gradient(155deg, oklch(0.31 0.05 145) 0%, oklch(0.25 0.06 155) 100%);
+     flips to light in dark mode so contrast holds against this. */
+  --category-spotlight: linear-gradient(155deg, oklch(0.32 0.05 35) 0%, oklch(0.26 0.06 20) 100%);
 }
 
 /* First-ever visit — no color-mode cookie exists yet, so app/layout.tsx
@@ -250,9 +244,7 @@
     --shadow-rail-resting: 2px 4px 12px rgb(0 0 0 / 22%);
     --shadow-rail-hover: 2px 4px 16px rgb(0 0 0 / 42%);
 
-    --category-spotlight-coral: linear-gradient(155deg, oklch(0.32 0.05 35) 0%, oklch(0.26 0.06 20) 100%);
-    --category-spotlight-lavender: linear-gradient(155deg, oklch(0.31 0.045 295) 0%, oklch(0.25 0.06 280) 100%);
-    --category-spotlight-sage: linear-gradient(155deg, oklch(0.31 0.05 145) 0%, oklch(0.25 0.06 155) 100%);
+    --category-spotlight: linear-gradient(155deg, oklch(0.32 0.05 35) 0%, oklch(0.26 0.06 20) 100%);
   }
 }
 
@@ -289,6 +281,9 @@
   --sidebar-border: oklch(0.88 0.02 80);
   --sidebar-ring: oklch(0.52 0.14 80);
   --chart-1: oklch(0.52 0.14 80);
+
+  /* Spotlight: primary hue 80° (royal gold). */
+  --category-spotlight: linear-gradient(155deg, oklch(0.925 0.05 80) 0%, oklch(0.865 0.075 65) 100%);
 }
 
 .theme-gold.dark, .theme-gold .dark {
@@ -304,6 +299,8 @@
   --border: oklch(1 0 0 / 10%);
   --sidebar: oklch(0.19 0.015 80);
   --sidebar-primary: oklch(0.75 0.13 80);
+
+  --category-spotlight: linear-gradient(155deg, oklch(0.315 0.055 80) 0%, oklch(0.255 0.065 65) 100%);
 }
 
 /* Emerald — "Emerald & Gold Heritage" ------------------------------------- */
@@ -327,6 +324,9 @@
   --sidebar-border: oklch(0.88 0.02 160);
   --sidebar-ring: oklch(0.45 0.13 160);
   --chart-1: oklch(0.45 0.13 160);
+
+  /* Spotlight: primary hue 160° (emerald). */
+  --category-spotlight: linear-gradient(155deg, oklch(0.92 0.05 160) 0%, oklch(0.86 0.075 145) 100%);
 }
 
 .theme-emerald.dark, .theme-emerald .dark {
@@ -342,6 +342,8 @@
   --border: oklch(1 0 0 / 10%);
   --sidebar: oklch(0.19 0.015 160);
   --sidebar-primary: oklch(0.70 0.12 160);
+
+  --category-spotlight: linear-gradient(155deg, oklch(0.31 0.05 160) 0%, oklch(0.25 0.06 145) 100%);
 }
 
 /* Slate — "Slate Luxury" ---------------------------------------------------- */
@@ -365,6 +367,12 @@
   --sidebar-border: oklch(0.87 0.01 40);
   --sidebar-ring: oklch(0.32 0.02 40);
   --chart-1: oklch(0.32 0.02 40);
+
+  /* Spotlight: primary hue 40° (slate's warm-gray identity), but
+     deliberately boosted well past --primary's own near-neutral 0.02
+     chroma — at that literal value the card would read as washed-out gray
+     rather than intentionally colored. */
+  --category-spotlight: linear-gradient(155deg, oklch(0.93 0.06 40) 0%, oklch(0.87 0.08 25) 100%);
 }
 
 .theme-slate.dark, .theme-slate .dark {
@@ -378,6 +386,8 @@
   --border: oklch(1 0 0 / 10%);
   --sidebar: oklch(0.17 0.01 40);
   --sidebar-primary: oklch(0.78 0.02 40);
+
+  --category-spotlight: linear-gradient(155deg, oklch(0.32 0.065 40) 0%, oklch(0.26 0.07 25) 100%);
 }
 
 /* Pink — "Blush Pink" ------------------------------------------------------ */
@@ -401,6 +411,9 @@
   --sidebar-border: oklch(0.90 0.02 8);
   --sidebar-ring: oklch(0.58 0.19 8);
   --chart-1: oklch(0.58 0.19 8);
+
+  /* Spotlight: primary hue 8° (blush pink). */
+  --category-spotlight: linear-gradient(155deg, oklch(0.925 0.06 8) 0%, oklch(0.865 0.08 353) 100%);
 }
 
 .theme-pink.dark, .theme-pink .dark {
@@ -416,6 +429,8 @@
   --border: oklch(1 0 0 / 10%);
   --sidebar: oklch(0.20 0.018 8);
   --sidebar-primary: oklch(0.75 0.16 8);
+
+  --category-spotlight: linear-gradient(155deg, oklch(0.315 0.06 8) 0%, oklch(0.255 0.07 353) 100%);
 }
 
 /* Plum — "Orchid Plum" ------------------------------------------------------ */
@@ -439,6 +454,9 @@
   --sidebar-border: oklch(0.88 0.02 320);
   --sidebar-ring: oklch(0.46 0.17 320);
   --chart-1: oklch(0.46 0.17 320);
+
+  /* Spotlight: primary hue 320° (orchid plum). */
+  --category-spotlight: linear-gradient(155deg, oklch(0.92 0.055 320) 0%, oklch(0.86 0.08 305) 100%);
 }
 
 .theme-plum.dark, .theme-plum .dark {
@@ -454,6 +472,8 @@
   --sidebar-primary: oklch(0.73 0.14 320);
   --brand-orange: oklch(0.72 0.17 350);
   --brand-orange-foreground: oklch(0.16 0.02 350);
+
+  --category-spotlight: linear-gradient(155deg, oklch(0.31 0.055 320) 0%, oklch(0.25 0.065 305) 100%);
 }
 
 /* ========================================================================== */

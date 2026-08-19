@@ -15,14 +15,10 @@ interface CategoryGridProps {
   categories: Category[];
 }
 
-// Soft pastel gradient tokens defined in app/globals.css (:root / .dark / the
-// prefers-color-scheme fallback — all three kept in sync). Cycled by index so
-// each of the 3 featured cards gets a distinct tone.
-const SPOTLIGHT_BACKGROUNDS = [
-  "bg-[image:var(--category-spotlight-coral)]",
-  "bg-[image:var(--category-spotlight-lavender)]",
-  "bg-[image:var(--category-spotlight-sage)]",
-];
+// Soft pastel gradient token defined in app/globals.css (:root / .dark / the
+// prefers-color-scheme fallback / each .theme-* block — all kept in sync).
+// Applied to all 3 featured cards so they share one theme-derived tone.
+const SPOTLIGHT_BACKGROUND = "bg-[image:var(--category-spotlight)]";
 
 export function CategoryGrid({ categories }: CategoryGridProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -85,7 +81,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
                 <div
                   className={cn(
                     "relative rounded-3xl aspect-[3/4] sm:aspect-[4/5] flex flex-col overflow-hidden",
-                    SPOTLIGHT_BACKGROUNDS[index % SPOTLIGHT_BACKGROUNDS.length]
+                    SPOTLIGHT_BACKGROUND
                   )}
                 >
                   {/* Full-card stretched link — single navigable target, so the
@@ -112,17 +108,18 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
 
                   {/* Image tile flush with the card's left/right/bottom edges —
                       clipping is handled by the outer card's rounded-3xl
-                      overflow-hidden. object-contain + object-bottom (not
-                      object-cover) so a transparent product PNG sits on the
-                      gradient without being cropped, gradient showing through
-                      above/around it. */}
+                      overflow-hidden. object-cover + object-bottom so the
+                      image always fills this box edge-to-edge (left, right,
+                      bottom) with no gradient gaps; tall/portrait images crop
+                      off the top instead, since object-bottom anchors the
+                      bottom edge. */}
                   <div className="relative z-0 flex-1 mt-5">
                     <Image
                       src={cat.bannerUrl ?? cat.mediumUrl ?? cat.imageUrl}
                       alt=""
                       aria-hidden="true"
                       fill
-                      className="object-contain object-bottom"
+                      className="object-cover object-bottom"
                       sizes="(max-width: 767px) 60vw, (max-width: 1279px) 40vw, 320px"
                     />
                   </div>
