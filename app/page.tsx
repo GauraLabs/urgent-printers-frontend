@@ -20,10 +20,6 @@ import { ROUTES } from "@/lib/constants/routes";
 
 export const revalidate = 60;
 
-// CategoryGrid is 2 cols (mobile) / 3 cols (desktop, first tile spans 2x2).
-// 12 is a multiple of both, so rows fill evenly with no dangling partial row.
-const HOMEPAGE_CATEGORY_LIMIT = 12;
-
 export const metadata: Metadata = {
   title: "Urgent Printers — Premium Print Solutions, Fast",
   description:
@@ -75,9 +71,9 @@ export default async function HomePage() {
   const totalProducts = categories.reduce((sum, c) => sum + c.productCount, 0);
   // Source the magazine-style campaign spread from a category, not the hero
   // banners array: banners[0] already led the hero carousel seconds earlier,
-  // and banners[1] is dev seed/test data. Index 2 skips CategoryGrid's own
-  // featured tile (index 0, shown just above) so nothing repeats on the page.
-  const campaignCategory = categories[2];
+  // and banners[1] is dev seed/test data. Index 3 skips CategoryGrid's own 3
+  // featured tiles (indices 0-2, shown just above) so nothing repeats on the page.
+  const campaignCategory = categories[3];
 
   return (
     <>
@@ -87,7 +83,7 @@ export default async function HomePage() {
       />
       <HeroBannerSection banners={banners} />
       <TrustBadges totalProducts={totalProducts > 0 ? totalProducts : undefined} />
-      <CategoryGrid categories={categories.slice(0, HOMEPAGE_CATEGORY_LIMIT)} />
+      <CategoryGrid categories={categories.slice(0, 3)} />
       <CategoryRail categories={categories} />
       <FeaturedProducts products={featured} />
       {campaignCategory && (
