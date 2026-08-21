@@ -112,7 +112,7 @@ export function CategoryRail({ categories }: CategoryRailProps) {
                 inverted ? "bg-foreground text-background" : "bg-card text-card-foreground"
               )}
             >
-              <div className="flex flex-col gap-1 p-5 pb-3">
+              <div className="flex flex-col gap-0.5 p-4 pb-2">
                 <h3 className="font-sans font-extrabold text-lg leading-[1.05] tracking-[-0.01em]">
                   {cat.name}
                 </h3>
@@ -121,7 +121,7 @@ export function CategoryRail({ categories }: CategoryRailProps) {
                     {cat.description}
                   </p>
                 )}
-                <span className="font-sans text-[11px] opacity-50 mt-1.5">
+                <span className="font-sans text-[11px] opacity-50 mt-1">
                   {cat.productCount} products
                 </span>
               </div>

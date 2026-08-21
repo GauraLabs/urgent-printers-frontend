@@ -67,6 +67,7 @@ export default async function HomePage() {
     getFeaturedProducts(),
     getTestimonials(),
   ]);
+  const featuredCategories = categories.slice(0, 3);
   const recommended = await getRecommendedProducts(featured.map((p) => p.id), 10);
   const totalProducts = categories.reduce((sum, c) => sum + c.productCount, 0);
   // Source the magazine-style campaign spread from a category, not the hero
@@ -83,7 +84,7 @@ export default async function HomePage() {
       />
       <HeroBannerSection banners={banners} />
       <TrustBadges totalProducts={totalProducts > 0 ? totalProducts : undefined} />
-      <CategoryGrid categories={categories.slice(0, 3)} />
+      <CategoryGrid categories={featuredCategories} />
       <CategoryRail categories={categories} />
       <FeaturedProducts products={featured} />
       {campaignCategory && (

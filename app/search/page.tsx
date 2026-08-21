@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Search, TrendingUp } from "lucide-react";
-import { searchProductsPaged, getCategories } from "@/lib/api";
+import { searchProductsPaged, getCategories, getPopularSearches } from "@/lib/api";
 import { ProductCard } from "@/features/products/ProductCard";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Breadcrumb } from "@/components/common/Breadcrumb";
@@ -22,7 +23,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   };
 }
 
-const POPULAR_TERMS = [
+const FALLBACK_POPULAR_TERMS = [
   "Business Cards", "A5 Flyers", "Vinyl Banners",
   "Custom T-Shirts", "Packaging Boxes", "Tri-Fold Brochures",
   "Luxury Foil Cards", "Eco Packaging", "Embroidered Caps",
@@ -32,12 +33,15 @@ export default async function SearchPage({ searchParams }: PageProps) {
   const { q = "" } = await searchParams;
   const query = q.trim();
 
-  const [{ data: results, total }, categories] = await Promise.all([
+  const [{ data: results, total }, categories, popularSearches] = await Promise.all([
     query.length >= 2
       ? searchProductsPaged(query, 1, 24)
       : Promise.resolve({ data: [], total: 0, page: 1, pageSize: 24, totalPages: 0 }),
     getCategories(),
+    getPopularSearches(),
   ]);
+
+  const terms = popularSearches.length > 0 ? popularSearches : FALLBACK_POPULAR_TERMS;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -116,7 +120,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
             <h2 className="font-heading font-semibold text-base">Popular Searches</h2>
           </div>
           <div className="flex flex-wrap gap-2">
-            {POPULAR_TERMS.map((term) => (
+            {terms.map((term) => (
               <Link
                 key={term}
                 href={`${ROUTES.search}?q=${encodeURIComponent(term)}`}
@@ -138,14 +142,15 @@ export default async function SearchPage({ searchParams }: PageProps) {
                 href={ROUTES.category(cat.slug)}
                 className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 shadow-sm hover:shadow-md transition-all text-center group"
               >
-                <span className="text-2xl">
-                  {cat.slug === "business-cards" ? "🪪"
-                   : cat.slug === "flyers"       ? "📄"
-                   : cat.slug === "banners"      ? "🚩"
-                   : cat.slug === "packaging"    ? "📦"
-                   : cat.slug === "brochures"    ? "📋"
-                   : "👕"}
-                </span>
+                <div className="relative w-10 h-10 rounded-full overflow-hidden bg-muted shrink-0">
+                  <Image
+                    src={cat.thumbnailUrl ?? cat.imageUrl}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    sizes="40px"
+                  />
+                </div>
                 <span className="text-xs font-semibold group-hover:text-primary transition-colors leading-tight">
                   {cat.name}
                 </span>
