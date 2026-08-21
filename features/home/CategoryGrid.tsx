@@ -8,17 +8,11 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { SectionHeading } from "@/components/common/SectionHeading";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { ROUTES } from "@/lib/constants/routes";
-import { cn } from "@/lib/utils";
 import type { Category } from "@/types";
 
 interface CategoryGridProps {
   categories: Category[];
 }
-
-// Soft pastel gradient token defined in app/globals.css (:root / .dark / the
-// prefers-color-scheme fallback / each .theme-* block — all kept in sync).
-// Applied to all 3 featured cards so they share one theme-derived tone.
-const SPOTLIGHT_BACKGROUND = "bg-[image:var(--category-spotlight)]";
 
 export function CategoryGrid({ categories }: CategoryGridProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -66,6 +60,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 lg:gap-x-12">
           {categories.map((cat, index) => {
             const href = ROUTES.category(cat.slug);
+            const imageUrl = cat.bannerUrl ?? cat.mediumUrl ?? cat.imageUrl;
             return (
               <motion.div
                 key={cat.id}
@@ -78,23 +73,45 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
                 viewport={{ once: true, margin: "-40px" }}
                 className="group relative"
               >
-                <div
-                  className={cn(
-                    "relative rounded-3xl aspect-[3/4] sm:aspect-[4/5] flex flex-col overflow-hidden",
-                    SPOTLIGHT_BACKGROUND
-                  )}
-                >
+                <div className="relative rounded-3xl aspect-[3/4] sm:aspect-[4/5] flex flex-col overflow-hidden bg-card">
+                  {/* Blurred, enlarged copy of the card's own photo as a vivid
+                      colorful backdrop — pure CSS filters, no server work.
+                      scale-[1.35] pushes the sharp source edges well outside the
+                      card before blur-[20px] softens them, so overflow-hidden
+                      above never reveals a crisp/legible boundary. brightness-[1.22]
+                      and saturate-[1.45] punch up the blur so it reads as vivid
+                      photo-color rather than a muted pastel wash (design choice
+                      "Vivid & saturated", picked from a set of backdrop options —
+                      paired with a much thinner scrim below). */}
+                  <Image
+                    src={imageUrl}
+                    alt=""
+                    aria-hidden="true"
+                    fill
+                    className="absolute inset-0 object-cover blur-[20px] brightness-[1.22] saturate-[1.45] scale-[1.35]"
+                    sizes="(max-width: 767px) 60vw, (max-width: 1279px) 40vw, 320px"
+                  />
+                  {/* Scrim keeps the title/description legible over whatever
+                      brightness the source photo happens to have, in both
+                      light and dark mode. Light stays thin so the
+                      vivid/saturated backdrop shows through clearly instead of
+                      being flattened toward a pastel wash. Dark is meaningfully
+                      stronger (50% vs 18%) because near-white text needs more
+                      dimming of the vivid/bright backdrop to stay legible;
+                      still short of a full wash so the vivid color survives. */}
+                  <div className="absolute inset-0 bg-background/8 dark:bg-background/50" />
+
                   {/* Full-card stretched link — single navigable target, so the
                       visible "Shop now" pill below can be its own real link without
                       creating nested anchors (same pattern as ProductCard). */}
                   <Link href={href} aria-label={cat.name} className="absolute inset-0 z-[1] rounded-3xl" />
 
                   <div className="relative z-10 flex flex-col items-center text-center px-6 pt-6 sm:px-7 sm:pt-7">
-                    <h3 className="font-sans font-bold text-foreground text-2xl sm:text-[1.75rem] leading-[1.1] tracking-[-0.01em] line-clamp-2">
+                    <h3 className="font-sans font-bold text-foreground text-2xl sm:text-[1.75rem] leading-[1.1] tracking-[-0.01em] line-clamp-2 dark:[text-shadow:0_1px_3px_rgba(0,0,0,0.5)]">
                       {cat.name}
                     </h3>
                     {cat.description && (
-                      <p className="font-sans text-sm text-muted-foreground mt-2 line-clamp-1">
+                      <p className="font-sans text-sm text-muted-foreground mt-2 line-clamp-1 dark:[text-shadow:0_1px_3px_rgba(0,0,0,0.5)]">
                         {cat.description}
                       </p>
                     )}
@@ -115,7 +132,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
                       bottom edge. */}
                   <div className="relative z-0 flex-1 mt-5">
                     <Image
-                      src={cat.bannerUrl ?? cat.mediumUrl ?? cat.imageUrl}
+                      src={imageUrl}
                       alt=""
                       aria-hidden="true"
                       fill
