@@ -7,7 +7,7 @@ import { ArtworkUpload } from "./artwork/ArtworkUpload";
 import { SavedArtworks } from "./artwork/SavedArtworks";
 import { TemplateForm } from "./template/TemplateForm";
 import { useRecentlyViewedStore } from "./recentlyViewed/store";
-import { formatPrice, getDisplayPricePerUnit } from "@/lib/utils";
+import { formatPrice } from "@/lib/utils";
 import type { Product } from "@/types";
 
 interface ProductDetailClientProps {
@@ -30,15 +30,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const recordView = useRecentlyViewedStore((s) => s.recordView);
 
   useEffect(() => {
-    const pricePerUnit = getDisplayPricePerUnit(product);
-
     recordView({
       productId: product.id,
       productSlug: product.slug,
       categorySlug: product.categorySlug,
-      productName: product.name,
-      productImage: product.mediumUrl ?? product.images[0],
-      pricePerUnit,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);

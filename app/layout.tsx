@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, DM_Sans } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import Script from "next/script";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/providers/QueryProvider";
@@ -21,7 +21,6 @@ import { COOKIE_CONSENT_STORAGE_KEY } from "@/lib/consent";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
-const cormorant = Cormorant_Garamond({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-display", display: "swap" });
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans", display: "swap" });
 
 export const metadata: Metadata = {
@@ -60,7 +59,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const brandClass = presetId === DEFAULT_THEME ? null : `theme-${presetId}`;
 
   return (
-    <html lang="en-IN" className={cn(cormorant.variable, dmSans.variable, "h-full", brandClass)} suppressHydrationWarning>
+    <html lang="en-IN" className={cn(dmSans.variable, "h-full", brandClass)} suppressHydrationWarning>
       <body className="min-h-full flex flex-col antialiased">
         <script dangerouslySetInnerHTML={{ __html: COLOR_MODE_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: CONSENT_INIT_SCRIPT }} />

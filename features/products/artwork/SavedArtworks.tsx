@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import { Trash2, ImageIcon, Loader2 } from "lucide-react";
+import { SafeImage } from "@/components/common/SafeImage";
 import { useAuthStore } from "@/features/auth/store";
 import { getSavedArtworks, deleteArtwork, type SavedArtwork } from "@/lib/api/artwork";
 import { formatFileSize, cn } from "@/lib/utils";
@@ -83,7 +83,7 @@ export function SavedArtworks({ onSelect }: SavedArtworksProps) {
                     "relative w-9 h-9 rounded-lg overflow-hidden shrink-0 border",
                     isSelected ? "border-primary" : "border-border"
                   )}>
-                    <Image
+                    <SafeImage
                       src={artwork.file_url}
                       alt={artwork.original_filename}
                       fill

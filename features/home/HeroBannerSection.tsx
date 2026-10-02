@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -9,6 +8,7 @@ import { Autoplay, A11y } from "swiper/modules";
 import type { Swiper as SwiperClass } from "swiper/types";
 import { motion } from "motion/react";
 import { buttonVariants } from "@/components/ui/button";
+import { SafeImage } from "@/components/common/SafeImage";
 import { cn } from "@/lib/utils";
 import type { HeroBanner } from "@/types";
 
@@ -69,6 +69,18 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
     });
   }, []);
 
+  // Hover-pause is scoped to the title/CTA content block only (not the whole
+  // banner) so hovering the background photo or empty gutters keeps the
+  // carousel auto-sliding, while hovering the text a reader is reading or the
+  // button they're about to click holds the current slide in place.
+  const handleContentMouseEnter = useCallback(() => {
+    swiperRef.current?.autoplay.pause();
+  }, []);
+
+  const handleContentMouseLeave = useCallback(() => {
+    swiperRef.current?.autoplay.resume();
+  }, []);
+
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
@@ -100,7 +112,7 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
     <section ref={sectionRef} aria-label="Featured promotions" className="relative w-full pt-4 sm:pt-6 lg:pt-8">
       <Swiper
         modules={[Autoplay, A11y]}
-        autoplay={{ delay: 5500, disableOnInteraction: false, pauseOnMouseEnter: true }}
+        autoplay={{ delay: 2750, disableOnInteraction: false }}
         onSwiper={(swiper) => {
           swiperRef.current = swiper;
         }}
@@ -121,7 +133,7 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
         {slides.map((banner, i) => (
           <SwiperSlide key={`${banner.id}-${i}`}>
             <div className="hero-slide-photo relative w-full aspect-[4/3] sm:aspect-video lg:aspect-[9/4] max-h-[720px] rounded-xl overflow-hidden brightness-60 transition-[filter] duration-300 ease-out [.swiper-slide-active_&]:brightness-100">
-              <Image
+              <SafeImage
                 src={banner.imageUrl}
                 alt={banner.headline}
                 fill
@@ -133,7 +145,11 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
               <div className="absolute inset-0 z-10 flex items-end pb-6 sm:pb-8 lg:pb-10">
                 <div className="w-full px-5 sm:px-8 lg:px-10">
-                  <div className="max-w-xl">
+                  <div
+                    className="max-w-xl"
+                    onMouseEnter={handleContentMouseEnter}
+                    onMouseLeave={handleContentMouseLeave}
+                  >
                     <motion.h1
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -152,7 +168,7 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
                         href={banner.ctaHref}
                         className={cn(
                           buttonVariants({ size: "sm" }),
-                          "shrink-0 h-9 px-4 gap-1.5 text-sm rounded-full bg-white hover:bg-white/90 text-neutral-900 font-semibold"
+                          "shrink-0 h-9 px-4 gap-1.5 text-sm rounded-full bg-white text-neutral-900 font-semibold [a]:hover:bg-primary [a]:hover:text-white"
                         )}
                       >
                         {banner.ctaText}

@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { motion } from "motion/react";
 import { useCallback, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
+import { SafeImage } from "@/components/common/SafeImage";
 import { StarRating } from "@/components/common/StarRating";
 import { WishlistButton } from "./WishlistButton";
 import { ROUTES } from "@/lib/constants/routes";
@@ -129,7 +129,7 @@ export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: Produ
       <div
         ref={frameRef}
         className="origin-top relative aspect-[19/20] overflow-hidden rounded-2xl mb-3 bg-muted transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform motion-reduce:transition-none">
-        <Image
+        <SafeImage
           src={product.mediumUrl ?? product.images[0]}
           alt={product.name}
           fill
@@ -140,7 +140,7 @@ export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: Produ
           sizes={sizes}
         />
         {hoverImage && (
-          <Image
+          <SafeImage
             src={hoverImage}
             alt=""
             aria-hidden="true"

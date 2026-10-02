@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import {
@@ -9,6 +8,7 @@ import {
   Banknote, Download, Printer, MapPin, CreditCard,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { SafeImage } from "@/components/common/SafeImage";
 import { ROUTES } from "@/lib/constants/routes";
 import { buttonVariants } from "@/components/ui/button";
 import { formatPrice, formatPricePerUnit, cn } from "@/lib/utils";
@@ -102,7 +102,7 @@ export default function OrderConfirmationPage() {
                   <div key={item.id} className="flex gap-3 px-5 py-4">
                     <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-muted border border-border shrink-0">
                       {item.thumbnailUrl ? (
-                        <Image src={item.thumbnailUrl} alt={item.productName} fill className="object-cover" sizes="56px" />
+                        <SafeImage src={item.thumbnailUrl} alt={item.productName} fill className="object-cover" sizes="56px" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-[9px] text-muted-foreground font-medium px-1 text-center leading-tight">
                           {item.productName.slice(0, 12)}

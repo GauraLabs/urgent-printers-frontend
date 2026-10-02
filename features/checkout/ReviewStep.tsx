@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import {
   Loader2, MapPin, CreditCard, Tag,
   Banknote, PartyPopper, AlertCircle, Lock,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { SafeImage } from "@/components/common/SafeImage";
 import { useCartStore } from "@/features/cart/store";
 import { formatPrice, formatPricePerUnit, cn } from "@/lib/utils";
 import type { CartItem, Address, OrderPreview } from "@/types";
@@ -70,7 +70,7 @@ export function ReviewStep({
             <div key={item.cartItemId} className="flex gap-3 p-4">
               <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-muted shrink-0 border border-border">
                 {item.product.thumbnailUrl ?? item.product.images[0] ? (
-                  <Image src={item.product.thumbnailUrl ?? item.product.images[0]} alt={item.product.name} fill className="object-cover" sizes="56px" />
+                  <SafeImage src={item.product.thumbnailUrl ?? item.product.images[0]} alt={item.product.name} fill className="object-cover" sizes="56px" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-muted-foreground text-[9px] font-medium px-1 text-center leading-tight">
                     {item.product.name.slice(0, 12)}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { CheckCircle, RefreshCw, Loader2, XCircle } from "lucide-react";
+import { SafeImg } from "@/components/common/SafeImage";
 import { cn } from "@/lib/utils";
 import { submitProofDecision } from "@/lib/api/orders";
 import type { ProofInfo } from "@/types";
@@ -111,8 +112,7 @@ export default function ProofApprovalClient({ proofInfo, token }: Props) {
               />
             </div>
           ) : (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
+            <SafeImg
               src={proofUrl}
               alt="Artwork proof"
               className="max-w-full rounded-xl border border-border"

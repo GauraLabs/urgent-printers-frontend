@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, LayoutGrid } from "lucide-react";
 import { motion } from "motion/react";
 import { EmptyState } from "@/components/common/EmptyState";
+import { SafeImage } from "@/components/common/SafeImage";
 import { SectionHeading } from "@/components/common/SectionHeading";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { ROUTES } from "@/lib/constants/routes";
@@ -83,7 +83,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
                       photo-color rather than a muted pastel wash (design choice
                       "Vivid & saturated", picked from a set of backdrop options —
                       paired with a much thinner scrim below). */}
-                  <Image
+                  <SafeImage
                     src={imageUrl}
                     alt=""
                     aria-hidden="true"
@@ -131,7 +131,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
                       off the top instead, since object-bottom anchors the
                       bottom edge. */}
                   <div className="relative z-0 flex-1 mt-5">
-                    <Image
+                    <SafeImage
                       src={imageUrl}
                       alt=""
                       aria-hidden="true"

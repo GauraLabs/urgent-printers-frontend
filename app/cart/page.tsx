@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { EmptyState } from "@/components/common/EmptyState";
+import { SafeImage } from "@/components/common/SafeImage";
 import { useCartStore } from "@/features/cart/store";
 import { useAuthStore } from "@/features/auth/store";
 import { useMounted } from "@/hooks/useMounted";
@@ -141,7 +141,7 @@ export default function CartPage() {
                     className="relative shrink-0 w-20 h-20 rounded-xl overflow-hidden bg-muted border border-border"
                   >
                     {item.product.thumbnailUrl ?? item.product.images[0] ? (
-                      <Image
+                      <SafeImage
                         src={item.product.thumbnailUrl ?? item.product.images[0]}
                         alt={item.product.name}
                         fill

@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Trash2, Plus, Minus } from "lucide-react";
+import { SafeImage } from "@/components/common/SafeImage";
 import { useCartStore } from "./store";
 import { formatPrice, slugify, cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants/routes";
@@ -33,7 +33,7 @@ export function CartDrawerItem({ item }: CartDrawerItemProps) {
         className="relative shrink-0 w-16 h-16 rounded-lg overflow-hidden border border-border bg-muted"
       >
         {item.product.thumbnailUrl ?? item.product.images[0] ? (
-          <Image
+          <SafeImage
             src={item.product.thumbnailUrl ?? item.product.images[0]}
             alt={item.product.name}
             fill

@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { AnimateIn } from "@/components/common/AnimateIn";
+import { SafeImage } from "@/components/common/SafeImage";
 
 interface CampaignBannerProps {
   imageUrl: string;
@@ -15,7 +15,7 @@ export function CampaignBanner({ imageUrl, headline, subheading, ctaText, ctaHre
   return (
     <section aria-label="Featured campaign" className="relative w-full overflow-hidden">
       <div className="relative w-full h-[380px] sm:h-[440px] lg:h-[520px]">
-        <Image
+        <SafeImage
           src={imageUrl}
           alt={headline}
           fill

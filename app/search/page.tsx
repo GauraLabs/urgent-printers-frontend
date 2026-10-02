@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { Search, TrendingUp } from "lucide-react";
 import { searchProductsPaged, getCategories, getPopularSearches } from "@/lib/api";
 import { ProductCard } from "@/features/products/ProductCard";
 import { EmptyState } from "@/components/common/EmptyState";
+import { SafeImage } from "@/components/common/SafeImage";
 import { Breadcrumb } from "@/components/common/Breadcrumb";
 import { ROUTES } from "@/lib/constants/routes";
 
@@ -143,7 +143,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
                 className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 shadow-sm hover:shadow-md transition-all text-center group"
               >
                 <div className="relative w-10 h-10 rounded-full overflow-hidden bg-muted shrink-0">
-                  <Image
+                  <SafeImage
                     src={cat.thumbnailUrl ?? cat.imageUrl}
                     alt=""
                     fill

@@ -2,10 +2,10 @@
 
 import { useState, useRef, useEffect, useId } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { Search, X, Loader2, ArrowRight, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { SafeImage } from "@/components/common/SafeImage";
 import { searchProducts } from "@/lib/api";
 import { useDebounce } from "@/hooks/useDebounce";
 import { ROUTES } from "@/lib/constants/routes";
@@ -192,7 +192,7 @@ export function HeaderSearch() {
                       )}
                     >
                       <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-muted border border-border shrink-0">
-                        <Image
+                        <SafeImage
                           src={product.images[0]}
                           alt={product.name}
                           fill

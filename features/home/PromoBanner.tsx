@@ -45,7 +45,7 @@ export function PromoBanner() {
               href={ROUTES.products}
               className={cn(
                 buttonVariants({ size: "lg" }),
-                "bg-brand-orange hover:bg-brand-orange/90 text-brand-orange-foreground font-semibold gap-2"
+                "bg-brand-orange text-brand-orange-foreground font-semibold gap-2 [a]:hover:bg-brand-orange/90"
               )}
             >
               Start Designing <ArrowRight size={16} />

@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, ExternalLink, Loader2, XCircle, Lock, CreditCard, Download, FileSearch } from "lucide-react";
+import { SafeImage } from "@/components/common/SafeImage";
 import { getOrderById, cancelOrder, verifyPayment, downloadReceipt } from "@/lib/api";
 import ItemProofPanel from "./ItemProofPanel";
 import { useAuthStore } from "@/features/auth/store";
@@ -341,7 +341,7 @@ export default function OrderDetailPage() {
               <div className="flex gap-4 p-5">
                 <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-muted border border-border shrink-0">
                   {item.thumbnailUrl ? (
-                    <Image src={item.thumbnailUrl} alt={item.productName} fill className="object-cover" sizes="64px" />
+                    <SafeImage src={item.thumbnailUrl} alt={item.productName} fill className="object-cover" sizes="64px" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[9px] text-muted-foreground font-medium px-1 text-center leading-tight">
                       {item.productName.slice(0, 12)}
