@@ -85,6 +85,11 @@ export interface PricingTier {
   pricePerUnit: number;
   totalPrice: number;
   isBestValue?: boolean;
+  // Absent when no discount is active (old backend, no MRP, or outside the
+  // sale window). pricePerUnit is always the price charged right now.
+  mrpPerUnit?: number;
+  discountPercent?: number;
+  discountPerUnit?: number;
 }
 
 export interface TurnaroundOption {
@@ -129,6 +134,12 @@ export interface Product {
   tags: string[];
   badge?: string;
   priceFrom?: number;
+  // All absent when no discount is active; priceFrom is the price charged now.
+  mrpFrom?: number;
+  discountPercent?: number;
+  discountAmount?: number;
+  onSale?: boolean;
+  discountEndsAt?: string;
   customizationMode: CustomizationMode;
   templateFields: TemplateField[];
 }
@@ -162,6 +173,8 @@ export interface CartItem {
   config: CartItemConfig;
   pricePerUnit: number;
   totalPrice: number;
+  // Optional: carts persisted before the MRP feature have none. Display-only.
+  mrpPerUnit?: number;
   addedAt: string;
 }
 
@@ -209,6 +222,7 @@ export interface AppliedCoupon {
   discountAmount: number;   // computed server-side based on subtotal
   description: string | null;
   message: string;          // user-friendly message shown directly in UI
+  appliesToDiscountedItems?: boolean;
 }
 
 // ─── Order creation ───────────────────────────────────────────────────────────
@@ -250,6 +264,9 @@ export interface CreateOrderRequest {
   shippingAddress: CreateOrderAddress;
   paymentMethod: "cod" | "online";
   couponCode?: string;
+  // Sent on createOrder only: the server rejects with 409 price_changed if its
+  // total differs by more than 0.01.
+  expectedTotal?: number;
 }
 
 // POST /api/v1/orders returns the same shape as the full Order
@@ -264,6 +281,9 @@ export interface OrderPreviewItem {
   pricePerUnit: number;
   totalPrice: number;
   turnaroundLabel: string;
+  mrpPerUnit?: number;
+  discountPerUnit?: number;
+  lineSavings?: number;
 }
 
 export interface OrderPreview {
@@ -318,6 +338,9 @@ export interface OrderItem {
   turnaroundLabel: string;
   pricePerUnit: number;
   totalPrice: number;
+  mrpPerUnit?: number;
+  discountPerUnit?: number;
+  lineSavings?: number;
   artworkFileKey?: string;
   artworkUrl?: string;
   artworkStatus?: string;
@@ -342,6 +365,9 @@ export interface OrderPricing {
   gstRate: number;
   gstAmount: number;
   totalAmount: number;
+  // Server-computed; absent from an old backend. totalSavings = mrpSavings + discountAmount.
+  mrpSavings?: number;
+  totalSavings?: number;
 }
 
 export interface OrderShippingAddress {

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Trash2, Plus, Minus } from "lucide-react";
 import { SafeImage } from "@/components/common/SafeImage";
 import { useCartStore } from "./store";
+import { PriceDisplay } from "@/components/common/PriceDisplay";
+import { cartItemDiscount } from "./savings";
 import { formatPrice, slugify, cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants/routes";
 import type { CartItem } from "@/types";
@@ -19,6 +21,8 @@ export function CartDrawerItem({ item }: CartDrawerItemProps) {
 
   const categorySlug = item.product.categorySlug || slugify(item.product.categoryName) || "products";
   const productHref = ROUTES.product(categorySlug, item.product.slug);
+
+  const discount = cartItemDiscount(item);
 
   const specLine = [item.config.sizeLabel, item.config.paperLabel, item.config.finishLabel].filter(
     (v): v is string => Boolean(v)
@@ -67,6 +71,17 @@ export function CartDrawerItem({ item }: CartDrawerItemProps) {
             : ""}
           {item.config.turnaroundLabel.split(" ")[0]}
         </p>
+
+        {discount && (
+          <PriceDisplay
+            variant="line"
+            price={item.pricePerUnit}
+            mrp={discount.mrp}
+            percent={discount.percent}
+            unitLabel="/unit"
+            className="mt-1"
+          />
+        )}
 
         {/* Quantity + price row */}
         <div className="flex items-center justify-between mt-2">

@@ -7,7 +7,8 @@ import { SafeImage } from "@/components/common/SafeImage";
 import { useMounted } from "@/hooks/useMounted";
 import { getProductBySlug } from "@/lib/api";
 import { ROUTES } from "@/lib/constants/routes";
-import { formatPricePerUnit, cn, getDisplayPricePerUnit } from "@/lib/utils";
+import { ProductPrice } from "@/components/common/ProductPrice";
+import { cn } from "@/lib/utils";
 import type { Product } from "@/types";
 import { useRecentlyViewedStore } from "./store";
 
@@ -107,12 +108,7 @@ export function RecentlyViewedCarousel({ currentProductId }: RecentlyViewedCarou
               <h3 className="font-heading font-semibold text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors">
                 {product.name}
               </h3>
-              <p className="text-xs text-muted-foreground">
-                From{" "}
-                <span className="font-semibold text-foreground">
-                  {formatPricePerUnit(getDisplayPricePerUnit(product))}
-                </span>
-              </p>
+              <ProductPrice variant="compact" prefix="From" product={product} />
             </div>
           </MotionLink>
         ))}

@@ -8,9 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { SafeImage } from "@/components/common/SafeImage";
 import { StarRating } from "@/components/common/StarRating";
 import { WishlistButton } from "./WishlistButton";
+import { getCornerBadge } from "./badge";
 import { ROUTES } from "@/lib/constants/routes";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
-import { formatPricePerUnit, getDisplayPricePerUnit, cn } from "@/lib/utils";
+import { ProductPrice } from "@/components/common/ProductPrice";
+import { cn } from "@/lib/utils";
 import type { Product } from "@/types";
 
 interface ProductCardProps {
@@ -69,7 +71,7 @@ function computeSafeHoverScale(frame: HTMLElement, maxScale: number): number {
 
 export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: ProductCardProps) {
   const href = ROUTES.product(product.categorySlug, product.slug);
-  const displayPrice = getDisplayPricePerUnit(product);
+  const cornerBadge = getCornerBadge(product);
   const prefersReducedMotion = usePrefersReducedMotion();
   const frameRef = useRef<HTMLDivElement>(null);
   // Desktop-only "hover to see alternate angle" — mock/real data both carry a 2nd+
@@ -149,21 +151,20 @@ export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: Produ
             sizes={sizes}
           />
         )}
-        {product.badge && product.badge !== "none" && (
+        {cornerBadge?.kind === "label" && (
           <Badge
-            variant={
-              product.badge === "new"
-                ? "success"
-                : product.badge === "sale"
-                  ? "sale"
-                  : "default"
-            }
+            variant={cornerBadge.label === "new" ? "success" : "default"}
             className={cn(
               "absolute top-2.5 left-2.5 z-10 border-0 text-[10px] px-2 capitalize",
-              product.badge === "bestseller" && "bg-brand-orange text-brand-orange-foreground"
+              cornerBadge.label === "bestseller" && "bg-brand-orange text-brand-orange-foreground"
             )}
           >
-            {product.badge}
+            {cornerBadge.label}
+          </Badge>
+        )}
+        {cornerBadge?.kind === "sale" && (
+          <Badge className="absolute top-2.5 left-2.5 z-10 border-0 text-[10px] px-2 bg-foreground text-background">
+            Sale
           </Badge>
         )}
 
@@ -197,15 +198,7 @@ export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: Produ
         />
 
         <div className="mt-auto pt-2.5 flex flex-col items-center gap-2.5">
-          <div>
-            <p className="font-sans text-sm leading-snug text-foreground">
-              From{" "}
-              <span className="font-bold text-xl leading-none">
-                {formatPricePerUnit(displayPrice)}
-              </span>
-            </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">per unit</p>
-          </div>
+          <ProductPrice variant="card" prefix="From" unitLabel="per unit" product={product} />
 
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
             <Link

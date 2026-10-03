@@ -5,7 +5,7 @@ import type {
   OrderPreview, OrderPreviewItem,
   ProofInfo, ProofApprovalResult, ItemProofInfo,
 } from "@/types";
-import { apiFetch, apiFetchPage, API_URL } from "./client";
+import { apiFetch, apiFetchPage, API_URL, ApiError } from "./client";
 import { logApiError } from "./logApiError";
 
 // ─── Backend shapes (camelCase from server, totalAmount as string) ────────────
@@ -43,6 +43,9 @@ interface BackendOrderItem {
   turnaroundLabel: string;
   pricePerUnit: string | number;
   totalPrice: string | number;
+  mrpPerUnit?: string | number | null;
+  discountPerUnit?: string | number | null;
+  lineSavings?: string | number | null;
   artworkFileKey?: string;
   artworkUrl?: string;
   artworkStatus?: string;
@@ -59,9 +62,29 @@ interface BackendPricing {
   gstRate: string | number;
   gstAmount: string | number;
   totalAmount: string | number;
+  mrpSavings?: string | number | null;
+  totalSavings?: string | number | null;
 }
 
-interface BackendOrderDetail {
+interface BackendPreviewItem {
+  productId: string;
+  productName: string;
+  quantity: number;
+  pricePerUnit: string | number;
+  totalPrice: string | number;
+  turnaroundLabel: string;
+  mrpPerUnit?: string | number | null;
+  discountPerUnit?: string | number | null;
+  lineSavings?: string | number | null;
+}
+
+export interface BackendPreview {
+  pricing: BackendPricing;
+  items: BackendPreviewItem[];
+  estimatedDelivery?: string;
+}
+
+export interface BackendOrderDetail {
   id: string;
   orderNumber: string;
   status: string;
@@ -94,6 +117,32 @@ interface BackendOrderDetail {
 const n = (v: string | number | undefined): number =>
   v === undefined || v === null ? 0 : parseFloat(String(v));
 
+// Optional money field: absent/null from an older backend stays undefined
+// instead of collapsing to 0, so "no discount data" is distinguishable.
+const nOpt = (v: string | number | null | undefined): number | undefined =>
+  v === undefined || v === null ? undefined : parseFloat(String(v));
+
+export const PRICE_CHANGED_CODE = "price_changed";
+
+export function isPriceChangedError(err: unknown): boolean {
+  return err instanceof ApiError && err.status === 409 && err.code === PRICE_CHANGED_CODE;
+}
+
+function mapPricing(p: BackendPricing): OrderPricing {
+  return {
+    subtotal:          n(p.subtotal),
+    discountAmount:    n(p.discountAmount),
+    couponCode:        p.couponCode,
+    couponDescription: p.couponDescription,
+    shippingCost:      n(p.shippingCost),
+    gstRate:           n(p.gstRate),
+    gstAmount:         n(p.gstAmount),
+    totalAmount:       n(p.totalAmount),
+    mrpSavings:        nOpt(p.mrpSavings),
+    totalSavings:      nOpt(p.totalSavings),
+  };
+}
+
 // ─── Mappers ──────────────────────────────────────────────────────────────────
 
 function mapOrderCard(b: BackendOrderCard): OrderCard {
@@ -113,17 +162,9 @@ function mapOrderCard(b: BackendOrderCard): OrderCard {
   };
 }
 
-function mapOrderDetail(b: BackendOrderDetail): Order {
-  const pricing: OrderPricing = {
-    subtotal:          n(b.pricing.subtotal),
-    discountAmount:    n(b.pricing.discountAmount),
-    couponCode:        b.pricing.couponCode,
-    couponDescription: b.pricing.couponDescription,
-    shippingCost:      n(b.pricing.shippingCost),
-    gstRate:           n(b.pricing.gstRate),
-    gstAmount:         n(b.pricing.gstAmount),
-    totalAmount:       n(b.pricing.totalAmount),
-  };
+export function mapOrderDetail(b: BackendOrderDetail): Order {
+  const pricing = mapPricing(b.pricing);
+
 
   const items: OrderItem[] = b.items.map((i) => ({
     id:             i.id,
@@ -140,6 +181,9 @@ function mapOrderDetail(b: BackendOrderDetail): Order {
     turnaroundLabel: i.turnaroundLabel,
     pricePerUnit:   n(i.pricePerUnit),
     totalPrice:     n(i.totalPrice),
+    mrpPerUnit:      nOpt(i.mrpPerUnit),
+    discountPerUnit: nOpt(i.discountPerUnit),
+    lineSavings:     nOpt(i.lineSavings),
     artworkFileKey: i.artworkFileKey,
     artworkUrl:     i.artworkUrl,
     artworkStatus:  i.artworkStatus,
@@ -228,50 +272,39 @@ export async function cancelOrder(orderId: string, token: string): Promise<void>
   });
 }
 
+export function mapPreview(raw: BackendPreview): OrderPreview {
+  const items: OrderPreviewItem[] = raw.items.map((i) => ({
+    productId:       i.productId,
+    productName:     i.productName,
+    quantity:        i.quantity,
+    pricePerUnit:    n(i.pricePerUnit),
+    totalPrice:      n(i.totalPrice),
+    turnaroundLabel: i.turnaroundLabel,
+    mrpPerUnit:      nOpt(i.mrpPerUnit),
+    discountPerUnit: nOpt(i.discountPerUnit),
+    lineSavings:     nOpt(i.lineSavings),
+  }));
+  return { pricing: mapPricing(raw.pricing), items, estimatedDelivery: raw.estimatedDelivery };
+}
+
 export async function previewOrder(
   data: CreateOrderRequest,
   token: string
 ): Promise<OrderPreview> {
   // REAL API: POST /api/v1/orders/preview
   // Identical computation to createOrder — validates coupon, computes all prices — but no DB write.
-  interface BackendPreview {
-    pricing: BackendPricing;
-    items: { productId: string; productName: string; quantity: number; pricePerUnit: string | number; totalPrice: string | number; turnaroundLabel: string }[];
-    estimatedDelivery?: string;
-  }
-
   const raw = await apiFetch<BackendPreview>(`/orders/preview`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify(buildOrderBody(data)),
   });
 
-  const pricing: OrderPricing = {
-    subtotal:          n(raw.pricing.subtotal),
-    discountAmount:    n(raw.pricing.discountAmount),
-    couponCode:        raw.pricing.couponCode,
-    couponDescription: raw.pricing.couponDescription,
-    shippingCost:      n(raw.pricing.shippingCost),
-    gstRate:           n(raw.pricing.gstRate),
-    gstAmount:         n(raw.pricing.gstAmount),
-    totalAmount:       n(raw.pricing.totalAmount),
-  };
-
-  const items: OrderPreviewItem[] = raw.items.map((i) => ({
-    productId:      i.productId,
-    productName:    i.productName,
-    quantity:       i.quantity,
-    pricePerUnit:   n(i.pricePerUnit),
-    totalPrice:     n(i.totalPrice),
-    turnaroundLabel: i.turnaroundLabel,
-  }));
-
-  return { pricing, items, estimatedDelivery: raw.estimatedDelivery };
+  return mapPreview(raw);
 }
 
 // ─── Shared request body builder ──────────────────────────────────────────────
 
-function buildOrderBody(data: CreateOrderRequest) {
+export function buildOrderBody(data: CreateOrderRequest) {
   return {
     items: data.items.map((item) => ({
       product_id:       item.productId,
@@ -303,6 +336,7 @@ function buildOrderBody(data: CreateOrderRequest) {
     },
     payment_method: data.paymentMethod,
     coupon_code:    data.couponCode ?? null,
+    ...(data.expectedTotal !== undefined && { expected_total: data.expectedTotal }),
   };
 }
 
@@ -311,7 +345,9 @@ export async function createOrder(
   token: string
 ): Promise<CreatedOrder> {
   // REAL API: POST /api/v1/orders
-  // Backend recomputes all prices — never trusts client prices.
+  // Backend recomputes all prices — never trusts client prices. A 409 with
+  // code price_changed (see isPriceChangedError) means data.expectedTotal no
+  // longer matches; no order or payment session was created.
   const raw = await apiFetch<BackendOrderDetail>(`/orders`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },

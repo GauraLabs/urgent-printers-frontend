@@ -7,7 +7,7 @@ import { ArtworkUpload } from "./artwork/ArtworkUpload";
 import { SavedArtworks } from "./artwork/SavedArtworks";
 import { TemplateForm } from "./template/TemplateForm";
 import { useRecentlyViewedStore } from "./recentlyViewed/store";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, round2 } from "@/lib/utils";
 import type { Product } from "@/types";
 
 interface ProductDetailClientProps {
@@ -25,6 +25,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const [configuratorState,  setConfiguratorState]  = useState({
     isInCart:   false,
     totalPrice: product.pricingTiers[0]?.totalPrice ?? product.priceFrom ?? 0,
+    savings:    0,
   });
 
   const recordView = useRecentlyViewedStore((s) => s.recordView);
@@ -93,6 +94,8 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
       <StickyAddToCart
         productName={product.name}
         price={formatPrice(configuratorState.totalPrice)}
+        mrpTotal={configuratorState.savings > 0 ? round2(configuratorState.totalPrice + configuratorState.savings) : undefined}
+        savings={configuratorState.savings > 0 ? configuratorState.savings : undefined}
         isInCart={configuratorState.isInCart}
         observeRef={addItemRef}
         onAddToCart={handleStickyAdd}

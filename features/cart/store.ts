@@ -11,7 +11,7 @@ interface CartStore {
   appliedCoupon: AppliedCoupon | null;
 
   // Actions
-  addItem: (product: Pick<Product, "id" | "slug" | "name" | "images" | "thumbnailUrl" | "categoryName" | "categorySlug">, config: CartItemConfig, pricePerUnit: number) => void;
+  addItem: (product: Pick<Product, "id" | "slug" | "name" | "images" | "thumbnailUrl" | "categoryName" | "categorySlug">, config: CartItemConfig, pricePerUnit: number, mrpPerUnit?: number) => void;
   removeItem: (cartItemId: string) => void;
   updateQuantity: (cartItemId: string, quantity: number) => void;
   setItems: (items: CartItem[]) => void;
@@ -33,7 +33,7 @@ export const useCartStore = create<CartStore>()(
       isOpen: false,
       appliedCoupon: null,
 
-      addItem: (product, config, pricePerUnit) => {
+      addItem: (product, config, pricePerUnit, mrpPerUnit) => {
         const cartItemId = makeCartItemId(
           product.id, config.sizeId ?? "", config.paperId ?? "", config.finishId ?? "",
           config.sides ?? "", config.turnaroundId, config.artworkFileKey, config.templateData
@@ -48,7 +48,7 @@ export const useCartStore = create<CartStore>()(
             return {
               items: state.items.map((i) =>
                 i.cartItemId === cartItemId
-                  ? { ...i, config: { ...i.config, quantity: config.quantity }, totalPrice }
+                  ? { ...i, config: { ...i.config, quantity: config.quantity }, pricePerUnit, mrpPerUnit, totalPrice }
                   : i
               ),
               isOpen: true,
@@ -57,7 +57,7 @@ export const useCartStore = create<CartStore>()(
           return {
             items: [
               ...state.items,
-              { cartItemId, product, config, pricePerUnit, totalPrice, addedAt: new Date().toISOString() },
+              { cartItemId, product, config, pricePerUnit, mrpPerUnit, totalPrice, addedAt: new Date().toISOString() },
             ],
             isOpen: true,
           };

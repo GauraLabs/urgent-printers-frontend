@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCartStore } from "./store";
 import { CartDrawerItem } from "./CartDrawerItem";
+import { cartTotalSavings } from "./savings";
 import { formatPrice, cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants/routes";
 
@@ -22,6 +23,8 @@ export function CartDrawer() {
   const items = useCartStore((s) => s.items);
   const subtotal = useCartStore((s) => s.subtotal());
   const itemCount = useCartStore((s) => s.itemCount());
+  const couponDiscount = useCartStore((s) => s.appliedCoupon?.discountAmount ?? 0);
+  const savings = cartTotalSavings(items, couponDiscount);
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && closeCart()}>
@@ -92,6 +95,12 @@ export function CartDrawer() {
                 <span>Subtotal</span>
                 <span>{formatPrice(subtotal)}</span>
               </div>
+
+              {savings > 0 && (
+                <p className="text-xs font-semibold text-foreground -mt-2">
+                  You save {formatPrice(savings)}
+                </p>
+              )}
 
               <p className="text-xs text-muted-foreground -mt-2">
                 Shipping and GST calculated at checkout.

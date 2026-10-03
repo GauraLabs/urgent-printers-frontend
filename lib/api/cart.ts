@@ -6,7 +6,7 @@ const BASE = "/cart";
 
 // ─── Backend shape (camelCase per API spec) ───────────────────────────────────
 
-interface BackendCartItem {
+export interface BackendCartItem {
   productId: string;
   productSlug: string;
   productName: string;
@@ -26,13 +26,17 @@ interface BackendCartItem {
   turnaroundLabel: string;
   pricePerUnit: number;
   totalPrice: number;
+  // Present on GET /cart responses once the backend supports MRP discounts;
+  // the sync request never needs to send them (the server re-derives prices).
+  mrpPerUnit?: number | null;
+  discountPerUnit?: number | null;
   artworkFileKey: string | null;
   templateData: Record<string, string> | null;
 }
 
 // ─── Mappers ──────────────────────────────────────────────────────────────────
 
-function mapCartItem(b: BackendCartItem): CartItem {
+export function mapCartItem(b: BackendCartItem): CartItem {
   const cartItemId = makeCartItemId(
     b.productId, b.sizeId ?? "", b.paperId ?? "", b.finishId ?? "", b.sides ?? "", b.turnaroundId,
     b.artworkFileKey ?? undefined, b.templateData ?? undefined
@@ -68,6 +72,7 @@ function mapCartItem(b: BackendCartItem): CartItem {
     },
     pricePerUnit: b.pricePerUnit,
     totalPrice: b.totalPrice,
+    mrpPerUnit: b.mrpPerUnit ?? undefined,
     addedAt: new Date().toISOString(),
   };
 }

@@ -153,13 +153,38 @@ urgent-printers-frontend/
 | Variable | Description | Required |
 |---|---|---|
 | `NEXT_PUBLIC_SITE_URL` | Production URL (e.g. `https://urgentprinters.com`) | Yes (for sitemap + OG URLs) |
-| `REVALIDATE_SECRET` | Shared secret checked on incoming `X-Revalidate-Secret` header at `app/api/revalidate/theme/route.ts`. Must match `REVALIDATE_SECRET` configured on `urgent-printers-backend` exactly — the backend calls this route as a webhook after an admin theme change, using this value to authenticate the request. Server-side only, never `NEXT_PUBLIC_*`. | Yes (for the admin theme-revalidation webhook) |
+| `REVALIDATE_SECRET` | Shared secret checked on incoming `X-Revalidate-Secret` header at `app/api/revalidate/theme/route.ts`, `site-status/route.ts` and `products/route.ts` (the last invalidates product/category/home pages by path after price or discount-window changes; payload `{products:[{category_slug,slug}], category_slugs:[], all:false}`, slugs `^[a-z0-9-]+$`, arrays max 200). Must match `REVALIDATE_SECRET` configured on `urgent-printers-backend` exactly — the backend calls this route as a webhook after an admin theme change, using this value to authenticate the request. Server-side only, never `NEXT_PUBLIC_*`. | Yes (for the admin theme-revalidation webhook) |
 
 Set in `.env.local` for local development:
 ```bash
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 REVALIDATE_SECRET=<same value as the backend's REVALIDATE_SECRET>
 ```
+
+---
+
+## MRP Discounts
+
+Prices come from the backend already resolved: `pricePerUnit` / `priceFrom` are always what is charged right now (outside a sale window that is the MRP), so the storefront never evaluates windows. Optional fields drive the display and are absent on an older backend, in which case nothing changes visually:
+
+- Products: `mrpFrom`, `discountPercent`, `discountAmount`, `onSale`, `discountEndsAt`; pricing tiers: `mrpPerUnit`, `discountPercent`, `discountPerUnit`.
+- Cart/order/preview lines: `mrpPerUnit`, `discountPerUnit`, `lineSavings`; order pricing: `mrpSavings`, `totalSavings` (server-computed; `totalSavings = mrpSavings + discountAmount`).
+- `components/common/PriceDisplay.tsx` is the single price block (`card` / `pdp` / `line` / `compact`): struck-through MRP, "X% off" badge, final price. A missing or 0% percent hides the MRP too and renders exactly the non-discounted markup. `ProductPrice` resolves the "From" tier for card/search/recent products.
+- Savings: checkout, confirmation and order pages show the server's `totalSavings` via `SavingsSummary`; cart and drawer compute `Σ(mrp − price) × qty + coupon` in `features/cart/savings.ts` (display only).
+- Checkout: the order preview is authoritative. If its line prices differ from the cart, a "Prices have been updated" notice is shown and the preview prices adopted. `createOrder` sends `expected_total`; a 409 with code `price_changed` re-runs the preview and asks the customer to confirm again.
+- "On Sale" filter sends `on_sale=true`; the stored `sale` badge is never rendered (the card's corner "Sale" tag comes from `onSale`).
+- Coupon validation sends `eligible_subtotal` (non-discounted line totals) and reads `applies_to_discounted_items`; the authoritative coupon figure comes from the preview.
+- Rounding: `round2` / `discountPercent` in `lib/utils.ts` and `features/products/configurator/pricing.ts` mirror the server's `Decimal` HALF_UP rules (golden vectors in `tests/fixtures/mrp-contract.ts`).
+
+---
+
+## Tests
+
+```bash
+npm test   # vitest run (jsdom + Testing Library), config in vitest.config.mts
+```
+
+Covers discount math, PriceDisplay variants, API mappers (with and without the new fields), checkout repricing and the `CheckoutPageClient` 409 `price_changed` flow, savings, the sticky add-to-cart bar, mock-data discounts, the On Sale filter and the product revalidation route (`next/cache` is aliased to a recording stub in `vitest.config.mts`). Typed contract fixtures live in `tests/fixtures/mrp-contract.ts`.
 
 ---
 

@@ -63,3 +63,4 @@ qa-pipeline/playwright/fixtures/oversized*
 qa-pipeline/artifacts/docs/**/*.pdf
 playwright-report
 test-results
+

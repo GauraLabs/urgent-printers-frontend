@@ -75,6 +75,16 @@ export async function getProducts(filters: ProductFilters): Promise<PaginatedRes
 }
 ```
 
+## MRP discount display
+
+- Backend sends charged-now prices plus optional discount fields (all absent on an old backend). Never compute sale windows client-side.
+- One price block: `components/common/PriceDisplay.tsx` (`card`/`pdp`/`line`/`compact`); `ProductPrice` for product-shaped data. Hidden entirely (MRP too) when percent is missing or 0. Badge is tinted-token + `text-foreground` for theme/dark contrast; do not switch it to a solid `bg-success`/`bg-destructive` fill with white text.
+- Rounding helpers: `round2`, `discountPercent`, `getDisplayDiscount`, `getUnitDiscount` in `lib/utils.ts`; configurator math in `features/products/configurator/pricing.ts`.
+- Savings: server `totalSavings` on checkout/confirmation/order pages (`SavingsSummary`); client-computed only in cart/drawer (`features/cart/savings.ts`). Don't add them together.
+- Checkout: preview is authoritative (`features/checkout/repricing.ts`); `createOrder` sends `expectedTotal`; 409 `price_changed` -> re-preview + confirm again.
+- `app/api/revalidate/products/route.ts` uses `revalidatePath` (product fetches have no tags). Never call `cookies()` in a layout (kills static generation).
+- Tests: `npm test` (Vitest 3 + jsdom + Testing Library, `tests/`; same stack as the admin panel). Vitest 5 conflicts with the repo's `@types/node ^20` pin, so stay on 3.x.
+
 ## Key known fixes (do not regress)
 
 | Issue | Fix |

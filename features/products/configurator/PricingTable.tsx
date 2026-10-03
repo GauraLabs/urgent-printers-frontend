@@ -1,7 +1,8 @@
 "use client";
 
 import { Star } from "lucide-react";
-import { formatPrice, formatPricePerUnit, cn } from "@/lib/utils";
+import { PriceDisplay } from "@/components/common/PriceDisplay";
+import { formatPrice, cn } from "@/lib/utils";
 import type { PricingTier } from "@/types";
 
 interface PricingTableProps {
@@ -47,9 +48,15 @@ export function PricingTable({ tiers, selectedQuantity, onSelectQuantity }: Pric
                   </span>
                 )}
               </span>
-              <span className="text-center text-muted-foreground">
-                {formatPricePerUnit(tier.pricePerUnit)}<span className="text-[10px]">/unit</span>
-              </span>
+              <PriceDisplay
+                variant="line"
+                align="center"
+                price={tier.pricePerUnit}
+                mrp={tier.mrpPerUnit}
+                percent={tier.discountPercent}
+                unitLabel={<span className="text-[10px]">/unit</span>}
+                className="text-center text-sm"
+              />
               <span className={cn("text-right font-semibold transition-colors duration-200", isSelected && "text-primary")}>
                 {formatPrice(tier.totalPrice)}
               </span>

@@ -12,7 +12,9 @@ import { useOrderItemCategorySlugs } from "@/hooks/useOrderItemCategorySlugs";
 import { OrderStatusTracker } from "@/features/account/OrderStatusTracker";
 import { Separator } from "@/components/ui/separator";
 import { ROUTES } from "@/lib/constants/routes";
-import { formatPrice, formatPricePerUnit } from "@/lib/utils";
+import { PriceDisplay } from "@/components/common/PriceDisplay";
+import { SavingsSummary, savingsFromPricing } from "@/components/common/SavingsSummary";
+import { formatPrice, getUnitDiscount } from "@/lib/utils";
 import { ORDER_STATUS_LABELS, SHIPMENT_STATUS_LABELS } from "@/lib/constants/print-specs";
 import { SHIPMENT_STATUS_COLORS } from "@/lib/constants/order-status";
 import { RAZORPAY_THEME_COLOR } from "@/lib/constants/payment";
@@ -390,7 +392,14 @@ export default function OrderDetailPage() {
                 </div>
                 <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
                   <p className="font-semibold text-sm">{formatPrice(item.totalPrice)}</p>
-                  <p className="text-xs text-muted-foreground">{formatPricePerUnit(item.pricePerUnit)}/unit</p>
+                  <PriceDisplay
+                    variant="line"
+                    align="end"
+                    price={item.pricePerUnit}
+                    mrp={getUnitDiscount(item.pricePerUnit, item.mrpPerUnit)?.mrp}
+                    percent={getUnitDiscount(item.pricePerUnit, item.mrpPerUnit)?.percent}
+                    unitLabel="/unit"
+                  />
                   {order.status === "delivered" && (
                     item.canReview ? (
                       <Link
@@ -443,6 +452,7 @@ export default function OrderDetailPage() {
               </span>
             </div>
             <Separator />
+            <SavingsSummary savings={savingsFromPricing(p)} variant="inline" />
             <div className="flex justify-between font-heading font-bold text-base">
               <span>Total</span>
               <span>{formatPrice(p.totalAmount)}</span>

@@ -17,7 +17,7 @@ import { logApiError } from "./logApiError";
 
 // ─── Backend shapes ───────────────────────────────────────────────────────────
 
-interface BackendProductCard {
+export interface BackendProductCard {
   id: number;
   name: string;
   slug: string;
@@ -31,11 +31,17 @@ interface BackendProductCard {
   thumbnail_url: string | null;
   medium_url: string | null;
   price_from: number | null;
+  // Discount fields are absent from a backend that predates the MRP feature
+  // and null while no discount is active.
+  mrp_from?: number | null;
+  discount_percent?: number | null;
+  discount_amount?: number | null;
+  on_sale?: boolean;
   rating: number;
   review_count: number;
 }
 
-interface BackendProductDetail extends BackendProductCard {
+export interface BackendProductDetail extends BackendProductCard {
   description: string | null;
   images: { thumb: string; md: string; lg: string; original: string }[];
   video_url: string | null;
@@ -45,7 +51,15 @@ interface BackendProductDetail extends BackendProductCard {
   finishes: { label: string; is_active: boolean; price_multiplier: number; is_default: boolean }[];
   sides_options: { label: string; price_multiplier: number; is_default: boolean }[];
   quantity_steps: number[];
-  pricing_tiers: { quantity: number; price_per_unit: number; is_best_value: boolean }[];
+  pricing_tiers: {
+    quantity: number;
+    price_per_unit: number;
+    is_best_value: boolean;
+    mrp_per_unit?: number | null;
+    discount_percent?: number | null;
+    discount_per_unit?: number | null;
+  }[];
+  discount_ends_at?: string | null;
   turnaround_options: { type: string; days: number; extra_cost: number; is_active: boolean }[];
   seo: { title: string | null; description: string | null; canonical_url: string | null };
   customization_mode: string;
@@ -65,7 +79,7 @@ interface BackendProductDetail extends BackendProductCard {
 // thumbnail_url and base_price are now indexed and present here, but
 // category_slug/category_name still are not — mapSearchDoc() below still
 // bridges that part of the gap via the categoryMap parameter.
-interface BackendSearchDoc {
+export interface BackendSearchDoc {
   id: string;
   name: string;
   description: string;
@@ -80,6 +94,10 @@ interface BackendSearchDoc {
   tags: string[];
   base_price: number | null;
   thumbnail_url: string | null;
+  base_mrp?: number | null;
+  discount_percent?: number | null;
+  discount_amount?: number | null;
+  has_discount?: boolean;
   // Not indexed by Typesense yet — treated as optional/absent, same posture as
   // category_slug/category_name below, until search results carry it too.
   medium_url?: string | null;
@@ -98,7 +116,21 @@ const EMPTY_PRINT_SPEC: PrintSpec = {
 
 // ─── Mappers ──────────────────────────────────────────────────────────────────
 
-function mapCard(c: BackendProductCard): Product {
+function discountFields(src: {
+  mrp?: number | null;
+  percent?: number | null;
+  amount?: number | null;
+  onSale?: boolean;
+}): Pick<Product, "mrpFrom" | "discountPercent" | "discountAmount" | "onSale"> {
+  return {
+    mrpFrom: src.mrp ?? undefined,
+    discountPercent: src.percent ?? undefined,
+    discountAmount: src.amount ?? undefined,
+    onSale: src.onSale ?? false,
+  };
+}
+
+export function mapCard(c: BackendProductCard): Product {
   const imageUrl = c.thumbnail_url ?? `https://picsum.photos/seed/${c.slug}/600/400`;
   return {
     id: String(c.id),
@@ -123,12 +155,13 @@ function mapCard(c: BackendProductCard): Product {
     tags: c.tags,
     badge: c.badge,
     priceFrom: c.price_from ?? undefined,
+    ...discountFields({ mrp: c.mrp_from, percent: c.discount_percent, amount: c.discount_amount, onSale: c.on_sale }),
     customizationMode: "none" as CustomizationMode,
     templateFields: [],
   };
 }
 
-function mapDetail(d: BackendProductDetail): Product {
+export function mapDetail(d: BackendProductDetail): Product {
   const lgImages = d.images.map((i) => i.lg);
   const images =
     lgImages.length > 0
@@ -181,6 +214,9 @@ function mapDetail(d: BackendProductDetail): Product {
     pricePerUnit: t.price_per_unit,
     totalPrice: parseFloat((t.quantity * t.price_per_unit).toFixed(2)),
     isBestValue: t.is_best_value,
+    mrpPerUnit: t.mrp_per_unit ?? undefined,
+    discountPercent: t.discount_percent ?? undefined,
+    discountPerUnit: t.discount_per_unit ?? undefined,
   }));
 
   const turnaroundOptions = d.turnaround_options
@@ -218,6 +254,8 @@ function mapDetail(d: BackendProductDetail): Product {
     tags: d.tags,
     badge: d.badge,
     priceFrom: d.price_from ?? undefined,
+    ...discountFields({ mrp: d.mrp_from, percent: d.discount_percent, amount: d.discount_amount, onSale: d.on_sale }),
+    discountEndsAt: d.discount_ends_at ?? undefined,
     customizationMode: (d.customization_mode ?? "none") as CustomizationMode,
     templateFields: (d.template_fields ?? []).map((f) => ({
       id: f.id,
@@ -233,7 +271,7 @@ function mapDetail(d: BackendProductDetail): Product {
 // Typesense now indexes thumbnail_url/base_price, so search results carry a
 // real image and price. category_slug/category_name are still not indexed,
 // so those keep coming from the categoryMap lookup below.
-function mapSearchDoc(
+export function mapSearchDoc(
   d: BackendSearchDoc,
   categoryMap: Map<number, { slug: string; name: string }>
 ): Product {
@@ -260,6 +298,7 @@ function mapSearchDoc(
     tags: d.tags ?? [],
     badge: d.badge,
     priceFrom: d.base_price ?? undefined,
+    ...discountFields({ mrp: d.base_mrp, percent: d.discount_percent, amount: d.discount_amount, onSale: d.has_discount }),
     customizationMode: "none" as CustomizationMode,
     templateFields: [],
   };
@@ -319,7 +358,9 @@ export async function getProducts(
     if (filters.tags?.length) {
       results = results.filter((p) => filters.tags!.every((tag) => p.tags.includes(tag)));
     }
-    if (filters.badge) {
+    if (filters.badge === "sale") {
+      results = results.filter((p) => p.onSale);
+    } else if (filters.badge) {
       results = results.filter((p) => p.badge === filters.badge);
     }
     switch (filters.sort) {
@@ -359,7 +400,9 @@ export async function getProducts(
     if (filters.minPrice !== undefined) params.set("min_price", String(filters.minPrice));
     if (filters.maxPrice !== undefined) params.set("max_price", String(filters.maxPrice));
     if (filters.tags?.length) params.set("tags", filters.tags.join(","));
-    if (filters.badge) params.set("badge", filters.badge);
+    // "On Sale" is derived from live pricing (on_sale), not the stored badge.
+    if (filters.badge === "sale") params.set("on_sale", "true");
+    else if (filters.badge) params.set("badge", filters.badge);
     if (filters.sort) params.set("sort_by", SORT_MAP[filters.sort]);
     params.set("page", String(filters.page ?? 1));
     params.set("page_size", String(filters.pageSize ?? 12));

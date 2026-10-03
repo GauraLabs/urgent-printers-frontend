@@ -1,3 +1,4 @@
+import { discountPercent, round2 } from "@/lib/utils";
 import type { Product, PricingTier, TurnaroundOption, PrintSpec, SidesOption, TemplateField, CustomizationMode } from "@/types";
 
 // ─── Shared turnaround options ────────────────────────────────────────────────
@@ -10,17 +11,37 @@ const standardTurnaround: TurnaroundOption[] = [
 
 // ─── Pricing tier helpers ─────────────────────────────────────────────────────
 
-function makeTiers(base: number, quantities: number[]): PricingTier[] {
+// mrpFactor > 1 gives every tier an MRP of price x factor (backend contract: the
+// tier's price_per_unit is the sale price). Percent/per-unit savings are derived
+// the way the public API returns them; omitted when the discount rounds to 0%.
+function makeTiers(base: number, quantities: number[], mrpFactor?: number): PricingTier[] {
   const discounts = [0, 0.10, 0.18, 0.25, 0.32, 0.38];
   return quantities.map((qty, i) => {
     const pu = parseFloat((base * (1 - (discounts[i] ?? discounts[discounts.length - 1]))).toFixed(2));
+    const mrp = mrpFactor ? round2(pu * mrpFactor) : undefined;
+    const pct = mrp !== undefined ? discountPercent(mrp, pu) : 0;
     return {
       quantity: qty,
       pricePerUnit: pu,
       totalPrice: parseFloat((pu * qty).toFixed(2)),
       isBestValue: i === Math.floor(quantities.length / 2),
+      ...(mrp !== undefined && pct >= 1 && { mrpPerUnit: mrp, discountPercent: pct, discountPerUnit: round2(mrp - pu) }),
     };
   });
+}
+
+// Card-level discount fields (mrpFrom/onSale…) come from the "From" tier, as the
+// backend's list endpoint derives them.
+function withSaleFields(p: Product): Product {
+  const tier = p.pricingTiers.find((t) => t.isBestValue) ?? p.pricingTiers[0];
+  if (!tier || tier.mrpPerUnit === undefined) return p;
+  return {
+    ...p,
+    onSale: true,
+    mrpFrom: tier.mrpPerUnit,
+    discountPercent: tier.discountPercent,
+    discountAmount: tier.discountPerUnit,
+  };
 }
 
 // ─── Shared print specs ───────────────────────────────────────────────────────
@@ -171,7 +192,7 @@ const businessCardTemplateFields: TemplateField[] = [
 
 // ─── Products ─────────────────────────────────────────────────────────────────
 
-export const mockProducts: Product[] = [
+const baseProducts: Product[] = [
   // ── Business Cards ──────────────────────────────────────────────────────────
   {
     id: "prod-bc-1",
@@ -188,13 +209,13 @@ export const mockProducts: Product[] = [
       "https://picsum.photos/seed/bc1c/800/600",
     ],
     printSpec: businessCardSpec,
-    pricingTiers: makeTiers(4.00, [50, 100, 250, 500, 750, 1000]),
+    pricingTiers: makeTiers(4.00, [50, 100, 250, 500, 750, 1000], 1.25),
     turnaroundOptions: standardTurnaround,
     averageRating: 4.8,
     reviewCount: 142,
     isFeatured: true,
     tags: ["bestseller", "professional", "networking"],
-    badge: "sale",
+    badge: "none",
     customizationMode: "template" as CustomizationMode,
     templateFields: businessCardTemplateFields,
   },
@@ -263,13 +284,13 @@ export const mockProducts: Product[] = [
       "https://picsum.photos/seed/fl1c/800/600",
     ],
     printSpec: flyerSpec,
-    pricingTiers: makeTiers(2.00, [100, 250, 500, 1000, 2500, 5000]),
+    pricingTiers: makeTiers(2.00, [100, 250, 500, 1000, 2500, 5000], 1.5),
     turnaroundOptions: standardTurnaround,
     averageRating: 4.6,
     reviewCount: 98,
     isFeatured: true,
     tags: ["promotion", "events", "handout", "bestseller"],
-    badge: "sale",
+    badge: "none",
     customizationMode: "artwork" as CustomizationMode,
     templateFields: [],
   },
@@ -468,13 +489,13 @@ export const mockProducts: Product[] = [
       "https://picsum.photos/seed/pk3c/800/600",
     ],
     printSpec: { ...packagingSpec, papers: packagingSpec.papers.filter(p => p.id === "pp-eco") },
-    pricingTiers: makeTiers(45.00, [25, 50, 100, 250, 500, 1000]),
+    pricingTiers: makeTiers(45.00, [25, 50, 100, 250, 500, 1000], 1.2),
     turnaroundOptions: standardTurnaround,
     averageRating: 4.5,
     reviewCount: 58,
     isFeatured: false,
     tags: ["eco", "sustainable", "kraft", "artisan"],
-    badge: "sale",
+    badge: "none",
     customizationMode: "artwork" as CustomizationMode,
     templateFields: [],
   },
@@ -570,13 +591,13 @@ export const mockProducts: Product[] = [
       "https://picsum.photos/seed/mc1c/800/600",
     ],
     printSpec: merchSpec,
-    pricingTiers: makeTiers(220.00, [10, 25, 50, 100, 250, 500]),
+    pricingTiers: makeTiers(220.00, [10, 25, 50, 100, 250, 500], 1.3),
     turnaroundOptions: standardTurnaround,
     averageRating: 4.7,
     reviewCount: 134,
     isFeatured: true,
     tags: ["apparel", "events", "team", "bestseller"],
-    badge: "sale",
+    badge: "none",
     customizationMode: "artwork" as CustomizationMode,
     templateFields: [],
   },
@@ -629,3 +650,5 @@ export const mockProducts: Product[] = [
     templateFields: [],
   },
 ];
+
+export const mockProducts: Product[] = baseProducts.map(withSaleFields);

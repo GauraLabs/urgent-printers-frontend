@@ -3,7 +3,7 @@ import { apiFetch } from "./client";
 
 // ─── Backend response shape ───────────────────────────────────────────────────
 
-interface BackendCouponResponse {
+export interface BackendCouponResponse {
   code: string;
   is_valid: boolean;
   discount_type: "percentage" | "fixed";
@@ -13,29 +13,20 @@ interface BackendCouponResponse {
   min_order_amount: number | null;
   max_discount_amount: number | null;
   message: string;   // always present; show directly in UI
+  applies_to_discounted_items?: boolean;
 }
 
 // ─── API function ─────────────────────────────────────────────────────────────
 
-export async function validateCoupon(
-  code: string,
-  subtotal: number,
-  token?: string
-): Promise<AppliedCoupon> {
-  // REAL API: POST /api/v1/coupons/validate
-  // Always returns 200. Check is_valid to determine success or failure.
-  // message is always user-friendly and can be shown directly.
-  const data = await apiFetch<BackendCouponResponse>("/coupons/validate", {
-    method: "POST",
-    ...(token && { headers: { Authorization: `Bearer ${token}` } }),
-    body: JSON.stringify({ code: code.trim().toUpperCase(), subtotal }),
-  });
+export function buildCouponBody(code: string, subtotal: number, eligibleSubtotal?: number) {
+  return {
+    code: code.trim().toUpperCase(),
+    subtotal,
+    ...(eligibleSubtotal !== undefined && { eligible_subtotal: eligibleSubtotal }),
+  };
+}
 
-  if (!data.is_valid) {
-    // Throw so the caller (cart page / ReviewStep) can surface the message inline
-    throw new Error(data.message);
-  }
-
+export function mapCoupon(data: BackendCouponResponse): AppliedCoupon {
   return {
     code:          data.code,
     discountType:  data.discount_type === "fixed" ? "flat" : "percentage",
@@ -43,5 +34,30 @@ export async function validateCoupon(
     discountAmount: data.discount_amount,
     description:   data.description,
     message:       data.message,
+    appliesToDiscountedItems: data.applies_to_discounted_items,
   };
+}
+
+export async function validateCoupon(
+  code: string,
+  subtotal: number,
+  token?: string,
+  eligibleSubtotal?: number
+): Promise<AppliedCoupon> {
+  // REAL API: POST /api/v1/coupons/validate
+  // Always returns 200. Check is_valid to determine success or failure.
+  // message is always user-friendly and can be shown directly.
+  // eligible_subtotal is display-only; preview/create compute the real figure.
+  const data = await apiFetch<BackendCouponResponse>("/coupons/validate", {
+    method: "POST",
+    ...(token && { headers: { Authorization: `Bearer ${token}` } }),
+    body: JSON.stringify(buildCouponBody(code, subtotal, eligibleSubtotal)),
+  });
+
+  if (!data.is_valid) {
+    // Throw so the caller (cart page / ReviewStep) can surface the message inline
+    throw new Error(data.message);
+  }
+
+  return mapCoupon(data);
 }

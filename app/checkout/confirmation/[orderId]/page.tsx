@@ -11,7 +11,9 @@ import { Separator } from "@/components/ui/separator";
 import { SafeImage } from "@/components/common/SafeImage";
 import { ROUTES } from "@/lib/constants/routes";
 import { buttonVariants } from "@/components/ui/button";
-import { formatPrice, formatPricePerUnit, cn } from "@/lib/utils";
+import { PriceDisplay } from "@/components/common/PriceDisplay";
+import { SavingsSummary, savingsFromPricing } from "@/components/common/SavingsSummary";
+import { formatPrice, getUnitDiscount, cn } from "@/lib/utils";
 import { getOrderById, downloadReceipt } from "@/lib/api";
 import { useAuthStore } from "@/features/auth/store";
 import { useOrderItemCategorySlugs } from "@/hooks/useOrderItemCategorySlugs";
@@ -134,7 +136,14 @@ export default function OrderConfirmationPage() {
                     </div>
                     <div className="text-right shrink-0">
                       <p className="font-semibold text-sm">{formatPrice(item.totalPrice)}</p>
-                      <p className="text-xs text-muted-foreground">{formatPricePerUnit(item.pricePerUnit)}/unit</p>
+                      <PriceDisplay
+                        variant="line"
+                        align="end"
+                        price={item.pricePerUnit}
+                        mrp={getUnitDiscount(item.pricePerUnit, item.mrpPerUnit)?.mrp}
+                        percent={getUnitDiscount(item.pricePerUnit, item.mrpPerUnit)?.percent}
+                        unitLabel="/unit"
+                      />
                     </div>
                   </div>
                 );
@@ -164,6 +173,7 @@ export default function OrderConfirmationPage() {
                 </span>
               </div>
               <Separator />
+              <SavingsSummary savings={savingsFromPricing(order.pricing)} variant="inline" />
               <div className="flex justify-between font-heading font-bold text-base">
                 <span>Total Paid</span>
                 <span className="text-primary">{formatPrice(order.pricing.totalAmount)}</span>
