@@ -9,7 +9,7 @@ import type {
   TemplateField,
 } from "@/types";
 import { mockProducts } from "@/lib/mock-data";
-import { slugify } from "@/lib/utils";
+import { getDisplayPricePerUnit, minOptionMultiplier, round2, slugify } from "@/lib/utils";
 import { delay } from "./delay";
 import { apiFetch, apiFetchPage } from "./client";
 import { getCategories } from "./categories";
@@ -49,7 +49,8 @@ export interface BackendProductDetail extends BackendProductCard {
   sizes: { label: string; width: number; height: number; unit: string; is_active: boolean; price_multiplier: number; is_default: boolean }[];
   paper_types: { label: string; gsm: number | null; is_active: boolean; price_multiplier: number; is_default: boolean }[];
   finishes: { label: string; is_active: boolean; price_multiplier: number; is_default: boolean }[];
-  sides_options: { label: string; price_multiplier: number; is_default: boolean }[];
+  // is_active is absent on backends that predate it; absent means active.
+  sides_options: { label: string; price_multiplier: number; is_default: boolean; is_active?: boolean }[];
   quantity_steps: number[];
   pricing_tiers: {
     quantity: number;
@@ -201,7 +202,9 @@ export function mapDetail(d: BackendProductDetail): Product {
       isDefault: f.is_default,
     }));
 
-  const sides: SidesOption[] = d.sides_options.map((s) => ({
+  const sides: SidesOption[] = d.sides_options
+    .filter((s) => s.is_active !== false)
+    .map((s) => ({
     label: s.label,
     priceMultiplier: s.price_multiplier,
     isDefault: s.is_default,
@@ -314,16 +317,8 @@ const SORT_MAP: Record<NonNullable<ProductFilters["sort"]>, string> = {
   popular: "featured",
 };
 
-// Tiers are ordered by ascending quantity, not ascending price — per-unit price
-// falls as quantity rises, so pricingTiers[0] is the *most* expensive tier, not
-// the cheapest. Used for "From ₹X" sort/display; falls back to priceFrom when a
-// product has no tiers loaded (e.g. card-shape search docs).
-function lowestPricePerUnit(product: Product): number {
-  return product.pricingTiers.length > 0
-    ? Math.min(...product.pricingTiers.map((t) => t.pricePerUnit))
-    : (product.priceFrom ?? 0);
-}
-
+// Sort/filter in mock mode mirrors the server: the display ("From") price is
+// the best-value tier x the product's min active option multipliers.
 // ─── API functions ────────────────────────────────────────────────────────────
 
 export async function getProducts(
@@ -348,11 +343,11 @@ export async function getProducts(
     // min bound and (independently) ANY tier clears the max bound.
     if (filters.minPrice !== undefined) {
       const min = filters.minPrice;
-      results = results.filter((p) => p.pricingTiers.some((t) => t.pricePerUnit >= min));
+      results = results.filter((p) => p.pricingTiers.some((t) => round2(t.pricePerUnit * minOptionMultiplier(p.printSpec)) >= min));
     }
     if (filters.maxPrice !== undefined) {
       const max = filters.maxPrice;
-      results = results.filter((p) => p.pricingTiers.some((t) => t.pricePerUnit <= max));
+      results = results.filter((p) => p.pricingTiers.some((t) => round2(t.pricePerUnit * minOptionMultiplier(p.printSpec)) <= max));
     }
     // Mirrors product_repository.py: every selected tag must be present (AND, not OR).
     if (filters.tags?.length) {
@@ -368,10 +363,10 @@ export async function getProducts(
         results.sort((a, b) => b.averageRating - a.averageRating);
         break;
       case "price-asc":
-        results.sort((a, b) => lowestPricePerUnit(a) - lowestPricePerUnit(b));
+        results.sort((a, b) => getDisplayPricePerUnit(a) - getDisplayPricePerUnit(b));
         break;
       case "price-desc":
-        results.sort((a, b) => lowestPricePerUnit(b) - lowestPricePerUnit(a));
+        results.sort((a, b) => getDisplayPricePerUnit(b) - getDisplayPricePerUnit(a));
         break;
       case "newest":
         // Mock data has no created_at; approximate "newest first" by reversing

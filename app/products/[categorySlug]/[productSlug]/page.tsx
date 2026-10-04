@@ -13,7 +13,7 @@ import { ReviewsSection } from "@/features/products/ReviewsSection";
 import { RelatedProducts } from "@/features/products/RelatedProducts";
 import { RecentlyViewedCarousel } from "@/features/products/recentlyViewed/RecentlyViewedCarousel";
 import { ROUTES } from "@/lib/constants/routes";
-import { formatPricePerUnit, getDisplayPricePerUnit } from "@/lib/utils";
+import { formatPricePerUnit, getDisplayPricePerUnit, minOptionMultiplier, round2 } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ categorySlug: string; productSlug: string }>;
@@ -30,8 +30,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!product || !product.categorySlug || product.categorySlug !== categorySlug) {
     return { title: "Product Not Found" };
   }
-
-  const lowestPrice = product.pricingTiers[0].pricePerUnit;
 
   return {
     title: product.name,
@@ -76,9 +74,14 @@ export default async function ProductDetailPage({ params }: PageProps) {
   // price falls as quantity rises, so index 0 is the *most* expensive tier
   // and the last index the cheapest. Derive lowest/highest explicitly rather
   // than relying on array position.
-  const tierPrices = product.pricingTiers.map((t) => t.pricePerUnit);
-  const lowestPrice = Math.min(...tierPrices);
-  const highestPrice = Math.max(...tierPrices);
+  // Payable range: tier prices scaled by the cheapest option combination (the
+  // server's priceFrom is used for the low end when present). The card/PDP
+  // "From" is pinned inside the range so the two can never disagree.
+  const displayPrice = getDisplayPricePerUnit(product);
+  const minMultiplier = minOptionMultiplier(product.printSpec);
+  const tierPrices = product.pricingTiers.map((t) => round2(t.pricePerUnit * minMultiplier));
+  const lowestPrice = Math.min(product.priceFrom ?? Math.min(...tierPrices), displayPrice);
+  const highestPrice = Math.max(...tierPrices, displayPrice);
 
   // The customer-facing "From" price merchandises the best-value tier, not
   // the mathematically cheapest per-unit price (usually the highest-quantity
@@ -87,8 +90,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
   // lowestPrice/highestPrice: schema.org AggregateOffer.lowPrice/highPrice
   // describe the actual price range across all offers for search engines,
   // independent of merchandising.
-  const displayPrice = getDisplayPricePerUnit(product);
-
   // JSON-LD structured data
   const jsonLd = {
     "@context": "https://schema.org",

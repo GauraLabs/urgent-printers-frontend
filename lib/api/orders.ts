@@ -296,7 +296,10 @@ export async function previewOrder(
   const raw = await apiFetch<BackendPreview>(`/orders/preview`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
-    body: JSON.stringify(buildOrderBody(data)),
+    body: JSON.stringify({
+      ...buildOrderBody(data),
+      ...(data.clientPricing && { client_pricing: data.clientPricing }),
+    }),
   });
 
   return mapPreview(raw);

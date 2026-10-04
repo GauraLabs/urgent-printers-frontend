@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import type { PricingTier } from "@/types";
+import type { PricingTier, PrintSpec } from "@/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -54,26 +54,6 @@ export function getUnitDiscount(price: number, mrp: number | undefined): Display
   return toDisplayDiscount(price, mrp, discountPercent(mrp, price));
 }
 
-/**
- * Discount for the same "From" tier getDisplayPricePerUnit prices. Detail
- * payloads carry it on the tier; card/search payloads carry it on the product.
- */
-export function getDisplayDiscount(product: {
-  pricingTiers: PricingTier[];
-  priceFrom?: number;
-  mrpFrom?: number;
-  discountPercent?: number;
-}): DisplayDiscount | null {
-  const price = getDisplayPricePerUnit(product);
-  const tier =
-    product.pricingTiers.find((t) => t.isBestValue) ??
-    (product.pricingTiers.length > 0
-      ? product.pricingTiers.reduce((a, b) => (b.pricePerUnit < a.pricePerUnit ? b : a))
-      : undefined);
-  if (tier) return toDisplayDiscount(price, tier.mrpPerUnit, tier.discountPercent);
-  return toDisplayDiscount(price, product.mrpFrom, product.discountPercent);
-}
-
 /** "Sale ends 12 Oct, 6:30 pm IST" — always IST regardless of viewer timezone. */
 export function formatSaleEnd(iso: string): string | null {
   const d = new Date(iso);
@@ -89,23 +69,66 @@ export function formatSaleEnd(iso: string): string | null {
   return `${text} IST`;
 }
 
+type OptionSpec = Partial<Pick<PrintSpec, "sizes" | "papers" | "finishes" | "sides">>;
+
 /**
- * The "From" price merchandises the best-value tier, not the mathematically
- * cheapest per-unit price (usually the highest-quantity tier). Falls back to
- * the true lowest tier price, then `priceFrom`, if no tier is flagged —
- * `Math.min()` on an empty array returns `Infinity`, so the `priceFrom`
- * fallback only kicks in when `pricingTiers` is actually empty.
+ * Product of the smallest valid multiplier in each option category, the
+ * cheapest configuration the server will charge. A category with no options
+ * counts as x1, and a non-finite or <= 0 multiplier is skipped (the detail
+ * mapper has already dropped inactive options). Turnaround is excluded.
  */
-export function getDisplayPricePerUnit(product: {
+export function minOptionMultiplier(spec: OptionSpec | undefined): number {
+  if (!spec) return 1;
+  let product = 1;
+  for (const options of [spec.sizes, spec.papers, spec.finishes, spec.sides]) {
+    const valid = (options ?? []).map((o) => o.priceMultiplier).filter((m) => Number.isFinite(m) && m > 0);
+    if (valid.length > 0) product *= Math.min(...valid);
+  }
+  return product;
+}
+
+export interface FromPriceInput {
   pricingTiers: PricingTier[];
   priceFrom?: number;
-}): number {
-  const bestValueTier = product.pricingTiers.find((t) => t.isBestValue);
-  if (bestValueTier) return bestValueTier.pricePerUnit;
-  if (product.pricingTiers.length > 0) {
-    return Math.min(...product.pricingTiers.map((t) => t.pricePerUnit));
+  mrpFrom?: number;
+  discountPercent?: number;
+  printSpec?: OptionSpec;
+}
+
+export interface FromPrice {
+  price: number;
+  discount: DisplayDiscount | null;
+}
+
+/**
+ * The single "From" price + discount used by cards, search, recent items, the
+ * PDP header and sort. The server's priceFrom/mrpFrom/discountPercent (already
+ * best-value tier x min active option multipliers) win when present; otherwise
+ * it is computed from the best-value (else cheapest) tier the same way:
+ * multiplier applied then rounded half-up to 0.01 for price and MRP, percent
+ * derived from the rounded figures.
+ */
+export function getFromPrice(product: FromPriceInput): FromPrice {
+  if (product.priceFrom !== undefined) {
+    return { price: product.priceFrom, discount: toDisplayDiscount(product.priceFrom, product.mrpFrom, product.discountPercent) };
   }
-  return product.priceFrom ?? 0;
+  const tiers = product.pricingTiers;
+  if (tiers.length === 0) return { price: 0, discount: null };
+
+  const tier = tiers.find((t) => t.isBestValue) ?? tiers.reduce((a, b) => (b.pricePerUnit < a.pricePerUnit ? b : a));
+  const m = minOptionMultiplier(product.printSpec);
+  const price = round2(tier.pricePerUnit * m);
+  if (tier.mrpPerUnit === undefined) return { price, discount: null };
+  const mrp = round2(tier.mrpPerUnit * m);
+  return { price, discount: toDisplayDiscount(price, mrp, discountPercent(mrp, price)) };
+}
+
+export function getDisplayPricePerUnit(product: FromPriceInput): number {
+  return getFromPrice(product).price;
+}
+
+export function getDisplayDiscount(product: FromPriceInput): DisplayDiscount | null {
+  return getFromPrice(product).discount;
 }
 
 export function formatPrice(amount: number, currency = "INR"): string {

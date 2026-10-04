@@ -82,7 +82,18 @@ export const useCartStore = create<CartStore>()(
           ),
         })),
 
-      setItems: (items) => set({ items }),
+      // Server sync/merge rebuilds items without addedAt; carry it over from the
+      // matching local line (never invent one) so backend mismatch labelling works.
+      setItems: (items) =>
+        set((state) => {
+          const known = new Map(state.items.map((i) => [i.cartItemId, i.addedAt]));
+          return {
+            items: items.map((i) => {
+              const addedAt = i.addedAt ?? known.get(i.cartItemId);
+              return addedAt ? { ...i, addedAt } : i;
+            }),
+          };
+        }),
 
       // Coupon is cleared when items change significantly (backend will revalidate anyway)
       setAppliedCoupon: (coupon) => set({ appliedCoupon: coupon }),

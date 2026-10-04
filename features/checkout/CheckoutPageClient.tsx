@@ -11,12 +11,13 @@ import { ReviewStep } from "@/features/checkout/ReviewStep";
 import { useCartStore } from "@/features/cart/store";
 import { useAuthStore } from "@/features/auth/store";
 import { createOrder, previewOrder, verifyPayment, isPriceChangedError } from "@/lib/api";
+import { buildClientPricing } from "./clientPricing";
 import { applyPreviewPrices, pricesDiffer } from "./repricing";
 import type { SiteStatus } from "@/lib/api/siteStatus";
 import { trackConnectivity } from "@/features/site-status/trackConnectivity";
 import { ROUTES } from "@/lib/constants/routes";
 import { RAZORPAY_THEME_COLOR } from "@/lib/constants/payment";
-import type { Address, OrderPreview, CreateOrderRequest } from "@/types";
+import type { Address, OrderPreview, CreateOrderRequest, ClientPricing } from "@/types";
 
 type PartialAddress = Omit<Address, "id" | "userId" | "isDefault">;
 
@@ -82,7 +83,7 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
     setPreview(null);
     setPreviewError(null);
     setPriceNotice(null);
-    void runPreview(address, token, "Totals below use the latest prices. Review them before placing your order.");
+    void runPreview(address, token, "Totals below use the latest prices. Review them before placing your order.", false, true);
   }
 
   // Fetches the authoritative preview and, if its line prices differ from the
@@ -92,11 +93,23 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
     addr: PartialAddress,
     token: string,
     noticeIfChanged: string,
-    forceNotice = false
+    forceNotice = false,
+    reviewStep = false
   ): Promise<OrderPreview | null> {
     setPreviewLoading(true);
     try {
-      const result = await trackConnectivity(previewOrder(buildRequest(addr), token));
+      const request = buildRequest(addr);
+      let clientPricing: ClientPricing | null = null;
+      if (reviewStep) {
+        try {
+          clientPricing = buildClientPricing(items, appliedCoupon);
+        } catch {
+          clientPricing = null;
+        }
+      }
+      const result = await trackConnectivity(
+        previewOrder(clientPricing ? { ...request, clientPricing } : request, token)
+      );
       setPreview(result);
       setPreviewError(null);
       if (pricesDiffer(items, result)) {

@@ -1,4 +1,5 @@
 import { logApiError } from "./logApiError";
+import { codedErrorMessage, formatValidationDetail } from "./validationErrors";
 
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
 
@@ -126,13 +127,13 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   let detail = "";
   let code: string | undefined;
   try {
-    const errJson = await res.json() as { message?: string; detail?: string; error?: string };
-    detail = errJson.message ?? errJson.detail ?? "";
+    const errJson = await res.json() as { message?: unknown; detail?: unknown; error?: string };
+    detail = formatValidationDetail(errJson.message) ?? formatValidationDetail(errJson.detail) ?? "";
     code = errJson.error;
   } catch (err) {
     logApiError(`apiFetch(${path}) — non-JSON error body`, err);
   }
-  throw new ApiError(detail || `API ${res.status}: ${path}`, res.status, code);
+  throw new ApiError(codedErrorMessage(code, detail) ?? (detail || `API ${res.status}: ${path}`), res.status, code);
 }
 
 export async function apiFetchPage<T>(path: string, init?: RequestInit): Promise<BackendPage<T>> {

@@ -175,7 +175,8 @@ export interface CartItem {
   totalPrice: number;
   // Optional: carts persisted before the MRP feature have none. Display-only.
   mrpPerUnit?: number;
-  addedAt: string;
+  // Optional: carts persisted before this field, and server-synced items, lack it.
+  addedAt?: string;
 }
 
 // ─── User / Auth ──────────────────────────────────────────────────────────────
@@ -267,6 +268,25 @@ export interface CreateOrderRequest {
   // Sent on createOrder only: the server rejects with 409 price_changed if its
   // total differs by more than 0.01.
   expectedTotal?: number;
+  // Sent on the review-step preview only; telemetry for price-mismatch debugging.
+  clientPricing?: ClientPricing;
+}
+
+export interface ClientPricingLine {
+  index: number;
+  productId: string;
+  quantity: number;
+  pricePerUnit: number;
+  mrpPerUnit: number | null;
+  totalPrice: number;
+  addedAt: string | null;
+}
+
+export interface ClientPricing {
+  source: "review";
+  lines: ClientPricingLine[];
+  subtotal: number | null;
+  total: number | null;
 }
 
 // POST /api/v1/orders returns the same shape as the full Order

@@ -1,8 +1,8 @@
 import { PriceDisplay, type PriceVariant } from "@/components/common/PriceDisplay";
-import { getDisplayDiscount, getDisplayPricePerUnit } from "@/lib/utils";
+import { getFromPrice } from "@/lib/utils";
 import type { Product } from "@/types";
 
-type PricedProduct = Pick<Product, "pricingTiers" | "priceFrom" | "mrpFrom" | "discountPercent">;
+type PricedProduct = Pick<Product, "pricingTiers" | "priceFrom" | "mrpFrom" | "discountPercent" | "printSpec">;
 
 interface ProductPriceProps extends Omit<React.ComponentProps<typeof PriceDisplay>, "price" | "mrp" | "percent" | "variant"> {
   product: PricedProduct;
@@ -12,11 +12,11 @@ interface ProductPriceProps extends Omit<React.ComponentProps<typeof PriceDispla
 // "From" price + its discount for a card/search/recent product, resolved the
 // same way everywhere so the MRP always belongs to the tier being priced.
 export function ProductPrice({ product, ...rest }: ProductPriceProps) {
-  const discount = getDisplayDiscount(product);
+  const { price, discount } = getFromPrice(product);
   return (
     <PriceDisplay
       {...rest}
-      price={getDisplayPricePerUnit(product)}
+      price={price}
       mrp={discount?.mrp}
       percent={discount?.percent}
     />

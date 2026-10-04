@@ -14,8 +14,8 @@ import { formatPrice, cn } from "@/lib/utils";
 import type { CartItem, Address, OrderPreview } from "@/types";
 import type { PaymentMethod } from "./PaymentStep";
 
-const SHIPPING_THRESHOLD = 999;
-const SHIPPING_COST = 99;
+export const SHIPPING_THRESHOLD = 999;
+export const SHIPPING_COST = 99;
 
 interface ReviewStepProps {
   items: CartItem[];

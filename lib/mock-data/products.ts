@@ -1,4 +1,4 @@
-import { discountPercent, round2 } from "@/lib/utils";
+import { discountPercent, getFromPrice, round2 } from "@/lib/utils";
 import type { Product, PricingTier, TurnaroundOption, PrintSpec, SidesOption, TemplateField, CustomizationMode } from "@/types";
 
 // ─── Shared turnaround options ────────────────────────────────────────────────
@@ -30,17 +30,19 @@ function makeTiers(base: number, quantities: number[], mrpFactor?: number): Pric
   });
 }
 
-// Card-level discount fields (mrpFrom/onSale…) come from the "From" tier, as the
-// backend's list endpoint derives them.
-function withSaleFields(p: Product): Product {
-  const tier = p.pricingTiers.find((t) => t.isBestValue) ?? p.pricingTiers[0];
-  if (!tier || tier.mrpPerUnit === undefined) return p;
+// Card-level fields mirror the backend's list endpoint: priceFrom/mrpFrom are the
+// best-value tier x the min active option multiplier per category (rounded
+// half-up), with the percent derived from the rounded figures.
+function withFromFields(p: Product): Product {
+  const { price, discount } = getFromPrice({ pricingTiers: p.pricingTiers, printSpec: p.printSpec });
+  if (!discount) return { ...p, priceFrom: price };
   return {
     ...p,
+    priceFrom: price,
     onSale: true,
-    mrpFrom: tier.mrpPerUnit,
-    discountPercent: tier.discountPercent,
-    discountAmount: tier.discountPerUnit,
+    mrpFrom: discount.mrp,
+    discountPercent: discount.percent,
+    discountAmount: round2(discount.mrp - price),
   };
 }
 
@@ -651,4 +653,4 @@ const baseProducts: Product[] = [
   },
 ];
 
-export const mockProducts: Product[] = baseProducts.map(withSaleFields);
+export const mockProducts: Product[] = baseProducts.map(withFromFields);

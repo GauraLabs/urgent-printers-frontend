@@ -73,7 +73,6 @@ export function mapCartItem(b: BackendCartItem): CartItem {
     pricePerUnit: b.pricePerUnit,
     totalPrice: b.totalPrice,
     mrpPerUnit: b.mrpPerUnit ?? undefined,
-    addedAt: new Date().toISOString(),
   };
 }
 
