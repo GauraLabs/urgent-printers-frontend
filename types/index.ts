@@ -85,6 +85,11 @@ export interface PricingTier {
   pricePerUnit: number;
   totalPrice: number;
   isBestValue?: boolean;
+  // Absent when no discount is active (old backend, no MRP, or outside the
+  // sale window). pricePerUnit is always the price charged right now.
+  mrpPerUnit?: number;
+  discountPercent?: number;
+  discountPerUnit?: number;
 }
 
 export interface TurnaroundOption {
@@ -92,6 +97,19 @@ export interface TurnaroundOption {
   label: string;
   businessDays: number;
   extraCost: number;
+}
+
+// Canonical "landing" configuration the shopping feed advertises (server-built).
+export interface ListingOffer {
+  quantity: number;
+  packSize: number;
+  price: number;
+  salePrice: number | null;
+  saleStartsAt: string | null;
+  saleEndsAt: string | null;
+  inStock: boolean;
+  // Precomputed PDP query string, e.g. "qty=50&size=2x2-in".
+  query: string;
 }
 
 // ─── Product ──────────────────────────────────────────────────────────────────
@@ -129,6 +147,19 @@ export interface Product {
   tags: string[];
   badge?: string;
   priceFrom?: number;
+  // All absent when no discount is active; priceFrom is the price charged now.
+  mrpFrom?: number;
+  discountPercent?: number;
+  discountAmount?: number;
+  onSale?: boolean;
+  discountEndsAt?: string;
+  // Pack/set selling. Absent on an old backend and in mock data: treat as
+  // packSize 1 / "pcs" (see lib/pack.ts normalizePack).
+  packSize?: number;
+  unitLabel?: string;
+  priceFromPack?: number;
+  mrpFromPack?: number;
+  listingOffer?: ListingOffer | null;
   customizationMode: CustomizationMode;
   templateFields: TemplateField[];
 }
@@ -150,6 +181,9 @@ export interface CartItemConfig {
   // Flat surcharge (INR) for the selected turnaround — must be persisted here
   // since it can't be reconstructed from turnaroundId alone once in the cart.
   turnaroundExtraCost: number;
+  // Copied from the product at add time; server values win after sync.
+  packSize?: number;
+  unitLabel?: string;
   artworkFileName?: string;
   artworkFileSize?: number;
   artworkFileKey?: string;
@@ -162,7 +196,14 @@ export interface CartItem {
   config: CartItemConfig;
   pricePerUnit: number;
   totalPrice: number;
-  addedAt: string;
+  // Optional: carts persisted before the MRP feature have none. Display-only.
+  mrpPerUnit?: number;
+  // Optional: carts persisted before this field, and server-synced items, lack it.
+  addedAt?: string;
+  // Set by the server when it snapped this line to whole packs; consumed once
+  // (toast) and never persisted.
+  quantityCorrected?: boolean;
+  originalQuantity?: number;
 }
 
 // ─── User / Auth ──────────────────────────────────────────────────────────────
@@ -209,6 +250,7 @@ export interface AppliedCoupon {
   discountAmount: number;   // computed server-side based on subtotal
   description: string | null;
   message: string;          // user-friendly message shown directly in UI
+  appliesToDiscountedItems?: boolean;
 }
 
 // ─── Order creation ───────────────────────────────────────────────────────────
@@ -250,6 +292,28 @@ export interface CreateOrderRequest {
   shippingAddress: CreateOrderAddress;
   paymentMethod: "cod" | "online";
   couponCode?: string;
+  // Sent on createOrder only: the server rejects with 409 price_changed if its
+  // total differs by more than 0.01.
+  expectedTotal?: number;
+  // Sent on the review-step preview only; telemetry for price-mismatch debugging.
+  clientPricing?: ClientPricing;
+}
+
+export interface ClientPricingLine {
+  index: number;
+  productId: string;
+  quantity: number;
+  pricePerUnit: number;
+  mrpPerUnit: number | null;
+  totalPrice: number;
+  addedAt: string | null;
+}
+
+export interface ClientPricing {
+  source: "review";
+  lines: ClientPricingLine[];
+  subtotal: number | null;
+  total: number | null;
 }
 
 // POST /api/v1/orders returns the same shape as the full Order
@@ -264,6 +328,11 @@ export interface OrderPreviewItem {
   pricePerUnit: number;
   totalPrice: number;
   turnaroundLabel: string;
+  mrpPerUnit?: number;
+  discountPerUnit?: number;
+  lineSavings?: number;
+  packSize?: number;
+  unitLabel?: string;
 }
 
 export interface OrderPreview {
@@ -318,12 +387,17 @@ export interface OrderItem {
   turnaroundLabel: string;
   pricePerUnit: number;
   totalPrice: number;
+  mrpPerUnit?: number;
+  discountPerUnit?: number;
+  lineSavings?: number;
   artworkFileKey?: string;
   artworkUrl?: string;
   artworkStatus?: string;
   templateData?: Record<string, string>;
   // Delivered order + this customer hasn't already reviewed the product (any order, ever).
   canReview?: boolean;
+  packSize?: number;
+  unitLabel?: string;
 }
 
 // Compact item shape used only in the orders list card
@@ -331,6 +405,8 @@ export interface OrderListItem {
   productName: string;
   thumbnailUrl: string | null;
   quantity: number;
+  packSize?: number;
+  unitLabel?: string;
 }
 
 export interface OrderPricing {
@@ -342,6 +418,9 @@ export interface OrderPricing {
   gstRate: number;
   gstAmount: number;
   totalAmount: number;
+  // Server-computed; absent from an old backend. totalSavings = mrpSavings + discountAmount.
+  mrpSavings?: number;
+  totalSavings?: number;
 }
 
 export interface OrderShippingAddress {

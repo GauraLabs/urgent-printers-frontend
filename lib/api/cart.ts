@@ -1,12 +1,13 @@
 import type { CartItem } from "@/types";
 import { apiFetch } from "./client";
 import { makeCartItemId } from "@/features/cart/cartItemId";
+import { normalizePack, isPack } from "@/lib/pack";
 
 const BASE = "/cart";
 
 // ─── Backend shape (camelCase per API spec) ───────────────────────────────────
 
-interface BackendCartItem {
+export interface BackendCartItem {
   productId: string;
   productSlug: string;
   productName: string;
@@ -26,13 +27,24 @@ interface BackendCartItem {
   turnaroundLabel: string;
   pricePerUnit: number;
   totalPrice: number;
+  // Present on GET /cart responses once the backend supports MRP discounts;
+  // the sync request never needs to send them (the server re-derives prices).
+  mrpPerUnit?: number | null;
+  discountPerUnit?: number | null;
   artworkFileKey: string | null;
   templateData: Record<string, string> | null;
+  // Absent on a backend that predates pack selling. The server derives pack data;
+  // these are never sent on sync.
+  packSize?: number | null;
+  unitLabel?: string | null;
+  quantityCorrected?: boolean | null;
+  originalQuantity?: number | null;
 }
 
 // ─── Mappers ──────────────────────────────────────────────────────────────────
 
-function mapCartItem(b: BackendCartItem): CartItem {
+export function mapCartItem(b: BackendCartItem): CartItem {
+  const pack = normalizePack(b.packSize, b.unitLabel);
   const cartItemId = makeCartItemId(
     b.productId, b.sizeId ?? "", b.paperId ?? "", b.finishId ?? "", b.sides ?? "", b.turnaroundId,
     b.artworkFileKey ?? undefined, b.templateData ?? undefined
@@ -65,10 +77,12 @@ function mapCartItem(b: BackendCartItem): CartItem {
       turnaroundExtraCost: parseFloat((b.totalPrice - b.pricePerUnit * b.quantity).toFixed(2)),
       artworkFileKey: b.artworkFileKey ?? undefined,
       templateData: b.templateData ?? undefined,
+      ...(isPack(pack.packSize) && { packSize: pack.packSize, unitLabel: pack.unitLabel }),
     },
     pricePerUnit: b.pricePerUnit,
     totalPrice: b.totalPrice,
-    addedAt: new Date().toISOString(),
+    mrpPerUnit: b.mrpPerUnit ?? undefined,
+    ...(b.quantityCorrected && { quantityCorrected: true, originalQuantity: b.originalQuantity ?? undefined }),
   };
 }
 
@@ -107,11 +121,13 @@ export async function getCart(token: string): Promise<CartItem[]> {
   return data.map(mapCartItem);
 }
 
-export async function syncCart(items: CartItem[], token: string): Promise<void> {
+/** Resolves to the lines the server snapped to whole packs (empty when none). */
+export async function syncCart(items: CartItem[], token: string): Promise<CartItem[]> {
   // REAL API: POST /api/v1/cart/sync — atomically replaces server cart
-  await apiFetch<BackendCartItem[]>(`${BASE}/sync`, {
+  const data = await apiFetch<BackendCartItem[] | null>(`${BASE}/sync`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify({ items: items.map(toSyncItem) }),
   });
+  return Array.isArray(data) ? data.filter((b) => b.quantityCorrected).map(mapCartItem) : [];
 }

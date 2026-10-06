@@ -95,10 +95,12 @@ export function useProductFilters() {
   // Backend search (Typesense /search) doesn't support category/price/tags/sort
   // params — search and catalog filters are mutually exclusive server-side, so
   // starting a search clears the other filters rather than silently ignoring them.
-  const setSearch = (q: string) => {
+  const setSearch = (q: string, opts?: { replace?: boolean }) => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
-    router.push(`${pathname}${params.toString() ? `?${params}` : ""}`, { scroll: false });
+    const url = `${pathname}${params.toString() ? `?${params}` : ""}`;
+    if (opts?.replace) router.replace(url, { scroll: false });
+    else router.push(url, { scroll: false });
   };
   const clearAll = () => router.push(pathname, { scroll: false });
 

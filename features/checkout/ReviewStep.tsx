@@ -1,18 +1,22 @@
 "use client";
 
-import Image from "next/image";
 import {
   Loader2, MapPin, CreditCard, Tag,
-  Banknote, PartyPopper, AlertCircle, Lock,
+  Banknote, AlertCircle, Lock, RefreshCw,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { SafeImage } from "@/components/common/SafeImage";
 import { useCartStore } from "@/features/cart/store";
-import { formatPrice, formatPricePerUnit, cn } from "@/lib/utils";
+import { PriceDisplay } from "@/components/common/PriceDisplay";
+import { SavingsSummary, savingsFromPricing, type Savings } from "@/components/common/SavingsSummary";
+import { cartLinePrice, cartMrpSavings, cartTotalSavings } from "@/features/cart/savings";
+import { formatQuantityLine } from "@/lib/pack";
+import { formatPrice, cn } from "@/lib/utils";
 import type { CartItem, Address, OrderPreview } from "@/types";
 import type { PaymentMethod } from "./PaymentStep";
 
-const SHIPPING_THRESHOLD = 999;
-const SHIPPING_COST = 99;
+export const SHIPPING_THRESHOLD = 999;
+export const SHIPPING_COST = 99;
 
 interface ReviewStepProps {
   items: CartItem[];
@@ -26,6 +30,8 @@ interface ReviewStepProps {
   isPlacing: boolean;
   ordersHalted: boolean;
   haltMessage: string | null;
+  /** Set when the server's prices differ from what the customer saw in the cart. */
+  priceNotice: string | null;
 }
 
 const PAYMENT_LABELS: Record<PaymentMethod, string> = {
@@ -37,7 +43,7 @@ export function ReviewStep({
   items, address, paymentMethod,
   preview, previewLoading, previewError,
   onPlaceOrder, onBack, isPlacing,
-  ordersHalted, haltMessage,
+  ordersHalted, haltMessage, priceNotice,
 }: ReviewStepProps) {
   const appliedCoupon = useCartStore((s) => s.appliedCoupon);
 
@@ -48,7 +54,16 @@ export function ReviewStep({
   const shipping      = preview?.pricing.shippingCost ?? (discountedSub >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST);
   const total         = preview?.pricing.totalAmount ?? (discountedSub + shipping);
   const gst           = preview?.pricing.gstAmount ?? parseFloat((discountedSub - discountedSub / 1.18).toFixed(2));
-  const totalSavings  = discount;
+  // Server-confirmed totalSavings when the preview is in; otherwise a client
+  // estimate (MRP savings + coupon). Either way each part is counted once.
+  const savings: Savings = preview
+    ? savingsFromPricing(preview.pricing)
+    : {
+        total: cartTotalSavings(items, discount),
+        mrp: cartMrpSavings(items),
+        coupon: discount,
+        couponCode: appliedCoupon?.code,
+      };
 
   return (
     <div className="space-y-5">
@@ -57,6 +72,16 @@ export function ReviewStep({
         <h2 className="font-heading font-bold text-lg">Review Your Order</h2>
         <p className="text-muted-foreground text-sm mt-1">Everything looks right? Place your order below.</p>
       </div>
+
+      {priceNotice && (
+        <div role="status" className="flex items-start gap-2 p-3 rounded-xl bg-brand-orange/10 border border-brand-orange/40 text-xs text-foreground">
+          <RefreshCw size={14} className="text-foreground shrink-0 mt-0.5" aria-hidden="true" />
+          <div>
+            <p className="font-semibold">Prices have been updated</p>
+            <p className="text-muted-foreground mt-0.5">{priceNotice}</p>
+          </div>
+        </div>
+      )}
 
       {/* Items */}
       <div className="rounded-2xl border border-border overflow-hidden shadow-sm">
@@ -70,7 +95,7 @@ export function ReviewStep({
             <div key={item.cartItemId} className="flex gap-3 p-4">
               <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-muted shrink-0 border border-border">
                 {item.product.thumbnailUrl ?? item.product.images[0] ? (
-                  <Image src={item.product.thumbnailUrl ?? item.product.images[0]} alt={item.product.name} fill className="object-cover" sizes="56px" />
+                  <SafeImage src={item.product.thumbnailUrl ?? item.product.images[0]} alt={item.product.name} fill className="object-cover" sizes="56px" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-muted-foreground text-[9px] font-medium px-1 text-center leading-tight">
                     {item.product.name.slice(0, 12)}
@@ -80,7 +105,7 @@ export function ReviewStep({
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm line-clamp-1">{item.product.name}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {item.config.quantity.toLocaleString("en-IN")} units
+                  {formatQuantityLine(item.config.quantity, item.config.packSize, item.config.unitLabel)}
                   {item.config.sizeLabel ? ` · ${item.config.sizeLabel}` : ""}
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -91,7 +116,11 @@ export function ReviewStep({
               </div>
               <div className="text-right shrink-0">
                 <p className="font-semibold text-sm">{formatPrice(item.totalPrice)}</p>
-                <p className="text-xs text-muted-foreground">{formatPricePerUnit(item.pricePerUnit)}/unit</p>
+                <PriceDisplay
+                  variant="line"
+                  align="end"
+                  {...cartLinePrice(item)}
+                />
               </div>
             </div>
           ))}
@@ -226,15 +255,7 @@ export function ReviewStep({
             <p className="font-heading font-bold text-2xl text-primary">{formatPrice(total)}</p>
           </div>
 
-          {/* Savings callout */}
-          {totalSavings > 0 && (
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-success/8 border border-success/25">
-              <PartyPopper size={15} className="text-success shrink-0" />
-              <p className="text-sm font-semibold text-success">
-                You're saving {formatPrice(totalSavings)} on this order!
-              </p>
-            </div>
-          )}
+          <SavingsSummary savings={savings} />
 
           {/* Payment instruction — COD */}
           {paymentMethod === "cod" && (

@@ -1,0 +1,182 @@
+{
+  "feature_found": true,
+  "feature_name": "Pack/Set Selling + Shopping Feed (Storefront)",
+  "source_files": [
+    "lib/pack.ts",
+    "lib/utils.ts",
+    "lib/structured-data.ts",
+    "lib/api/products.ts",
+    "lib/api/cart.ts",
+    "lib/api/orders.ts",
+    "lib/api/validationErrors.ts",
+    "types/index.ts",
+    "components/common/ProductPrice.tsx",
+    "components/common/PriceDisplay.tsx",
+    "components/layout/HeaderSearch.tsx",
+    "features/products/ProductCard.tsx",
+    "features/products/ProductDetailClient.tsx",
+    "features/products/StickyAddToCart.tsx",
+    "features/products/configurator/ProductConfigurator.tsx",
+    "features/products/configurator/PricingTable.tsx",
+    "features/products/configurator/preselect.ts",
+    "features/cart/store.ts",
+    "features/cart/CartDrawerItem.tsx",
+    "features/cart/CartSyncProvider.tsx",
+    "features/cart/cartItemId.ts",
+    "features/cart/savings.ts",
+    "features/checkout/ReviewStep.tsx",
+    "features/checkout/CheckoutPageClient.tsx",
+    "app/cart/page.tsx",
+    "app/products/[categorySlug]/[productSlug]/page.tsx",
+    "app/checkout/confirmation/[orderId]/page.tsx",
+    "app/account/orders/[id]/page.tsx",
+    "../urgent-printers-backend/app/services/listing_offer.py",
+    "../urgent-printers-backend/app/services/pack_quantity.py",
+    "../urgent-printers-backend/app/services/pricing.py",
+    "../urgent-printers-backend/app/services/cart_service.py",
+    "../urgent-printers-backend/app/schemas/product.py",
+    "../urgent-printers-backend/app/schemas/cart.py"
+  ],
+  "user_goal": "Buy a product that is sold only in whole packs and always see the price of a pack, never a confusing per-piece figure.",
+  "business_goal": "Sell sticker-like consumables in packs so shopping-channel listings advertise a real purchasable price, with the feed, the landing page and the charged amount all equal.",
+  "user_journey": [
+    { "step": "Browse a category and see pack pricing on the card", "route_or_state": "/products/stickers-labels" },
+    { "step": "Open the product and pick a pack tier", "route_or_state": "/products/stickers-labels/custom-diecut-stickers" },
+    { "step": "Add whole packs to the cart and adjust in pack steps", "route_or_state": "cart drawer + /cart" },
+    { "step": "Review the order and confirm totals match the server", "route_or_state": "/checkout" },
+    { "step": "See the confirmed order expressed in packs", "route_or_state": "/checkout/confirmation/[orderId]" },
+    { "step": "Arrive from a shopping channel on a preselected configuration", "route_or_state": "/products/.../...?qty=&size=&paper=&finish=&sides=&turnaround=" }
+  ],
+  "happy_path": [
+    {
+      "step_id": "hp-01",
+      "action": "Open the Stickers & Labels category listing and read the Custom Die-Cut Stickers card price block",
+      "selector": "a[href='/products/stickers-labels/custom-diecut-stickers'] (ProductCard) -> ProductPrice variant='card'",
+      "expected_result": "Card shows the pack 'From' price (price_from x pack_size = Rs 300.00) with the caption 'per 50 pcs' instead of a per-unit caption; discount percent rendering unchanged."
+    },
+    {
+      "step_id": "hp-02",
+      "action": "Open the product detail page and read the pricing tier rows",
+      "selector": "PricingTable rows: text '50 pcs · ₹750' with secondary '₹15.00/pc'",
+      "expected_result": "Each row label is '<quantity> pcs · <pack total>' with a '₹X/pc' secondary line; multi-pack rows also show '· N packs'. Pack total equals rounded unit price x quantity exactly."
+    },
+    {
+      "step_id": "hp-03",
+      "action": "Select the 5-pack (250 pcs) tier and read the configurator summary",
+      "selector": "PricingTable row for quantity 250; ProductConfigurator summary",
+      "expected_result": "Summary expresses the selection as '5 packs (250 pcs)' and the total equals the backend's compute_item_pricing total for quantity 250."
+    },
+    {
+      "step_id": "hp-04",
+      "action": "Add the selected configuration to the cart and open the cart drawer",
+      "selector": "Add to Cart button; CartDrawerItem quantity label",
+      "expected_result": "Drawer line reads '5 packs (250 pcs)' via formatQuantity, not a bare '250'."
+    },
+    {
+      "step_id": "hp-05",
+      "action": "Press the drawer quantity increase and decrease controls once each",
+      "selector": "CartDrawerItem stepper buttons -> stepQuantity(..., packSize)",
+      "expected_result": "Quantity moves by one whole pack (250 -> 300 -> 250), never by the legacy 25/50 steps, and never below one pack (50)."
+    },
+    {
+      "step_id": "hp-06",
+      "action": "Open the full cart page and read the line quantity and stepper",
+      "selector": "app/cart/page.tsx line quantity span; stepper buttons",
+      "expected_result": "Line shows formatQuantity pack text and the stepper steps in whole packs with a one-pack floor."
+    },
+    {
+      "step_id": "hp-07",
+      "action": "Go to checkout and compare the review-step totals against the backend order preview",
+      "selector": "features/checkout/ReviewStep.tsx line quantity + order summary totals",
+      "expected_result": "Line reads '5 packs (250 pcs)' via formatQuantityLine; displayed totals equal the server preview exactly, so no price_changed banner appears and no price-mismatch telemetry event is created."
+    },
+    {
+      "step_id": "hp-08",
+      "action": "Place the order with the dev/fake payment provider and read the confirmation page",
+      "selector": "app/checkout/confirmation/[orderId]/page.tsx item quantity",
+      "expected_result": "Confirmed order line is expressed in packs from the snapshotted pack_size/unit_label on the order item."
+    }
+  ],
+  "alternate_paths": [
+    {
+      "path_name": "Arrive from the shopping feed on a preselected configuration",
+      "steps": [
+        {
+          "step_id": "alt-01",
+          "action": "Open the PDP with the exact query string from the product's listing_offer (qty=50&size=2-x-2-in-square&paper=vinyl-matte&finish=diecut&sides=single-sided&turnaround=standard)",
+          "selector": "ProductConfigurator via resolvePreselection(useSearchParams()) inside <Suspense>",
+          "expected_result": "The 1-pack (50 pcs) tier and each named size/paper/finish/sides/turnaround option are selected on arrival, and the displayed total equals listing_offer.price (Rs 750.00), i.e. the feed's g:price."
+        },
+        {
+          "step_id": "alt-02",
+          "action": "Read the JSON-LD block emitted on that same PDP",
+          "selector": "script[type='application/ld+json'] -> offers",
+          "expected_result": "offers is a single Offer (not AggregateOffer) whose price equals the same listing_offer value, with priceCurrency INR, availability, itemCondition and seller; product name carries the 'Pack of 50 pcs' suffix."
+        }
+      ]
+    },
+    {
+      "path_name": "A pack_size=1 product is untouched",
+      "steps": [
+        {
+          "step_id": "alt-03",
+          "action": "Open a pack_size=1 product's card, PDP and cart line",
+          "selector": "/products/business-cards/standard-business-cards",
+          "expected_result": "Card caption, PDP tier rows, cart quantity text and the legacy 25/50 cart steppers all render exactly as before pack selling existed; no pack or unit-label text anywhere."
+        }
+      ]
+    }
+  ],
+  "error_paths": [
+    {
+      "step_id": "err-01",
+      "trigger": "PDP opened with unknown or malformed preselect params (qty=37, size=not-a-size, turnaround=bogus)",
+      "expected_ui_response": "Every unresolvable value is dropped and the configurator keeps its defaults; the page renders normally with no error and no console exception.",
+      "selector": "resolvePreselection in features/products/configurator/preselect.ts"
+    },
+    {
+      "step_id": "err-02",
+      "trigger": "Server returns 422 invalid_pack_multiple for a cart or order request whose quantity is not a whole number of packs",
+      "expected_ui_response": "The coded message from lib/api/validationErrors.ts is surfaced and the shopper is sent back to the cart rather than left on a dead checkout step.",
+      "selector": "lib/api/validationErrors.ts -> invalid_pack_multiple"
+    },
+    {
+      "step_id": "err-03",
+      "trigger": "A persisted guest cart holds a legacy non-multiple quantity (e.g. 120 pcs of a pack-50 product) and is synced on load",
+      "expected_ui_response": "The server snaps the line to the nearest whole pack and returns quantityCorrected with originalQuantity; the store adopts the corrected quantity and shows exactly one toast 'Quantity adjusted to full packs (was 120)'.",
+      "selector": "features/cart/CartSyncProvider.tsx toast copy; features/cart/store.ts fix merge"
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "MRP is set per pack, so the strikethrough must be the pack MRP and not the per-unit MRP",
+      "existing_validation": "getFromPackPrice in lib/utils.ts and PriceDisplay render mrpFromPack / packPrice(mrp, packSize); percent off is computed from the same pair",
+      "risk_note": "A float multiplication here would drift by a paisa at large pack sizes; lib/pack.ts packPrice multiplies in integer cents specifically to avoid that. Worth asserting the struck figure equals mrp_per_unit x pack_size exactly."
+    },
+    {
+      "case": "Pack price must equal the amount actually charged, including option multipliers",
+      "existing_validation": "PricingTable uses the configurator's priceTier total (already unit-rounded) rather than recomputing pack x multiplier",
+      "risk_note": "Spec section 11 allows option multipliers to move the pack figure by up to pack_size x 0.005 versus 'base pack x multiplier'. Display must follow the charge, not the other way round."
+    },
+    {
+      "case": "Cart store rehydration before useMounted renders SSR defaults",
+      "existing_validation": "useMounted gate in HeaderActions / MobileBottomNav per the repo's hydration rule",
+      "risk_note": "A screenshot or assertion taken too early reads 0 items and would make pack quantity text look missing when it is merely not hydrated yet."
+    },
+    {
+      "case": "Stepping down repeatedly must floor at one pack, never 0 or a partial pack",
+      "existing_validation": "stepQuantity -> Math.max(size, base - size) in lib/pack.ts",
+      "risk_note": "A 0 or partial quantity would be rejected by the backend with invalid_pack_multiple on the next write, turning a UI slip into a failed checkout."
+    },
+    {
+      "case": "Pack data absent from a stale backend response or an old persisted cart entry",
+      "existing_validation": "normalizePack defaults to size 1 / 'pcs' for anything non-integer or < 1",
+      "risk_note": "Without the default, a pack-aware stepper would divide by undefined and strand the line at NaN."
+    }
+  ],
+  "gaps": [
+    "GET /api/v1/feeds/products.xml cannot be exercised over HTTP locally: resolve_link_base rejects a localhost FRONTEND_URL, so the route returns 503 feed_not_configured. Feed body content is therefore verified through the backend suite (tests/api/test_shopping_feed.py) and an in-process render against the dev DB, not through the storefront.",
+    "The storefront never reads quantity_steps (deprecated per spec D6), so there is nothing to assert for it on this side.",
+    "Price sorting and min/max price filters remain per-unit by design (spec D5), so a mixed-pack-size card list can legitimately look unsorted by pack price; this is a documented limitation, not a testable defect."
+  ]
+}

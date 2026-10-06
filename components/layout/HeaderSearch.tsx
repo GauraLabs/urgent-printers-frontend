@@ -2,14 +2,16 @@
 
 import { useState, useRef, useEffect, useId } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { Search, X, Loader2, ArrowRight, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { SafeImage } from "@/components/common/SafeImage";
 import { searchProducts } from "@/lib/api";
 import { useDebounce } from "@/hooks/useDebounce";
 import { ROUTES } from "@/lib/constants/routes";
-import { formatPricePerUnit, cn } from "@/lib/utils";
+import { ProductPrice } from "@/components/common/ProductPrice";
+import { cn } from "@/lib/utils";
+import type { Product } from "@/types";
 
 const POPULAR = [
   "Business Cards",
@@ -19,6 +21,10 @@ const POPULAR = [
   "Packaging Boxes",
   "Brochures",
 ];
+
+function hasPrice(product: Product): boolean {
+  return product.pricingTiers.length > 0 || product.priceFrom !== undefined;
+}
 
 export function HeaderSearch() {
   const router = useRouter();
@@ -168,16 +174,6 @@ export function HeaderSearch() {
               </div>
               <div id={listboxId} role="listbox" aria-label="Search results" className="py-1">
                 {results.map((product, i) => {
-                  // "From" price merchandises the best-value tier, not the
-                  // mathematically cheapest per-unit price (usually the
-                  // highest-quantity tier). Falls back to the true lowest
-                  // price, then priceFrom, if no tier is flagged.
-                  const bestValueTier = product.pricingTiers.find((t) => t.isBestValue);
-                  const unitPrice = bestValueTier
-                    ? bestValueTier.pricePerUnit
-                    : product.pricingTiers.length > 0
-                      ? Math.min(...product.pricingTiers.map((t) => t.pricePerUnit))
-                      : product.priceFrom;
                   return (
                     <Link
                       key={product.id}
@@ -192,7 +188,7 @@ export function HeaderSearch() {
                       )}
                     >
                       <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-muted border border-border shrink-0">
-                        <Image
+                        <SafeImage
                           src={product.images[0]}
                           alt={product.name}
                           fill
@@ -204,10 +200,16 @@ export function HeaderSearch() {
                         <p className="text-sm font-medium line-clamp-1">{product.name}</p>
                         <p className="text-xs text-muted-foreground">{product.categoryName}</p>
                       </div>
-                      {unitPrice !== undefined && (
-                        <p className="text-xs font-semibold text-primary shrink-0">
-                          from {formatPricePerUnit(unitPrice)}/unit
-                        </p>
+                      {hasPrice(product) && (
+                        <ProductPrice
+                          variant="compact"
+                          align="end"
+                          prefix="from"
+                          unitLabel="/unit"
+                          product={product}
+                          className="whitespace-nowrap font-semibold text-primary"
+                          priceClassName="text-primary"
+                        />
                       )}
                     </Link>
                   );

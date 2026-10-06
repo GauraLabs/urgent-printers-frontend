@@ -1,18 +1,22 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { EmptyState } from "@/components/common/EmptyState";
+import { SafeImage } from "@/components/common/SafeImage";
 import { useCartStore } from "@/features/cart/store";
 import { useAuthStore } from "@/features/auth/store";
 import { useMounted } from "@/hooks/useMounted";
 import { validateCoupon } from "@/lib/api";
 import { trackConnectivity } from "@/features/site-status/trackConnectivity";
 import { ROUTES } from "@/lib/constants/routes";
-import { formatPrice, formatPricePerUnit, slugify, cn } from "@/lib/utils";
+import { PriceDisplay } from "@/components/common/PriceDisplay";
+import { SavingsSummary } from "@/components/common/SavingsSummary";
+import { cartLinePrice, cartMrpSavings, cartTotalSavings, eligibleSubtotal } from "@/features/cart/savings";
+import { formatPrice, slugify, cn } from "@/lib/utils";
+import { formatQuantity, isPack, stepQuantity } from "@/lib/pack";
 
 function CartSkeleton() {
   return (
@@ -78,6 +82,8 @@ export default function CartPage() {
   const shipping          = discountedSub >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
   const total             = discountedSub + shipping;
   const gst               = parseFloat((discountedSub - discountedSub / 1.18).toFixed(2));
+  // Display-only: checkout replaces this with the server's totalSavings.
+  const mrpSavings        = cartMrpSavings(items);
 
   async function handleApplyPromo() {
     const code = promoInput.trim().toUpperCase();
@@ -85,7 +91,7 @@ export default function CartPage() {
     setPromoError("");
     setValidating(true);
     try {
-      const coupon = await trackConnectivity(validateCoupon(code, subtotal, token));
+      const coupon = await trackConnectivity(validateCoupon(code, subtotal, token, eligibleSubtotal(items)));
       setAppliedCoupon(coupon);
       setPromoInput("");
     } catch (err) {
@@ -141,7 +147,7 @@ export default function CartPage() {
                     className="relative shrink-0 w-20 h-20 rounded-xl overflow-hidden bg-muted border border-border"
                   >
                     {item.product.thumbnailUrl ?? item.product.images[0] ? (
-                      <Image
+                      <SafeImage
                         src={item.product.thumbnailUrl ?? item.product.images[0]}
                         alt={item.product.name}
                         fill
@@ -183,24 +189,24 @@ export default function CartPage() {
                     <div className="mt-3 space-y-2">
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => {
-                            const step = item.config.quantity <= 100 ? 25 : 50;
-                            const next = Math.max(25, item.config.quantity - step);
-                            updateQuantity(item.cartItemId, next);
-                          }}
+                          onClick={() =>
+                            updateQuantity(
+                              item.cartItemId,
+                              stepQuantity(item.config.quantity, "down", item.config.packSize, { legacyMin: 25 })
+                            )
+                          }
                           aria-label="Decrease quantity"
                           className="w-7 h-7 flex items-center justify-center rounded-lg border border-border hover:bg-muted transition-colors"
                         >
                           <Minus size={12} />
                         </button>
-                        <span className="text-sm font-semibold w-12 text-center">
-                          {item.config.quantity.toLocaleString("en-IN")}
+                        <span className={cn("text-sm font-semibold text-center", isPack(item.config.packSize) ? "min-w-12" : "w-12")}>
+                          {formatQuantity(item.config.quantity, item.config.packSize, item.config.unitLabel)}
                         </span>
                         <button
-                          onClick={() => {
-                            const step = item.config.quantity < 100 ? 25 : 50;
-                            updateQuantity(item.cartItemId, item.config.quantity + step);
-                          }}
+                          onClick={() =>
+                            updateQuantity(item.cartItemId, stepQuantity(item.config.quantity, "up", item.config.packSize))
+                          }
                           aria-label="Increase quantity"
                           className="w-7 h-7 flex items-center justify-center rounded-lg border border-border hover:bg-muted transition-colors"
                         >
@@ -208,9 +214,11 @@ export default function CartPage() {
                         </button>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">
-                          × {formatPricePerUnit(item.pricePerUnit)}/unit
-                        </span>
+                        <PriceDisplay
+                          variant="line"
+                          prefix="×"
+                          {...cartLinePrice(item)}
+                        />
                         <p className="font-heading font-bold text-base">
                           {formatPrice(item.totalPrice)}
                         </p>
@@ -303,15 +311,10 @@ export default function CartPage() {
                 <p className="font-heading font-bold text-xl text-primary">{formatPrice(total)}</p>
               </div>
 
-              {/* Savings callout */}
-              {discount > 0 && (
-                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-success/8 border border-success/25">
-                  <CheckCircle2 size={13} className="text-success shrink-0" />
-                  <p className="text-xs font-semibold text-success">
-                    You're saving {formatPrice(discount)}!
-                  </p>
-                </div>
-              )}
+              <SavingsSummary
+                variant="inline"
+                savings={{ total: cartTotalSavings(items, discount), mrp: mrpSavings, coupon: discount, couponCode: appliedCoupon?.code }}
+              />
 
               {/* Coupon input */}
               {appliedCoupon ? (

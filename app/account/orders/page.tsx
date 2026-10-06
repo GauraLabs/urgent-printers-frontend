@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { ArrowRight, Package, Loader2 } from "lucide-react";
 import { getOrders } from "@/lib/api";
 import { useAuthStore } from "@/features/auth/store";
 import { EmptyState } from "@/components/common/EmptyState";
+import { SafeImage } from "@/components/common/SafeImage";
 import { ROUTES } from "@/lib/constants/routes";
 import { formatPrice } from "@/lib/utils";
+import { summarizeOrderQuantity } from "@/lib/pack";
 import { ORDER_STATUS_LABELS } from "@/lib/constants/print-specs";
 import { ORDER_STATUS_COLORS } from "@/lib/constants/order-status";
 import type { OrderCard } from "@/types";
@@ -78,7 +79,7 @@ export default function OrdersPage() {
                   {order.items.slice(0, 3).map((item, i) => (
                     <div key={i} className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-background bg-muted shrink-0">
                       {item.thumbnailUrl ? (
-                        <Image src={item.thumbnailUrl} alt={item.productName} fill className="object-cover" sizes="48px" />
+                        <SafeImage src={item.thumbnailUrl} alt={item.productName} fill className="object-cover" sizes="48px" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-[9px] font-medium text-muted-foreground px-1 text-center leading-tight">
                           {item.productName.slice(0, 8)}
@@ -97,7 +98,7 @@ export default function OrdersPage() {
                     {order.items.map((i) => i.productName).join(", ")}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {order.items.reduce((s, i) => s + i.quantity, 0).toLocaleString("en-IN")} total units
+                    {summarizeOrderQuantity(order.items)}
                   </p>
                 </div>
                 <p className="font-heading font-bold text-base shrink-0">{formatPrice(order.totalAmount)}</p>

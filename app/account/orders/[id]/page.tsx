@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, ExternalLink, Loader2, XCircle, Lock, CreditCard, Download, FileSearch } from "lucide-react";
+import { SafeImage } from "@/components/common/SafeImage";
 import { getOrderById, cancelOrder, verifyPayment, downloadReceipt } from "@/lib/api";
 import ItemProofPanel from "./ItemProofPanel";
 import { useAuthStore } from "@/features/auth/store";
@@ -12,7 +12,11 @@ import { useOrderItemCategorySlugs } from "@/hooks/useOrderItemCategorySlugs";
 import { OrderStatusTracker } from "@/features/account/OrderStatusTracker";
 import { Separator } from "@/components/ui/separator";
 import { ROUTES } from "@/lib/constants/routes";
-import { formatPrice, formatPricePerUnit } from "@/lib/utils";
+import { PriceDisplay } from "@/components/common/PriceDisplay";
+import { SavingsSummary, savingsFromPricing } from "@/components/common/SavingsSummary";
+import { formatPrice } from "@/lib/utils";
+import { formatQuantityLine } from "@/lib/pack";
+import { orderLinePrice } from "@/features/cart/savings";
 import { ORDER_STATUS_LABELS, SHIPMENT_STATUS_LABELS } from "@/lib/constants/print-specs";
 import { SHIPMENT_STATUS_COLORS } from "@/lib/constants/order-status";
 import { RAZORPAY_THEME_COLOR } from "@/lib/constants/payment";
@@ -341,7 +345,7 @@ export default function OrderDetailPage() {
               <div className="flex gap-4 p-5">
                 <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-muted border border-border shrink-0">
                   {item.thumbnailUrl ? (
-                    <Image src={item.thumbnailUrl} alt={item.productName} fill className="object-cover" sizes="64px" />
+                    <SafeImage src={item.thumbnailUrl} alt={item.productName} fill className="object-cover" sizes="64px" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[9px] text-muted-foreground font-medium px-1 text-center leading-tight">
                       {item.productName.slice(0, 12)}
@@ -377,7 +381,7 @@ export default function OrderDetailPage() {
                       {item.sides
                         ? `${item.sides.toLowerCase().includes("double") ? "Double-sided" : "Single-sided"} · `
                         : ""}
-                      {item.quantity.toLocaleString("en-IN")} units
+                      {formatQuantityLine(item.quantity, item.packSize, item.unitLabel)}
                     </p>
                     <p>{item.turnaroundLabel}</p>
                     {item.artworkStatus && item.artworkStatus !== "none" && (
@@ -390,7 +394,11 @@ export default function OrderDetailPage() {
                 </div>
                 <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
                   <p className="font-semibold text-sm">{formatPrice(item.totalPrice)}</p>
-                  <p className="text-xs text-muted-foreground">{formatPricePerUnit(item.pricePerUnit)}/unit</p>
+                  <PriceDisplay
+                    variant="line"
+                    align="end"
+                    {...orderLinePrice(item)}
+                  />
                   {order.status === "delivered" && (
                     item.canReview ? (
                       <Link
@@ -443,6 +451,7 @@ export default function OrderDetailPage() {
               </span>
             </div>
             <Separator />
+            <SavingsSummary savings={savingsFromPricing(p)} variant="inline" />
             <div className="flex justify-between font-heading font-bold text-base">
               <span>Total</span>
               <span>{formatPrice(p.totalAmount)}</span>

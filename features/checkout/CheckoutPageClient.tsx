@@ -10,12 +10,14 @@ import { PaymentStep, type PaymentMethod } from "@/features/checkout/PaymentStep
 import { ReviewStep } from "@/features/checkout/ReviewStep";
 import { useCartStore } from "@/features/cart/store";
 import { useAuthStore } from "@/features/auth/store";
-import { createOrder, previewOrder, verifyPayment } from "@/lib/api";
+import { createOrder, previewOrder, verifyPayment, isPriceChangedError, isInvalidPackMultipleError } from "@/lib/api";
+import { buildClientPricing } from "./clientPricing";
+import { applyPreviewPrices, pricesDiffer } from "./repricing";
 import type { SiteStatus } from "@/lib/api/siteStatus";
 import { trackConnectivity } from "@/features/site-status/trackConnectivity";
 import { ROUTES } from "@/lib/constants/routes";
 import { RAZORPAY_THEME_COLOR } from "@/lib/constants/payment";
-import type { Address, OrderPreview, CreateOrderRequest } from "@/types";
+import type { Address, OrderPreview, CreateOrderRequest, ClientPricing } from "@/types";
 
 type PartialAddress = Omit<Address, "id" | "userId" | "isDefault">;
 
@@ -30,6 +32,7 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
   const appliedCoupon    = useCartStore((s) => s.appliedCoupon);
   const clearCart        = useCartStore((s) => s.clearCart);
   const setAppliedCoupon = useCartStore((s) => s.setAppliedCoupon);
+  const setItems         = useCartStore((s) => s.setItems);
 
   const [step,           setStep]           = useState<CheckoutStep>(1);
   const [address,        setAddress]        = useState<PartialAddress | null>(null);
@@ -38,6 +41,7 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
   const [preview,        setPreview]        = useState<OrderPreview | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError,   setPreviewError]   = useState<string | null>(null);
+  const [priceNotice,    setPriceNotice]    = useState<string | null>(null);
 
   const buildRequest = useCallback((addr: PartialAddress): CreateOrderRequest => ({
     items: items.map((item) => ({
@@ -78,12 +82,53 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
 
     setPreview(null);
     setPreviewError(null);
-    setPreviewLoading(true);
+    setPriceNotice(null);
+    void runPreview(address, token, "Totals below use the latest prices. Review them before placing your order.", false, true);
+  }
 
-    trackConnectivity(previewOrder(buildRequest(address), token))
-      .then(setPreview)
-      .catch((err) => setPreviewError(err instanceof Error ? err.message : "Could not compute pricing."))
-      .finally(() => setPreviewLoading(false));
+  // Fetches the authoritative preview and, if its line prices differ from the
+  // cart (a sale window opened/closed since the item was added), adopts them
+  // and shows `noticeIfChanged`. Returns the preview so callers can chain.
+  async function runPreview(
+    addr: PartialAddress,
+    token: string,
+    noticeIfChanged: string,
+    forceNotice = false,
+    reviewStep = false
+  ): Promise<OrderPreview | null> {
+    setPreviewLoading(true);
+    try {
+      const request = buildRequest(addr);
+      let clientPricing: ClientPricing | null = null;
+      if (reviewStep) {
+        try {
+          clientPricing = buildClientPricing(items, appliedCoupon);
+        } catch {
+          clientPricing = null;
+        }
+      }
+      const result = await trackConnectivity(
+        previewOrder(clientPricing ? { ...request, clientPricing } : request, token)
+      );
+      setPreview(result);
+      setPreviewError(null);
+      if (pricesDiffer(items, result)) {
+        setItems(applyPreviewPrices(items, result));
+        setPriceNotice(noticeIfChanged);
+      } else if (forceNotice) {
+        setPriceNotice(noticeIfChanged);
+      }
+      return result;
+    } catch (err) {
+      if (isInvalidPackMultipleError(err)) {
+        toast.error(`${err instanceof Error ? err.message : "Quantity must be in whole packs."} Update it in your cart.`);
+        router.push(ROUTES.cart);
+      }
+      setPreviewError(err instanceof Error ? err.message : "Could not compute pricing.");
+      return null;
+    } finally {
+      setPreviewLoading(false);
+    }
   }
 
   function finishOrder(orderId: string) {
@@ -110,7 +155,15 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
       // is still enforced server-side even if the button were somehow
       // clicked (e.g. stale client state). Falls into the same catch below
       // as any other order-creation failure — no separate short-circuit.
-      const order = await trackConnectivity(createOrder(buildRequest(address), token));
+      // expectedTotal is the total the customer is looking at; if the server's
+      // price differs (e.g. a sale ended mid-checkout) it answers 409
+      // price_changed and creates nothing, so we re-preview and ask again.
+      const order = await trackConnectivity(
+        createOrder(
+          { ...buildRequest(address), ...(preview && { expectedTotal: preview.pricing.totalAmount }) },
+          token
+        )
+      );
 
       // ── COD: no payment gateway needed ──────────────────────────────────────
       if (paymentMethod === "cod") {
@@ -229,7 +282,20 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
       }
 
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to place order. Please try again.");
+      if (isPriceChangedError(err)) {
+        await runPreview(
+          address,
+          token,
+          "Prices changed while you were checking out. Nothing has been charged. Please review the new total and confirm again.",
+          true
+        );
+        toast.error("Prices have changed. Please review the updated total and confirm again.");
+      } else if (isInvalidPackMultipleError(err)) {
+        toast.error(`${err instanceof Error ? err.message : "Quantity must be in whole packs."} Update it in your cart.`);
+        router.push(ROUTES.cart);
+      } else {
+        toast.error(err instanceof Error ? err.message : "Failed to place order. Please try again.");
+      }
       setIsPlacing(false);
     }
   }
@@ -262,6 +328,7 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
           isPlacing={isPlacing}
           ordersHalted={siteStatus.orders_halted}
           haltMessage={siteStatus.message}
+          priceNotice={priceNotice}
         />
       )}
     </div>

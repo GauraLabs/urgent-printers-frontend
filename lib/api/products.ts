@@ -7,9 +7,11 @@ import type {
   SidesOption,
   CustomizationMode,
   TemplateField,
+  ListingOffer,
 } from "@/types";
+import { normalizePack, packPrice } from "@/lib/pack";
 import { mockProducts } from "@/lib/mock-data";
-import { slugify } from "@/lib/utils";
+import { getDisplayPricePerUnit, minOptionMultiplier, round2, slugify } from "@/lib/utils";
 import { delay } from "./delay";
 import { apiFetch, apiFetchPage } from "./client";
 import { getCategories } from "./categories";
@@ -17,7 +19,7 @@ import { logApiError } from "./logApiError";
 
 // ─── Backend shapes ───────────────────────────────────────────────────────────
 
-interface BackendProductCard {
+export interface BackendProductCard {
   id: number;
   name: string;
   slug: string;
@@ -31,21 +33,53 @@ interface BackendProductCard {
   thumbnail_url: string | null;
   medium_url: string | null;
   price_from: number | null;
+  // Discount fields are absent from a backend that predates the MRP feature
+  // and null while no discount is active.
+  mrp_from?: number | null;
+  discount_percent?: number | null;
+  discount_amount?: number | null;
+  on_sale?: boolean;
+  // Pack fields are absent from a backend that predates pack selling.
+  pack_size?: number | null;
+  unit_label?: string | null;
+  price_from_pack?: number | null;
+  mrp_from_pack?: number | null;
   rating: number;
   review_count: number;
 }
 
-interface BackendProductDetail extends BackendProductCard {
+export interface BackendListingOffer {
+  quantity: number;
+  pack_size?: number | null;
+  price: number | string;
+  sale_price?: number | string | null;
+  sale_starts_at?: string | null;
+  sale_ends_at?: string | null;
+  in_stock?: boolean;
+  query?: string | null;
+}
+
+export interface BackendProductDetail extends BackendProductCard {
   description: string | null;
   images: { thumb: string; md: string; lg: string; original: string }[];
   video_url: string | null;
   video_thumbnail_url: string | null;
-  sizes: { label: string; width: number; height: number; unit: string; is_active: boolean; price_multiplier: number; is_default: boolean }[];
-  paper_types: { label: string; gsm: number | null; is_active: boolean; price_multiplier: number; is_default: boolean }[];
-  finishes: { label: string; is_active: boolean; price_multiplier: number; is_default: boolean }[];
-  sides_options: { label: string; price_multiplier: number; is_default: boolean }[];
+  sizes: { id?: string | null; label: string; width: number; height: number; unit: string; is_active: boolean; price_multiplier: number; is_default: boolean }[];
+  paper_types: { id?: string | null; label: string; gsm: number | null; is_active: boolean; price_multiplier: number; is_default: boolean }[];
+  finishes: { id?: string | null; label: string; is_active: boolean; price_multiplier: number; is_default: boolean }[];
+  // is_active is absent on backends that predate it; absent means active.
+  sides_options: { label: string; price_multiplier: number; is_default: boolean; is_active?: boolean }[];
   quantity_steps: number[];
-  pricing_tiers: { quantity: number; price_per_unit: number; is_best_value: boolean }[];
+  pricing_tiers: {
+    quantity: number;
+    price_per_unit: number;
+    is_best_value: boolean;
+    mrp_per_unit?: number | null;
+    discount_percent?: number | null;
+    discount_per_unit?: number | null;
+  }[];
+  discount_ends_at?: string | null;
+  listing_offer?: BackendListingOffer | null;
   turnaround_options: { type: string; days: number; extra_cost: number; is_active: boolean }[];
   seo: { title: string | null; description: string | null; canonical_url: string | null };
   customization_mode: string;
@@ -65,7 +99,7 @@ interface BackendProductDetail extends BackendProductCard {
 // thumbnail_url and base_price are now indexed and present here, but
 // category_slug/category_name still are not — mapSearchDoc() below still
 // bridges that part of the gap via the categoryMap parameter.
-interface BackendSearchDoc {
+export interface BackendSearchDoc {
   id: string;
   name: string;
   description: string;
@@ -80,6 +114,12 @@ interface BackendSearchDoc {
   tags: string[];
   base_price: number | null;
   thumbnail_url: string | null;
+  base_mrp?: number | null;
+  discount_percent?: number | null;
+  discount_amount?: number | null;
+  has_discount?: boolean;
+  pack_size?: number | null;
+  unit_label?: string | null;
   // Not indexed by Typesense yet — treated as optional/absent, same posture as
   // category_slug/category_name below, until search results carry it too.
   medium_url?: string | null;
@@ -98,7 +138,58 @@ const EMPTY_PRINT_SPEC: PrintSpec = {
 
 // ─── Mappers ──────────────────────────────────────────────────────────────────
 
-function mapCard(c: BackendProductCard): Product {
+function discountFields(src: {
+  mrp?: number | null;
+  percent?: number | null;
+  amount?: number | null;
+  onSale?: boolean;
+}): Pick<Product, "mrpFrom" | "discountPercent" | "discountAmount" | "onSale"> {
+  return {
+    mrpFrom: src.mrp ?? undefined,
+    discountPercent: src.percent ?? undefined,
+    discountAmount: src.amount ?? undefined,
+    onSale: src.onSale ?? false,
+  };
+}
+
+function mapListingOffer(o: BackendListingOffer | null | undefined): ListingOffer | null {
+  if (!o) return null;
+  const price = Number(o.price);
+  if (!Number.isFinite(price)) return null;
+  const sale = o.sale_price === null || o.sale_price === undefined ? null : Number(o.sale_price);
+  return {
+    quantity: o.quantity,
+    packSize: normalizePack(o.pack_size).packSize,
+    price,
+    salePrice: sale !== null && Number.isFinite(sale) ? sale : null,
+    saleStartsAt: o.sale_starts_at ?? null,
+    saleEndsAt: o.sale_ends_at ?? null,
+    inStock: o.in_stock ?? true,
+    query: o.query ?? "",
+  };
+}
+
+function packFields(src: {
+  packSize?: number | null;
+  unitLabel?: string | null;
+  priceFrom?: number | null;
+  mrpFrom?: number | null;
+  priceFromPack?: number | null;
+  mrpFromPack?: number | null;
+}): Pick<Product, "packSize" | "unitLabel" | "priceFromPack" | "mrpFromPack"> {
+  const { packSize, unitLabel } = normalizePack(src.packSize, src.unitLabel);
+  if (packSize === 1) return { packSize, unitLabel };
+  // Server pack figures win; otherwise derive from the already-rounded
+  // per-unit price so a card is never left showing a per-unit price.
+  return {
+    packSize,
+    unitLabel,
+    priceFromPack: src.priceFromPack ?? (src.priceFrom != null ? packPrice(src.priceFrom, packSize) : undefined),
+    mrpFromPack: src.mrpFromPack ?? (src.mrpFrom != null ? packPrice(src.mrpFrom, packSize) : undefined),
+  };
+}
+
+export function mapCard(c: BackendProductCard): Product {
   const imageUrl = c.thumbnail_url ?? `https://picsum.photos/seed/${c.slug}/600/400`;
   return {
     id: String(c.id),
@@ -123,12 +214,14 @@ function mapCard(c: BackendProductCard): Product {
     tags: c.tags,
     badge: c.badge,
     priceFrom: c.price_from ?? undefined,
+    ...discountFields({ mrp: c.mrp_from, percent: c.discount_percent, amount: c.discount_amount, onSale: c.on_sale }),
+    ...packFields({ packSize: c.pack_size, unitLabel: c.unit_label, priceFrom: c.price_from, mrpFrom: c.mrp_from, priceFromPack: c.price_from_pack, mrpFromPack: c.mrp_from_pack }),
     customizationMode: "none" as CustomizationMode,
     templateFields: [],
   };
 }
 
-function mapDetail(d: BackendProductDetail): Product {
+export function mapDetail(d: BackendProductDetail): Product {
   const lgImages = d.images.map((i) => i.lg);
   const images =
     lgImages.length > 0
@@ -138,7 +231,7 @@ function mapDetail(d: BackendProductDetail): Product {
   const sizes: SizeOption[] = d.sizes
     .filter((s) => s.is_active)
     .map((s) => ({
-      id: slugify(s.label),
+      id: s.id || slugify(s.label),
       label: s.label,
       width: s.width,
       height: s.height,
@@ -150,7 +243,7 @@ function mapDetail(d: BackendProductDetail): Product {
   const papers = d.paper_types
     .filter((p) => p.is_active)
     .map((p) => ({
-      id: slugify(p.label),
+      id: p.id || slugify(p.label),
       label: p.label,
       weight: p.gsm ? `${p.gsm}gsm` : "",
       description: p.label,
@@ -161,14 +254,16 @@ function mapDetail(d: BackendProductDetail): Product {
   const finishes = d.finishes
     .filter((f) => f.is_active)
     .map((f) => ({
-      id: slugify(f.label),
+      id: f.id || slugify(f.label),
       label: f.label,
       description: f.label,
       priceMultiplier: f.price_multiplier,
       isDefault: f.is_default,
     }));
 
-  const sides: SidesOption[] = d.sides_options.map((s) => ({
+  const sides: SidesOption[] = d.sides_options
+    .filter((s) => s.is_active !== false)
+    .map((s) => ({
     label: s.label,
     priceMultiplier: s.price_multiplier,
     isDefault: s.is_default,
@@ -181,6 +276,9 @@ function mapDetail(d: BackendProductDetail): Product {
     pricePerUnit: t.price_per_unit,
     totalPrice: parseFloat((t.quantity * t.price_per_unit).toFixed(2)),
     isBestValue: t.is_best_value,
+    mrpPerUnit: t.mrp_per_unit ?? undefined,
+    discountPercent: t.discount_percent ?? undefined,
+    discountPerUnit: t.discount_per_unit ?? undefined,
   }));
 
   const turnaroundOptions = d.turnaround_options
@@ -218,6 +316,10 @@ function mapDetail(d: BackendProductDetail): Product {
     tags: d.tags,
     badge: d.badge,
     priceFrom: d.price_from ?? undefined,
+    ...discountFields({ mrp: d.mrp_from, percent: d.discount_percent, amount: d.discount_amount, onSale: d.on_sale }),
+    ...packFields({ packSize: d.pack_size, unitLabel: d.unit_label, priceFrom: d.price_from, mrpFrom: d.mrp_from, priceFromPack: d.price_from_pack, mrpFromPack: d.mrp_from_pack }),
+    listingOffer: mapListingOffer(d.listing_offer),
+    discountEndsAt: d.discount_ends_at ?? undefined,
     customizationMode: (d.customization_mode ?? "none") as CustomizationMode,
     templateFields: (d.template_fields ?? []).map((f) => ({
       id: f.id,
@@ -233,7 +335,7 @@ function mapDetail(d: BackendProductDetail): Product {
 // Typesense now indexes thumbnail_url/base_price, so search results carry a
 // real image and price. category_slug/category_name are still not indexed,
 // so those keep coming from the categoryMap lookup below.
-function mapSearchDoc(
+export function mapSearchDoc(
   d: BackendSearchDoc,
   categoryMap: Map<number, { slug: string; name: string }>
 ): Product {
@@ -260,6 +362,8 @@ function mapSearchDoc(
     tags: d.tags ?? [],
     badge: d.badge,
     priceFrom: d.base_price ?? undefined,
+    ...discountFields({ mrp: d.base_mrp, percent: d.discount_percent, amount: d.discount_amount, onSale: d.has_discount }),
+    ...packFields({ packSize: d.pack_size, unitLabel: d.unit_label, priceFrom: d.base_price, mrpFrom: d.base_mrp }),
     customizationMode: "none" as CustomizationMode,
     templateFields: [],
   };
@@ -275,16 +379,8 @@ const SORT_MAP: Record<NonNullable<ProductFilters["sort"]>, string> = {
   popular: "featured",
 };
 
-// Tiers are ordered by ascending quantity, not ascending price — per-unit price
-// falls as quantity rises, so pricingTiers[0] is the *most* expensive tier, not
-// the cheapest. Used for "From ₹X" sort/display; falls back to priceFrom when a
-// product has no tiers loaded (e.g. card-shape search docs).
-function lowestPricePerUnit(product: Product): number {
-  return product.pricingTiers.length > 0
-    ? Math.min(...product.pricingTiers.map((t) => t.pricePerUnit))
-    : (product.priceFrom ?? 0);
-}
-
+// Sort/filter in mock mode mirrors the server: the display ("From") price is
+// the best-value tier x the product's min active option multipliers.
 // ─── API functions ────────────────────────────────────────────────────────────
 
 export async function getProducts(
@@ -309,17 +405,19 @@ export async function getProducts(
     // min bound and (independently) ANY tier clears the max bound.
     if (filters.minPrice !== undefined) {
       const min = filters.minPrice;
-      results = results.filter((p) => p.pricingTiers.some((t) => t.pricePerUnit >= min));
+      results = results.filter((p) => p.pricingTiers.some((t) => round2(t.pricePerUnit * minOptionMultiplier(p.printSpec)) >= min));
     }
     if (filters.maxPrice !== undefined) {
       const max = filters.maxPrice;
-      results = results.filter((p) => p.pricingTiers.some((t) => t.pricePerUnit <= max));
+      results = results.filter((p) => p.pricingTiers.some((t) => round2(t.pricePerUnit * minOptionMultiplier(p.printSpec)) <= max));
     }
     // Mirrors product_repository.py: every selected tag must be present (AND, not OR).
     if (filters.tags?.length) {
       results = results.filter((p) => filters.tags!.every((tag) => p.tags.includes(tag)));
     }
-    if (filters.badge) {
+    if (filters.badge === "sale") {
+      results = results.filter((p) => p.onSale);
+    } else if (filters.badge) {
       results = results.filter((p) => p.badge === filters.badge);
     }
     switch (filters.sort) {
@@ -327,10 +425,10 @@ export async function getProducts(
         results.sort((a, b) => b.averageRating - a.averageRating);
         break;
       case "price-asc":
-        results.sort((a, b) => lowestPricePerUnit(a) - lowestPricePerUnit(b));
+        results.sort((a, b) => getDisplayPricePerUnit(a) - getDisplayPricePerUnit(b));
         break;
       case "price-desc":
-        results.sort((a, b) => lowestPricePerUnit(b) - lowestPricePerUnit(a));
+        results.sort((a, b) => getDisplayPricePerUnit(b) - getDisplayPricePerUnit(a));
         break;
       case "newest":
         // Mock data has no created_at; approximate "newest first" by reversing
@@ -359,7 +457,9 @@ export async function getProducts(
     if (filters.minPrice !== undefined) params.set("min_price", String(filters.minPrice));
     if (filters.maxPrice !== undefined) params.set("max_price", String(filters.maxPrice));
     if (filters.tags?.length) params.set("tags", filters.tags.join(","));
-    if (filters.badge) params.set("badge", filters.badge);
+    // "On Sale" is derived from live pricing (on_sale), not the stored badge.
+    if (filters.badge === "sale") params.set("on_sale", "true");
+    else if (filters.badge) params.set("badge", filters.badge);
     if (filters.sort) params.set("sort_by", SORT_MAP[filters.sort]);
     params.set("page", String(filters.page ?? 1));
     params.set("page_size", String(filters.pageSize ?? 12));

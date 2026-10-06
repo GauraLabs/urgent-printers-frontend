@@ -1,5 +1,5 @@
-import Image from "next/image";
 import type { Category } from "@/types";
+import { SafeImage } from "@/components/common/SafeImage";
 import { CategoryVideoOverlay } from "./CategoryVideoOverlay";
 
 interface CategoryHeroProps {
@@ -23,7 +23,7 @@ export function CategoryHero({ category }: CategoryHeroProps) {
 
   return (
     <div className="relative w-full h-[180px] sm:h-[240px] lg:h-[320px] overflow-hidden bg-muted">
-      <Image
+      <SafeImage
         src={posterSrc}
         alt=""
         aria-hidden="true"
@@ -33,7 +33,7 @@ export function CategoryHero({ category }: CategoryHeroProps) {
         className="object-cover scale-110 blur-2xl"
         sizes="100vw"
       />
-      <Image
+      <SafeImage
         src={posterSrc}
         alt={name}
         fill

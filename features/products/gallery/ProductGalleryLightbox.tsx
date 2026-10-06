@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { ChevronLeft, ChevronRight, XIcon } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Zoom, Pagination, A11y } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { Dialog, DialogPortal, DialogOverlay, DialogClose } from "@/components/ui/dialog";
+import { SafeImage } from "@/components/common/SafeImage";
 import { useSwiperArrowNav } from "./useSwiperArrowNav";
 
 import "swiper/css";
@@ -89,7 +89,7 @@ export default function ProductGalleryLightbox({
             {images.map((src, i) => (
               <SwiperSlide key={i} className="flex h-full w-full items-center justify-center">
                 <div className="swiper-zoom-container relative h-full w-full">
-                  <Image
+                  <SafeImage
                     src={src}
                     alt={`${productName} — view ${i + 1}, zoomed`}
                     fill

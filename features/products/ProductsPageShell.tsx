@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
-import { Loader2, Search, X } from "lucide-react";
+import { Suspense, useEffect, useRef, useState, useTransition } from "react";
+import { Loader2 } from "lucide-react";
 import { ProductCard } from "./ProductCard";
 import { SortDropdown } from "./SortDropdown";
 import { FiltersDrawer } from "./FiltersDrawer";
@@ -10,6 +10,7 @@ import { FilterControls } from "./FilterControls";
 import { useProductFilters } from "./useProductFilters";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
+import { SearchField } from "@/components/common/SearchField";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ProductGridSkeleton } from "@/components/common/ProductCardSkeleton";
 import { getProducts, searchProductsPaged } from "@/lib/api";
@@ -39,25 +40,38 @@ function ShellInner({
 }: ProductsPageShellProps) {
   const { current, setSearch, isSearching } = useProductFilters();
 
-  // Local input state so typing feels instant; the URL (and therefore the
+  // Local input state is the source of truth while typing; the URL (and the
   // server fetch) only updates after the debounce settles.
   const [searchInput, setSearchInput] = useState(current.search);
   const debouncedSearch = useDebounce(searchInput, 400);
+  const [isPending, startTransition] = useTransition();
 
-  // Render-phase state adjustment (React-recommended over an effect here) —
-  // resyncs the local input when the URL's `q` changes from elsewhere (e.g.
-  // clearing the search chip in ActiveFilters) without an extra render pass.
-  const [prevUrlSearch, setPrevUrlSearch] = useState(current.search);
-  if (current.search !== prevUrlSearch) {
-    setPrevUrlSearch(current.search);
+  // Values this input pushed to the URL that haven't been seen coming back yet.
+  // The URL echoing one of them is our own update and must not overwrite what
+  // the user has typed since (e.g. "car" landing after "cards" was typed).
+  const pushedRef = useRef<string[]>([]);
+
+  useEffect(() => {
+    const idx = pushedRef.current.indexOf(current.search);
+    if (idx >= 0) {
+      pushedRef.current.splice(0, idx + 1);
+      return;
+    }
+    // External change (back/forward, ActiveFilters chip, link click).
+    pushedRef.current = [];
     setSearchInput(current.search);
+  }, [current.search]);
+
+  function pushSearch(q: string) {
+    const trimmed = q.trim();
+    if (trimmed === current.search.trim() && pushedRef.current.length === 0) return;
+    pushedRef.current.push(trimmed);
+    startTransition(() => setSearch(trimmed, { replace: true }));
   }
 
   useEffect(() => {
-    if (debouncedSearch.trim() === current.search.trim()) return;
-    setSearch(debouncedSearch.trim());
-    // Only fire when the debounced value changes — including `current.search`
-    // would re-run this on every URL change and fight the sync above.
+    pushSearch(debouncedSearch);
+    // Only fire when the debounced value changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);
 
@@ -126,32 +140,26 @@ function ShellInner({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Search */}
-      <div className="relative mb-5 max-w-md">
-        <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-        <input
-          type="search"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="Search this catalog…"
-          autoComplete="off"
-          aria-label="Search this catalog"
-          className={cn(
-            "w-full h-10 rounded-full border border-border bg-card pl-10 pr-9 text-sm",
-            "placeholder:text-muted-foreground",
-            "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
-          )}
-        />
-        {searchInput && (
-          <button
-            type="button"
-            onClick={() => setSearchInput("")}
-            aria-label="Clear search"
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          >
-            <X size={14} />
-          </button>
+      <SearchField
+        value={searchInput}
+        onChange={setSearchInput}
+        onClear={() => {
+          setSearchInput("");
+          pushSearch("");
+        }}
+        loading={isPending}
+        placeholder="Search this catalog…"
+        ariaLabel="Search this catalog"
+        className="mb-5 max-w-md"
+        iconSize={16}
+        iconClassName="left-3.5"
+        endClassName="right-3.5"
+        inputClassName={cn(
+          "w-full h-10 rounded-full border border-border bg-card pl-10 pr-14 text-sm",
+          "placeholder:text-muted-foreground",
+          "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
         )}
-      </div>
+      />
 
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-3 mb-4">
@@ -185,8 +193,10 @@ function ShellInner({
         </aside>
 
         {/* Product grid */}
-        <div className="flex-1 min-w-0">
-          {items.length === 0 ? (
+        <div className="flex-1 min-w-0" aria-busy={isPending}>
+          {isPending ? (
+            <ProductGridSkeleton count={9} gridClassName="lg:grid-cols-3" />
+          ) : items.length === 0 ? (
             <EmptyState
               icon={PackageSearch}
               title="No products found"
@@ -212,7 +222,7 @@ function ShellInner({
                 <div ref={sentinelRef} className="flex items-center justify-center py-10">
                   {loadingMore && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Loader2 size={16} className="animate-spin" />
+                      <Loader2 size={16} className="animate-spin motion-reduce:animate-none" />
                       Loading more…
                     </div>
                   )}

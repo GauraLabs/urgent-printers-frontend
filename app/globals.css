@@ -8,7 +8,7 @@
 @theme inline {
   /* Brand fonts */
   --font-sans: var(--font-dm-sans);
-  --font-heading: var(--font-display);
+  --font-heading: var(--font-sans);
   --font-mono: var(--font-geist-mono);
 
   /* Semantic color tokens */

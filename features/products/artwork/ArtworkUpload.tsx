@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import Image from "next/image";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { UploadCloud, FileCheck2, X, AlertCircle, ExternalLink, Info, Loader2 } from "lucide-react";
+import { SafeImage } from "@/components/common/SafeImage";
 import { PRINT_SPECS } from "@/lib/constants/print-specs";
 import { formatFileSize, cn } from "@/lib/utils";
 import { presignArtwork } from "@/lib/api/artwork";
@@ -159,7 +159,7 @@ export function ArtworkUpload({ onChange }: ArtworkUploadProps) {
           {file.previewUrl ? (
             <div className="relative w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-success/40">
               {/* blob: object URL — next/image auto-marks these unoptimized, no remotePattern needed */}
-              <Image src={file.previewUrl} alt={file.name} fill sizes="40px" className="object-cover" />
+              <SafeImage src={file.previewUrl} alt={file.name} fill sizes="40px" className="object-cover" />
             </div>
           ) : (
             <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center shrink-0">

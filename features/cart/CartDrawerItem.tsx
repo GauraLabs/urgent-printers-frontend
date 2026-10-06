@@ -1,10 +1,13 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Trash2, Plus, Minus } from "lucide-react";
+import { SafeImage } from "@/components/common/SafeImage";
 import { useCartStore } from "./store";
+import { PriceDisplay } from "@/components/common/PriceDisplay";
+import { cartItemDiscount, cartLinePrice } from "./savings";
 import { formatPrice, slugify, cn } from "@/lib/utils";
+import { formatQuantity, isPack, normalizePack, stepQuantity } from "@/lib/pack";
 import { ROUTES } from "@/lib/constants/routes";
 import type { CartItem } from "@/types";
 
@@ -20,6 +23,10 @@ export function CartDrawerItem({ item }: CartDrawerItemProps) {
   const categorySlug = item.product.categorySlug || slugify(item.product.categoryName) || "products";
   const productHref = ROUTES.product(categorySlug, item.product.slug);
 
+  const discount = cartItemDiscount(item);
+  const linePrice = cartLinePrice(item);
+  const { packSize, unitLabel } = normalizePack(item.config.packSize, item.config.unitLabel);
+
   const specLine = [item.config.sizeLabel, item.config.paperLabel, item.config.finishLabel].filter(
     (v): v is string => Boolean(v)
   );
@@ -33,7 +40,7 @@ export function CartDrawerItem({ item }: CartDrawerItemProps) {
         className="relative shrink-0 w-16 h-16 rounded-lg overflow-hidden border border-border bg-muted"
       >
         {item.product.thumbnailUrl ?? item.product.images[0] ? (
-          <Image
+          <SafeImage
             src={item.product.thumbnailUrl ?? item.product.images[0]}
             alt={item.product.name}
             fill
@@ -68,15 +75,16 @@ export function CartDrawerItem({ item }: CartDrawerItemProps) {
           {item.config.turnaroundLabel.split(" ")[0]}
         </p>
 
+        {discount && (
+          <PriceDisplay variant="line" {...linePrice} className="mt-1" />
+        )}
+
         {/* Quantity + price row */}
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-center gap-1.5">
             <button
               onClick={() =>
-                updateQuantity(
-                  item.cartItemId,
-                  Math.max(1, item.config.quantity - (item.config.quantity <= 100 ? 25 : 50))
-                )
+                updateQuantity(item.cartItemId, stepQuantity(item.config.quantity, "down", packSize))
               }
               aria-label="Decrease quantity"
               className={cn(
@@ -86,15 +94,12 @@ export function CartDrawerItem({ item }: CartDrawerItemProps) {
             >
               <Minus size={10} />
             </button>
-            <span className="text-xs font-medium w-10 text-center">
-              {item.config.quantity}
+            <span className={cn("text-xs font-medium text-center", isPack(packSize) ? "min-w-10" : "w-10")}>
+              {isPack(packSize) ? formatQuantity(item.config.quantity, packSize, unitLabel) : item.config.quantity}
             </span>
             <button
               onClick={() =>
-                updateQuantity(
-                  item.cartItemId,
-                  item.config.quantity + (item.config.quantity < 100 ? 25 : 50)
-                )
+                updateQuantity(item.cartItemId, stepQuantity(item.config.quantity, "up", packSize))
               }
               aria-label="Increase quantity"
               className={cn(

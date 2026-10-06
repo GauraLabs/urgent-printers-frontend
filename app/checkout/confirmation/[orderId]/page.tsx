@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import {
@@ -9,9 +8,14 @@ import {
   Banknote, Download, Printer, MapPin, CreditCard,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { SafeImage } from "@/components/common/SafeImage";
 import { ROUTES } from "@/lib/constants/routes";
 import { buttonVariants } from "@/components/ui/button";
-import { formatPrice, formatPricePerUnit, cn } from "@/lib/utils";
+import { PriceDisplay } from "@/components/common/PriceDisplay";
+import { SavingsSummary, savingsFromPricing } from "@/components/common/SavingsSummary";
+import { formatPrice, cn } from "@/lib/utils";
+import { formatQuantityLine } from "@/lib/pack";
+import { orderLinePrice } from "@/features/cart/savings";
 import { getOrderById, downloadReceipt } from "@/lib/api";
 import { useAuthStore } from "@/features/auth/store";
 import { useOrderItemCategorySlugs } from "@/hooks/useOrderItemCategorySlugs";
@@ -102,7 +106,7 @@ export default function OrderConfirmationPage() {
                   <div key={item.id} className="flex gap-3 px-5 py-4">
                     <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-muted border border-border shrink-0">
                       {item.thumbnailUrl ? (
-                        <Image src={item.thumbnailUrl} alt={item.productName} fill className="object-cover" sizes="56px" />
+                        <SafeImage src={item.thumbnailUrl} alt={item.productName} fill className="object-cover" sizes="56px" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-[9px] text-muted-foreground font-medium px-1 text-center leading-tight">
                           {item.productName.slice(0, 12)}
@@ -129,12 +133,16 @@ export default function OrderConfirmationPage() {
                         ) : null;
                       })()}
                       <p className="text-xs text-muted-foreground">
-                        {item.quantity.toLocaleString("en-IN")} units · {item.turnaroundLabel}
+                        {formatQuantityLine(item.quantity, item.packSize, item.unitLabel)} · {item.turnaroundLabel}
                       </p>
                     </div>
                     <div className="text-right shrink-0">
                       <p className="font-semibold text-sm">{formatPrice(item.totalPrice)}</p>
-                      <p className="text-xs text-muted-foreground">{formatPricePerUnit(item.pricePerUnit)}/unit</p>
+                      <PriceDisplay
+                        variant="line"
+                        align="end"
+                        {...orderLinePrice(item)}
+                      />
                     </div>
                   </div>
                 );
@@ -164,6 +172,7 @@ export default function OrderConfirmationPage() {
                 </span>
               </div>
               <Separator />
+              <SavingsSummary savings={savingsFromPricing(order.pricing)} variant="inline" />
               <div className="flex justify-between font-heading font-bold text-base">
                 <span>Total Paid</span>
                 <span className="text-primary">{formatPrice(order.pricing.totalAmount)}</span>

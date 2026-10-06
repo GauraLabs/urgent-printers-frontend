@@ -1,18 +1,30 @@
 "use client";
 
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 import { ProductConfigurator } from "./configurator/ProductConfigurator";
+import { resolvePreselection } from "./configurator/preselect";
 import { StickyAddToCart } from "./StickyAddToCart";
 import { ArtworkUpload } from "./artwork/ArtworkUpload";
 import { SavedArtworks } from "./artwork/SavedArtworks";
 import { TemplateForm } from "./template/TemplateForm";
 import { useRecentlyViewedStore } from "./recentlyViewed/store";
-import { formatPrice, getDisplayPricePerUnit } from "@/lib/utils";
+import { formatPrice, round2 } from "@/lib/utils";
 import type { Product } from "@/types";
+
+interface ConfiguratorState {
+  isInCart: boolean;
+  totalPrice: number;
+  savings: number;
+  quantityLabel?: string;
+}
 
 interface ProductDetailClientProps {
   product: Product;
 }
+
+const subscribeNever = () => () => {};
+const readSearch = () => window.location.search;
+const serverSearch = () => "";
 
 export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const addItemRef         = useRef<HTMLButtonElement>(null);
@@ -22,23 +34,25 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const [artworkFileName,    setArtworkFileName]    = useState<string>("");
   const [templateData,       setTemplateData]       = useState<Record<string, string>>({});
   const [showTemplateErrors, setShowTemplateErrors] = useState(false);
-  const [configuratorState,  setConfiguratorState]  = useState({
+  const [configuratorState,  setConfiguratorState]  = useState<ConfiguratorState>({
     isInCart:   false,
     totalPrice: product.pricingTiers[0]?.totalPrice ?? product.priceFrom ?? 0,
+    savings:    0,
   });
+
+  // Feed links land on a configuration via ?qty=&size=... Read client-side (the
+  // server snapshot is "" so hydration matches) to keep the page's ISR; the
+  // configurator remounts once if params exist.
+  const search = useSyncExternalStore(subscribeNever, readSearch, serverSearch);
+  const preselection = useMemo(() => resolvePreselection(product, new URLSearchParams(search)), [product, search]);
 
   const recordView = useRecentlyViewedStore((s) => s.recordView);
 
   useEffect(() => {
-    const pricePerUnit = getDisplayPricePerUnit(product);
-
     recordView({
       productId: product.id,
       productSlug: product.slug,
       categorySlug: product.categorySlug,
-      productName: product.name,
-      productImage: product.mediumUrl ?? product.images[0],
-      pricePerUnit,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);
@@ -66,7 +80,9 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   return (
     <>
       <ProductConfigurator
+        key={search}
         ref={addItemRef}
+        preselection={preselection}
         product={product}
         artworkFileKey={artworkFileKey || undefined}
         artworkFileName={artworkFileName || undefined}
@@ -98,7 +114,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
       <StickyAddToCart
         productName={product.name}
         price={formatPrice(configuratorState.totalPrice)}
+        mrpTotal={configuratorState.savings > 0 ? round2(configuratorState.totalPrice + configuratorState.savings) : undefined}
+        savings={configuratorState.savings > 0 ? configuratorState.savings : undefined}
         isInCart={configuratorState.isInCart}
+        quantityLabel={configuratorState.quantityLabel}
         observeRef={addItemRef}
         onAddToCart={handleStickyAdd}
       />

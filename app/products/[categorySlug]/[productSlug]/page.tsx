@@ -13,7 +13,9 @@ import { ReviewsSection } from "@/features/products/ReviewsSection";
 import { RelatedProducts } from "@/features/products/RelatedProducts";
 import { RecentlyViewedCarousel } from "@/features/products/recentlyViewed/RecentlyViewedCarousel";
 import { ROUTES } from "@/lib/constants/routes";
-import { formatPricePerUnit, getDisplayPricePerUnit } from "@/lib/utils";
+import { formatPricePerUnit, getDisplayPricePerUnit, getFromPackPrice, formatPrice } from "@/lib/utils";
+import { formatPackSize, normalizePack } from "@/lib/pack";
+import { buildProductJsonLd, SITE_URL } from "@/lib/structured-data";
 
 interface PageProps {
   params: Promise<{ categorySlug: string; productSlug: string }>;
@@ -30,8 +32,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!product || !product.categorySlug || product.categorySlug !== categorySlug) {
     return { title: "Product Not Found" };
   }
-
-  const lowestPrice = product.pricingTiers[0].pricePerUnit;
 
   return {
     title: product.name,
@@ -72,50 +72,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
   // must never be treated as matching every segment.
   if (!product.categorySlug || product.categorySlug !== categorySlug) notFound();
 
-  // Tiers are ordered by ascending quantity, not ascending price — per-unit
-  // price falls as quantity rises, so index 0 is the *most* expensive tier
-  // and the last index the cheapest. Derive lowest/highest explicitly rather
-  // than relying on array position.
-  const tierPrices = product.pricingTiers.map((t) => t.pricePerUnit);
-  const lowestPrice = Math.min(...tierPrices);
-  const highestPrice = Math.max(...tierPrices);
-
-  // The customer-facing "From" price merchandises the best-value tier, not
-  // the mathematically cheapest per-unit price (usually the highest-quantity
-  // tier) — falls back to the true lowest price, then priceFrom, if no tier
-  // is flagged. JSON-LD below intentionally keeps using true
-  // lowestPrice/highestPrice: schema.org AggregateOffer.lowPrice/highPrice
-  // describe the actual price range across all offers for search engines,
-  // independent of merchandising.
   const displayPrice = getDisplayPricePerUnit(product);
+  const fromPack = getFromPackPrice(product).price;
+  const packInfo = normalizePack(product.packSize, product.unitLabel);
 
-  // JSON-LD structured data
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.name,
-    description: product.description,
-    image: product.images,
-    brand: { "@type": "Brand", name: "Urgent Printers" },
-    ...(product.reviewCount > 0 && {
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: product.averageRating,
-        reviewCount: product.reviewCount,
-        bestRating: 5,
-        worstRating: 1,
-      },
-    }),
-    offers: {
-      "@type": "AggregateOffer",
-      priceCurrency: "INR",
-      lowPrice: lowestPrice,
-      highPrice: highestPrice,
-      offerCount: product.pricingTiers.length,
-      availability: "https://schema.org/InStock",
-      seller: { "@type": "Organization", name: "Urgent Printers" },
-    },
-  };
+  const jsonLd = buildProductJsonLd(product, SITE_URL);
 
   return (
     <>
@@ -172,7 +133,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   </span>
                 )}
                 <span className="text-xs text-muted-foreground">
-                  From <span className="font-semibold text-foreground">{formatPricePerUnit(displayPrice)}</span> / unit
+                  {packInfo.packSize > 1 ? (
+                    <>From <span className="font-semibold text-foreground">{formatPrice(fromPack)}</span> / {formatPackSize(packInfo.packSize, packInfo.unitLabel)}</>
+                  ) : (
+                    <>From <span className="font-semibold text-foreground">{formatPricePerUnit(displayPrice)}</span> / unit</>
+                  )}
                 </span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">

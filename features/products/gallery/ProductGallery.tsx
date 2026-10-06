@@ -1,12 +1,12 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Image from "next/image";
 import dynamic from "next/dynamic";
 import { Play, Pause, ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Navigation, Thumbs, A11y } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
+import { SafeImage } from "@/components/common/SafeImage";
 import { cn } from "@/lib/utils";
 import { useSwiperArrowNav } from "./useSwiperArrowNav";
 
@@ -142,7 +142,7 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
                 </SwiperSlide>
               ) : (
                 <SwiperSlide key={`img-${i}`} className="relative">
-                  <Image
+                  <SafeImage
                     src={slide.src}
                     alt={`${productName} — view ${i - imageIndexOffset + 1}`}
                     fill
@@ -189,7 +189,7 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
                 </SwiperSlide>
               ) : (
                 <SwiperSlide key={`img-${i}`} className="relative">
-                  <Image
+                  <SafeImage
                     src={slide.src}
                     alt={`${productName} — view ${i - imageIndexOffset + 1}`}
                     fill
@@ -260,7 +260,7 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
                 >
                   {slide.type === "video" ? (
                     slide.poster ? (
-                      <Image
+                      <SafeImage
                         src={slide.poster}
                         alt={`${productName} video thumbnail`}
                         fill
@@ -271,7 +271,7 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
                       <div className="h-full w-full bg-muted" />
                     )
                   ) : (
-                    <Image
+                    <SafeImage
                       src={slide.thumbSrc}
                       alt={`${productName} thumbnail ${i + 1}`}
                       fill

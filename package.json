@@ -7,6 +7,7 @@
     "build": "next build && next-sitemap",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
     "qa:capture": "playwright test --config=qa-pipeline/playwright/playwright.config.js",
     "qa:validate": "node qa-pipeline/scripts/validate.mjs",
     "qa:docs": "node qa-pipeline/scripts/render-docs.mjs",
@@ -49,17 +50,23 @@
     "@remotion/renderer": "^4.0.501",
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.20",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
+    "jsdom": "^30.1.1",
     "lighthouse": "^13.4.1",
     "marked": "^18.0.7",
     "playwright-lighthouse": "^4.0.0",
     "remotion": "^4.0.501",
     "shadcn": "^4.5.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }

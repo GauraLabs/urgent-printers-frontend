@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { Search, TrendingUp } from "lucide-react";
 import { searchProductsPaged, getCategories, getPopularSearches } from "@/lib/api";
 import { ProductCard } from "@/features/products/ProductCard";
 import { EmptyState } from "@/components/common/EmptyState";
+import { SafeImage } from "@/components/common/SafeImage";
 import { Breadcrumb } from "@/components/common/Breadcrumb";
+import { SearchPageProvider, SearchPageForm, SearchResultsFrame } from "@/features/products/SearchPageClient";
 import { ROUTES } from "@/lib/constants/routes";
 
 interface PageProps {
@@ -44,6 +45,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
   const terms = popularSearches.length > 0 ? popularSearches : FALLBACK_POPULAR_TERMS;
 
   return (
+    <SearchPageProvider>
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <Breadcrumb items={[{ label: query ? `Results for "${query}"` : "Search" }]} className="mb-6" />
 
@@ -66,50 +68,33 @@ export default async function SearchPage({ searchParams }: PageProps) {
         </div>
       )}
 
-      {/* Search bar (inline for no-JS fallback and direct navigation) */}
-      <form action={ROUTES.search} method="GET" className="mb-10">
-        <div className="relative max-w-xl">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-          <input
-            type="search"
-            name="q"
-            defaultValue={query}
-            placeholder="Search products, categories…"
-            autoFocus={!query}
-            className="w-full h-12 pl-12 pr-4 rounded-2xl border-2 border-border bg-card text-base focus:outline-none focus:border-primary transition-colors shadow-sm"
+      <SearchPageForm query={query} />
+
+      <SearchResultsFrame>
+        {/* Results grid */}
+        {query.length >= 2 && total > 0 && (
+          <section aria-label="Search results">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
+              {results.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  sizes="(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 289px"
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* No results */}
+        {query.length >= 2 && total === 0 && (
+          <EmptyState
+            icon={Search}
+            title={`No results for "${query}"`}
+            description="Try a different search term, or browse by category below."
           />
-          <button
-            type="submit"
-            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-          >
-            Search
-          </button>
-        </div>
-      </form>
-
-      {/* Results grid */}
-      {query.length >= 2 && total > 0 && (
-        <section aria-label="Search results">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5">
-            {results.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                sizes="(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 289px"
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* No results */}
-      {query.length >= 2 && total === 0 && (
-        <EmptyState
-          icon={Search}
-          title={`No results for "${query}"`}
-          description="Try a different search term, or browse by category below."
-        />
-      )}
+        )}
+      </SearchResultsFrame>
 
       {/* Popular + category suggestions */}
       <div className="mt-12 space-y-10">
@@ -143,7 +128,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
                 className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 shadow-sm hover:shadow-md transition-all text-center group"
               >
                 <div className="relative w-10 h-10 rounded-full overflow-hidden bg-muted shrink-0">
-                  <Image
+                  <SafeImage
                     src={cat.thumbnailUrl ?? cat.imageUrl}
                     alt=""
                     fill
@@ -160,5 +145,6 @@ export default async function SearchPage({ searchParams }: PageProps) {
         </section>
       </div>
     </div>
+    </SearchPageProvider>
   );
 }

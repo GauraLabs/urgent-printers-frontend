@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Heart, ImageIcon, Trash2, ArrowRight } from "lucide-react";
 import { useWishlistStore } from "@/features/wishlist/store";
 import { EmptyState } from "@/components/common/EmptyState";
+import { SafeImage } from "@/components/common/SafeImage";
 import { ROUTES } from "@/lib/constants/routes";
 
 export default function SavedItemsPage() {
@@ -38,7 +38,7 @@ export default function SavedItemsPage() {
               <Link href={ROUTES.product(item.productSlug.split("-").slice(0, -2).join("-") || "products", item.productSlug)}>
                 <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-muted shrink-0 flex items-center justify-center">
                   {item.productImage ? (
-                    <Image src={item.productImage} alt={item.productName} fill className="object-cover" sizes="80px" />
+                    <SafeImage src={item.productImage} alt={item.productName} fill className="object-cover" sizes="80px" />
                   ) : (
                     <ImageIcon size={20} className="text-muted-foreground" />
                   )}

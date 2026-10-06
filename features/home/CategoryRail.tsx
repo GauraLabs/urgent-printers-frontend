@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { LayoutGrid } from "lucide-react";
 import { motion } from "motion/react";
 import { EmptyState } from "@/components/common/EmptyState";
+import { SafeImage } from "@/components/common/SafeImage";
 import { SectionHeading } from "@/components/common/SectionHeading";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { ROUTES } from "@/lib/constants/routes";
@@ -132,7 +132,7 @@ export function CategoryRail({ categories }: CategoryRailProps) {
                   inverted ? "bg-foreground" : "bg-card"
                 )}
               >
-                <Image
+                <SafeImage
                   src={cat.mediumUrl ?? cat.imageUrl}
                   alt={cat.name}
                   fill

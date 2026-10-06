@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ChevronDown, CheckCircle, RefreshCw, Loader2, XCircle } from "lucide-react";
+import { SafeImg } from "@/components/common/SafeImage";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/features/auth/store";
 import { getOrderItemProof, submitOrderItemProofDecision } from "@/lib/api/orders";
@@ -140,8 +141,7 @@ export default function ItemProofPanel({ orderId, itemId, artworkStatus }: Props
                   title="Artwork proof PDF"
                 />
               ) : (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
+                <SafeImg
                   src={proofUrl}
                   alt="Artwork proof"
                   className="max-w-full rounded-lg border border-border"
