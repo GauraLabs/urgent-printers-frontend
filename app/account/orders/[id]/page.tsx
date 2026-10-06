@@ -14,7 +14,9 @@ import { Separator } from "@/components/ui/separator";
 import { ROUTES } from "@/lib/constants/routes";
 import { PriceDisplay } from "@/components/common/PriceDisplay";
 import { SavingsSummary, savingsFromPricing } from "@/components/common/SavingsSummary";
-import { formatPrice, getUnitDiscount } from "@/lib/utils";
+import { formatPrice } from "@/lib/utils";
+import { formatQuantityLine } from "@/lib/pack";
+import { orderLinePrice } from "@/features/cart/savings";
 import { ORDER_STATUS_LABELS, SHIPMENT_STATUS_LABELS } from "@/lib/constants/print-specs";
 import { SHIPMENT_STATUS_COLORS } from "@/lib/constants/order-status";
 import { RAZORPAY_THEME_COLOR } from "@/lib/constants/payment";
@@ -379,7 +381,7 @@ export default function OrderDetailPage() {
                       {item.sides
                         ? `${item.sides.toLowerCase().includes("double") ? "Double-sided" : "Single-sided"} · `
                         : ""}
-                      {item.quantity.toLocaleString("en-IN")} units
+                      {formatQuantityLine(item.quantity, item.packSize, item.unitLabel)}
                     </p>
                     <p>{item.turnaroundLabel}</p>
                     {item.artworkStatus && item.artworkStatus !== "none" && (
@@ -395,10 +397,7 @@ export default function OrderDetailPage() {
                   <PriceDisplay
                     variant="line"
                     align="end"
-                    price={item.pricePerUnit}
-                    mrp={getUnitDiscount(item.pricePerUnit, item.mrpPerUnit)?.mrp}
-                    percent={getUnitDiscount(item.pricePerUnit, item.mrpPerUnit)?.percent}
-                    unitLabel="/unit"
+                    {...orderLinePrice(item)}
                   />
                   {order.status === "delivered" && (
                     item.canReview ? (

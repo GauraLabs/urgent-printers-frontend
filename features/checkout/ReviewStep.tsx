@@ -9,7 +9,8 @@ import { SafeImage } from "@/components/common/SafeImage";
 import { useCartStore } from "@/features/cart/store";
 import { PriceDisplay } from "@/components/common/PriceDisplay";
 import { SavingsSummary, savingsFromPricing, type Savings } from "@/components/common/SavingsSummary";
-import { cartItemDiscount, cartMrpSavings, cartTotalSavings } from "@/features/cart/savings";
+import { cartLinePrice, cartMrpSavings, cartTotalSavings } from "@/features/cart/savings";
+import { formatQuantityLine } from "@/lib/pack";
 import { formatPrice, cn } from "@/lib/utils";
 import type { CartItem, Address, OrderPreview } from "@/types";
 import type { PaymentMethod } from "./PaymentStep";
@@ -104,7 +105,7 @@ export function ReviewStep({
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm line-clamp-1">{item.product.name}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {item.config.quantity.toLocaleString("en-IN")} units
+                  {formatQuantityLine(item.config.quantity, item.config.packSize, item.config.unitLabel)}
                   {item.config.sizeLabel ? ` · ${item.config.sizeLabel}` : ""}
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -118,10 +119,7 @@ export function ReviewStep({
                 <PriceDisplay
                   variant="line"
                   align="end"
-                  price={item.pricePerUnit}
-                  mrp={cartItemDiscount(item)?.mrp}
-                  percent={cartItemDiscount(item)?.percent}
-                  unitLabel="/unit"
+                  {...cartLinePrice(item)}
                 />
               </div>
             </div>

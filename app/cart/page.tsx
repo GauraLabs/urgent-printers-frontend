@@ -14,8 +14,9 @@ import { trackConnectivity } from "@/features/site-status/trackConnectivity";
 import { ROUTES } from "@/lib/constants/routes";
 import { PriceDisplay } from "@/components/common/PriceDisplay";
 import { SavingsSummary } from "@/components/common/SavingsSummary";
-import { cartItemDiscount, cartMrpSavings, cartTotalSavings, eligibleSubtotal } from "@/features/cart/savings";
+import { cartLinePrice, cartMrpSavings, cartTotalSavings, eligibleSubtotal } from "@/features/cart/savings";
 import { formatPrice, slugify, cn } from "@/lib/utils";
+import { formatQuantity, isPack, stepQuantity } from "@/lib/pack";
 
 function CartSkeleton() {
   return (
@@ -188,24 +189,24 @@ export default function CartPage() {
                     <div className="mt-3 space-y-2">
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => {
-                            const step = item.config.quantity <= 100 ? 25 : 50;
-                            const next = Math.max(25, item.config.quantity - step);
-                            updateQuantity(item.cartItemId, next);
-                          }}
+                          onClick={() =>
+                            updateQuantity(
+                              item.cartItemId,
+                              stepQuantity(item.config.quantity, "down", item.config.packSize, { legacyMin: 25 })
+                            )
+                          }
                           aria-label="Decrease quantity"
                           className="w-7 h-7 flex items-center justify-center rounded-lg border border-border hover:bg-muted transition-colors"
                         >
                           <Minus size={12} />
                         </button>
-                        <span className="text-sm font-semibold w-12 text-center">
-                          {item.config.quantity.toLocaleString("en-IN")}
+                        <span className={cn("text-sm font-semibold text-center", isPack(item.config.packSize) ? "min-w-12" : "w-12")}>
+                          {formatQuantity(item.config.quantity, item.config.packSize, item.config.unitLabel)}
                         </span>
                         <button
-                          onClick={() => {
-                            const step = item.config.quantity < 100 ? 25 : 50;
-                            updateQuantity(item.cartItemId, item.config.quantity + step);
-                          }}
+                          onClick={() =>
+                            updateQuantity(item.cartItemId, stepQuantity(item.config.quantity, "up", item.config.packSize))
+                          }
                           aria-label="Increase quantity"
                           className="w-7 h-7 flex items-center justify-center rounded-lg border border-border hover:bg-muted transition-colors"
                         >
@@ -216,10 +217,7 @@ export default function CartPage() {
                         <PriceDisplay
                           variant="line"
                           prefix="×"
-                          price={item.pricePerUnit}
-                          mrp={cartItemDiscount(item)?.mrp}
-                          percent={cartItemDiscount(item)?.percent}
-                          unitLabel="/unit"
+                          {...cartLinePrice(item)}
                         />
                         <p className="font-heading font-bold text-base">
                           {formatPrice(item.totalPrice)}

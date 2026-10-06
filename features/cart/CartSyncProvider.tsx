@@ -19,6 +19,22 @@ function mergeCartItems(local: CartItem[], server: CartItem[]): CartItem[] {
   return result;
 }
 
+function toastCorrected(lines: { originalQuantity?: number }[]): void {
+  if (lines.length === 0) return;
+  const was = lines[0].originalQuantity;
+  toast(
+    lines.length === 1 && was !== undefined
+      ? `Quantity adjusted to full packs (was ${was.toLocaleString("en-IN")})`
+      : "Quantities adjusted to full packs"
+  );
+}
+
+// Server sync snapped these lines to whole packs; mirror that locally and tell
+// the customer once.
+function announceCorrections(corrected: CartItem[]): void {
+  toastCorrected(useCartStore.getState().applyQuantityCorrections(corrected));
+}
+
 export function CartSyncProvider({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const token           = useAuthStore((s) => s.token);
@@ -52,13 +68,14 @@ export function CartSyncProvider({ children }: { children: React.ReactNode }) {
 
         if (serverItems.length === 0) {
           // Nothing on server — push local cart up (handles first login + page refresh)
-          if (localItems.length > 0) await trackConnectivity(syncCart(localItems, token));
+          if (localItems.length > 0) announceCorrections(await trackConnectivity(syncCart(localItems, token)));
           return;
         }
 
         if (localItems.length === 0) {
           // Nothing local — restore from server (e.g. different device)
           setItems(serverItems);
+          toastCorrected(serverItems.filter((i) => i.quantityCorrected));
           return;
         }
 
@@ -66,7 +83,9 @@ export function CartSyncProvider({ children }: { children: React.ReactNode }) {
         const merged = mergeCartItems(localItems, serverItems);
         const addedFromServer = merged.length > localItems.length;
         setItems(merged);
-        await trackConnectivity(syncCart(merged, token));
+        const localIds = new Set(localItems.map((l) => l.cartItemId));
+        toastCorrected(serverItems.filter((i) => i.quantityCorrected && !localIds.has(i.cartItemId)));
+        announceCorrections(await trackConnectivity(syncCart(merged, token)));
 
         if (addedFromServer) {
           toast.success("Cart updated", {
@@ -90,7 +109,7 @@ export function CartSyncProvider({ children }: { children: React.ReactNode }) {
       const t    = tokenRef.current;
       const auth = useAuthStore.getState().isAuthenticated;
       if (!auth || !t) return;
-      void trackConnectivity(syncCart(useCartStore.getState().items, t)).catch(() => {});
+      void trackConnectivity(syncCart(useCartStore.getState().items, t)).then(announceCorrections).catch(() => {});
     }, 500);
 
     return () => clearTimeout(syncTimerRef.current);

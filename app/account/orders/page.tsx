@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { SafeImage } from "@/components/common/SafeImage";
 import { ROUTES } from "@/lib/constants/routes";
 import { formatPrice } from "@/lib/utils";
+import { summarizeOrderQuantity } from "@/lib/pack";
 import { ORDER_STATUS_LABELS } from "@/lib/constants/print-specs";
 import { ORDER_STATUS_COLORS } from "@/lib/constants/order-status";
 import type { OrderCard } from "@/types";
@@ -97,7 +98,7 @@ export default function OrdersPage() {
                     {order.items.map((i) => i.productName).join(", ")}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {order.items.reduce((s, i) => s + i.quantity, 0).toLocaleString("en-IN")} total units
+                    {summarizeOrderQuantity(order.items)}
                   </p>
                 </div>
                 <p className="font-heading font-bold text-base shrink-0">{formatPrice(order.totalAmount)}</p>

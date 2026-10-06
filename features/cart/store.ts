@@ -15,6 +15,8 @@ interface CartStore {
   removeItem: (cartItemId: string) => void;
   updateQuantity: (cartItemId: string, quantity: number) => void;
   setItems: (items: CartItem[]) => void;
+  // Applies server pack-snaps to matching local lines; returns the lines changed.
+  applyQuantityCorrections: (corrected: CartItem[]) => CartItem[];
   setAppliedCoupon: (coupon: AppliedCoupon | null) => void;
   clearCart: () => void;
   openCart: () => void;
@@ -24,6 +26,36 @@ interface CartStore {
   // Derived helpers (computed on read, not stored)
   itemCount: () => number;
   subtotal: () => number;
+}
+
+function withoutCorrectionFlags(item: CartItem): CartItem {
+  const rest = { ...item };
+  delete rest.quantityCorrected;
+  delete rest.originalQuantity;
+  return rest;
+}
+
+// A malformed persisted item must never fail rehydration (that would wipe the
+// cart): recompute per item and keep it unchanged on any error.
+export function migrateCartState(persisted: unknown): unknown {
+  const state = persisted as { items?: unknown } | null | undefined;
+  if (!state || !Array.isArray(state.items)) return persisted;
+  return {
+    ...state,
+    items: state.items.map((raw: CartItem) => {
+      try {
+        return {
+          ...raw,
+          cartItemId: makeCartItemId(
+            raw.product.id, raw.config.sizeId ?? "", raw.config.paperId ?? "", raw.config.finishId ?? "",
+            raw.config.sides ?? "", raw.config.turnaroundId, raw.config.artworkFileKey, raw.config.templateData
+          ),
+        };
+      } catch {
+        return raw;
+      }
+    }),
+  };
 }
 
 export const useCartStore = create<CartStore>()(
@@ -88,12 +120,34 @@ export const useCartStore = create<CartStore>()(
         set((state) => {
           const known = new Map(state.items.map((i) => [i.cartItemId, i.addedAt]));
           return {
-            items: items.map((i) => {
+            items: items.map((raw) => {
+              const i = withoutCorrectionFlags(raw);
               const addedAt = i.addedAt ?? known.get(i.cartItemId);
               return addedAt ? { ...i, addedAt } : i;
             }),
           };
         }),
+
+      // Only lines still at the quantity the server corrected from are touched,
+      // so an edit made while the sync was in flight is never overwritten.
+      applyQuantityCorrections: (corrected) => {
+        const applied: CartItem[] = [];
+        set((state) => ({
+          items: state.items.map((local) => {
+            const fix = corrected.find((c) => c.cartItemId === local.cartItemId);
+            if (!fix || fix.originalQuantity !== local.config.quantity) return local;
+            applied.push(fix);
+            return {
+              ...local,
+              config: { ...local.config, quantity: fix.config.quantity, packSize: fix.config.packSize, unitLabel: fix.config.unitLabel },
+              pricePerUnit: fix.pricePerUnit,
+              mrpPerUnit: fix.mrpPerUnit,
+              totalPrice: fix.totalPrice,
+            };
+          }),
+        }));
+        return applied;
+      },
 
       // Coupon is cleared when items change significantly (backend will revalidate anyway)
       setAppliedCoupon: (coupon) => set({ appliedCoupon: coupon }),
@@ -108,6 +162,9 @@ export const useCartStore = create<CartStore>()(
     }),
     {
       name: "urgent-printers-cart",
+      // v1: cartItemId normalises option ids; recompute ids persisted by v0.
+      version: 1,
+      migrate: (persisted) => migrateCartState(persisted) as never,
       partialize: (state) => ({ items: state.items, appliedCoupon: state.appliedCoupon }),
     }
   )
