@@ -10,7 +10,7 @@ import { PaymentStep, type PaymentMethod } from "@/features/checkout/PaymentStep
 import { ReviewStep } from "@/features/checkout/ReviewStep";
 import { useCartStore } from "@/features/cart/store";
 import { useAuthStore } from "@/features/auth/store";
-import { createOrder, previewOrder, verifyPayment, isPriceChangedError } from "@/lib/api";
+import { createOrder, previewOrder, verifyPayment, isPriceChangedError, isInvalidPackMultipleError } from "@/lib/api";
 import { buildClientPricing } from "./clientPricing";
 import { applyPreviewPrices, pricesDiffer } from "./repricing";
 import type { SiteStatus } from "@/lib/api/siteStatus";
@@ -120,6 +120,10 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
       }
       return result;
     } catch (err) {
+      if (isInvalidPackMultipleError(err)) {
+        toast.error(`${err instanceof Error ? err.message : "Quantity must be in whole packs."} Update it in your cart.`);
+        router.push(ROUTES.cart);
+      }
       setPreviewError(err instanceof Error ? err.message : "Could not compute pricing.");
       return null;
     } finally {
@@ -286,6 +290,9 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
           true
         );
         toast.error("Prices have changed. Please review the updated total and confirm again.");
+      } else if (isInvalidPackMultipleError(err)) {
+        toast.error(`${err instanceof Error ? err.message : "Quantity must be in whole packs."} Update it in your cart.`);
+        router.push(ROUTES.cart);
       } else {
         toast.error(err instanceof Error ? err.message : "Failed to place order. Please try again.");
       }

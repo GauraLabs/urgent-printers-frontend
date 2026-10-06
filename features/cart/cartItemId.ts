@@ -4,6 +4,11 @@
  * Artwork and template data are included so users can order the same product
  * with different artwork/personalisation as separate cart entries.
  */
+/** Mirrors the backend's option-id normalisation (pricing._normalize): lowercase, strip all non-alphanumerics. */
+export function normalizeOptionKey(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
 export function makeCartItemId(
   productId: string,
   sizeId: string,
@@ -23,5 +28,8 @@ export function makeCartItemId(
           .map(([k, v]) => `${k}:${v}`)
           .join("|")
       : "";
-  return `${productId}-${sizeId}-${paperId}-${finishId}-${sides}-${turnaroundId}-${artworkPart}-${templatePart}`;
+  // Option ids are normalised so a line keeps one identity whether its ids came
+  // from the old slugify(label) format or the backend's canonical ids.
+  const [size, paper, finish, side, turnaround] = [sizeId, paperId, finishId, sides, turnaroundId].map(normalizeOptionKey);
+  return `${productId}-${size}-${paper}-${finish}-${side}-${turnaround}-${artworkPart}-${templatePart}`;
 }

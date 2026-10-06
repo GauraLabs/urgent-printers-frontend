@@ -7,6 +7,7 @@ import type {
 } from "@/types";
 import { apiFetch, apiFetchPage, API_URL, ApiError } from "./client";
 import { logApiError } from "./logApiError";
+import { normalizePack } from "@/lib/pack";
 
 // ─── Backend shapes (camelCase from server, totalAmount as string) ────────────
 
@@ -14,6 +15,9 @@ interface BackendOrderListItem {
   productName: string;
   thumbnailUrl: string | null;
   quantity: number;
+  // Pack snapshot; absent on a backend that predates pack selling.
+  packSize?: number | null;
+  unitLabel?: string | null;
 }
 
 interface BackendOrderCard {
@@ -51,6 +55,8 @@ interface BackendOrderItem {
   artworkStatus?: string;
   templateData?: Record<string, string>;
   canReview?: boolean;
+  packSize?: number | null;
+  unitLabel?: string | null;
 }
 
 interface BackendPricing {
@@ -76,6 +82,8 @@ interface BackendPreviewItem {
   mrpPerUnit?: string | number | null;
   discountPerUnit?: string | number | null;
   lineSavings?: string | number | null;
+  packSize?: number | null;
+  unitLabel?: string | null;
 }
 
 export interface BackendPreview {
@@ -122,6 +130,19 @@ const n = (v: string | number | undefined): number =>
 const nOpt = (v: string | number | null | undefined): number | undefined =>
   v === undefined || v === null ? undefined : parseFloat(String(v));
 
+// Display-only pack snapshot. Non-pack lines carry no pack fields at all so
+// they render exactly as before.
+function packSnapshot(i: { packSize?: number | null; unitLabel?: string | null }): { packSize?: number; unitLabel?: string } {
+  const pack = normalizePack(i.packSize, i.unitLabel);
+  return pack.packSize > 1 ? pack : {};
+}
+
+export const INVALID_PACK_MULTIPLE_CODE = "invalid_pack_multiple";
+
+export function isInvalidPackMultipleError(err: unknown): boolean {
+  return err instanceof ApiError && err.status === 422 && err.code === INVALID_PACK_MULTIPLE_CODE;
+}
+
 export const PRICE_CHANGED_CODE = "price_changed";
 
 export function isPriceChangedError(err: unknown): boolean {
@@ -158,6 +179,7 @@ function mapOrderCard(b: BackendOrderCard): OrderCard {
       productName: i.productName,
       thumbnailUrl: i.thumbnailUrl,
       quantity: i.quantity,
+      ...packSnapshot(i),
     })),
   };
 }
@@ -189,6 +211,7 @@ export function mapOrderDetail(b: BackendOrderDetail): Order {
     artworkStatus:  i.artworkStatus,
     templateData:   i.templateData,
     canReview:      i.canReview ?? false,
+    ...packSnapshot(i),
   }));
 
   const statusHistory: OrderStatusEvent[] = b.statusHistory.map((s) => ({
@@ -283,6 +306,7 @@ export function mapPreview(raw: BackendPreview): OrderPreview {
     mrpPerUnit:      nOpt(i.mrpPerUnit),
     discountPerUnit: nOpt(i.discountPerUnit),
     lineSavings:     nOpt(i.lineSavings),
+    ...packSnapshot(i),
   }));
   return { pricing: mapPricing(raw.pricing), items, estimatedDelivery: raw.estimatedDelivery };
 }

@@ -99,6 +99,19 @@ export interface TurnaroundOption {
   extraCost: number;
 }
 
+// Canonical "landing" configuration the shopping feed advertises (server-built).
+export interface ListingOffer {
+  quantity: number;
+  packSize: number;
+  price: number;
+  salePrice: number | null;
+  saleStartsAt: string | null;
+  saleEndsAt: string | null;
+  inStock: boolean;
+  // Precomputed PDP query string, e.g. "qty=50&size=2x2-in".
+  query: string;
+}
+
 // ─── Product ──────────────────────────────────────────────────────────────────
 
 export interface Product {
@@ -140,6 +153,13 @@ export interface Product {
   discountAmount?: number;
   onSale?: boolean;
   discountEndsAt?: string;
+  // Pack/set selling. Absent on an old backend and in mock data: treat as
+  // packSize 1 / "pcs" (see lib/pack.ts normalizePack).
+  packSize?: number;
+  unitLabel?: string;
+  priceFromPack?: number;
+  mrpFromPack?: number;
+  listingOffer?: ListingOffer | null;
   customizationMode: CustomizationMode;
   templateFields: TemplateField[];
 }
@@ -161,6 +181,9 @@ export interface CartItemConfig {
   // Flat surcharge (INR) for the selected turnaround — must be persisted here
   // since it can't be reconstructed from turnaroundId alone once in the cart.
   turnaroundExtraCost: number;
+  // Copied from the product at add time; server values win after sync.
+  packSize?: number;
+  unitLabel?: string;
   artworkFileName?: string;
   artworkFileSize?: number;
   artworkFileKey?: string;
@@ -177,6 +200,10 @@ export interface CartItem {
   mrpPerUnit?: number;
   // Optional: carts persisted before this field, and server-synced items, lack it.
   addedAt?: string;
+  // Set by the server when it snapped this line to whole packs; consumed once
+  // (toast) and never persisted.
+  quantityCorrected?: boolean;
+  originalQuantity?: number;
 }
 
 // ─── User / Auth ──────────────────────────────────────────────────────────────
@@ -304,6 +331,8 @@ export interface OrderPreviewItem {
   mrpPerUnit?: number;
   discountPerUnit?: number;
   lineSavings?: number;
+  packSize?: number;
+  unitLabel?: string;
 }
 
 export interface OrderPreview {
@@ -367,6 +396,8 @@ export interface OrderItem {
   templateData?: Record<string, string>;
   // Delivered order + this customer hasn't already reviewed the product (any order, ever).
   canReview?: boolean;
+  packSize?: number;
+  unitLabel?: string;
 }
 
 // Compact item shape used only in the orders list card
@@ -374,6 +405,8 @@ export interface OrderListItem {
   productName: string;
   thumbnailUrl: string | null;
   quantity: number;
+  packSize?: number;
+  unitLabel?: string;
 }
 
 export interface OrderPricing {

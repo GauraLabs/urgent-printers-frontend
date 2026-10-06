@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type { PricingTier, PrintSpec } from "@/types";
+import { normalizePack, packPrice } from "@/lib/pack";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -93,6 +94,9 @@ export interface FromPriceInput {
   mrpFrom?: number;
   discountPercent?: number;
   printSpec?: OptionSpec;
+  packSize?: number;
+  priceFromPack?: number;
+  mrpFromPack?: number;
 }
 
 export interface FromPrice {
@@ -121,6 +125,22 @@ export function getFromPrice(product: FromPriceInput): FromPrice {
   if (tier.mrpPerUnit === undefined) return { price, discount: null };
   const mrp = round2(tier.mrpPerUnit * m);
   return { price, discount: toDisplayDiscount(price, mrp, discountPercent(mrp, price)) };
+}
+
+/**
+ * "From" price for one pack (card/search/recent). Same discount percent as the
+ * per-unit figure; pack amounts come from the server's priceFromPack/mrpFromPack
+ * or, failing that, per-unit x packSize in integer cents. For packSize 1 this is
+ * exactly getFromPrice.
+ */
+export function getFromPackPrice(product: FromPriceInput): FromPrice {
+  const { packSize } = normalizePack(product.packSize);
+  const unit = getFromPrice(product);
+  if (packSize === 1) return unit;
+  const price = product.priceFromPack ?? packPrice(unit.price, packSize);
+  if (!unit.discount) return { price, discount: null };
+  const mrp = product.mrpFromPack ?? packPrice(unit.discount.mrp, packSize);
+  return { price, discount: toDisplayDiscount(price, mrp, unit.discount.percent) };
 }
 
 export function getDisplayPricePerUnit(product: FromPriceInput): number {

@@ -7,7 +7,9 @@ import type {
   SidesOption,
   CustomizationMode,
   TemplateField,
+  ListingOffer,
 } from "@/types";
+import { normalizePack, packPrice } from "@/lib/pack";
 import { mockProducts } from "@/lib/mock-data";
 import { getDisplayPricePerUnit, minOptionMultiplier, round2, slugify } from "@/lib/utils";
 import { delay } from "./delay";
@@ -37,8 +39,24 @@ export interface BackendProductCard {
   discount_percent?: number | null;
   discount_amount?: number | null;
   on_sale?: boolean;
+  // Pack fields are absent from a backend that predates pack selling.
+  pack_size?: number | null;
+  unit_label?: string | null;
+  price_from_pack?: number | null;
+  mrp_from_pack?: number | null;
   rating: number;
   review_count: number;
+}
+
+export interface BackendListingOffer {
+  quantity: number;
+  pack_size?: number | null;
+  price: number | string;
+  sale_price?: number | string | null;
+  sale_starts_at?: string | null;
+  sale_ends_at?: string | null;
+  in_stock?: boolean;
+  query?: string | null;
 }
 
 export interface BackendProductDetail extends BackendProductCard {
@@ -46,9 +64,9 @@ export interface BackendProductDetail extends BackendProductCard {
   images: { thumb: string; md: string; lg: string; original: string }[];
   video_url: string | null;
   video_thumbnail_url: string | null;
-  sizes: { label: string; width: number; height: number; unit: string; is_active: boolean; price_multiplier: number; is_default: boolean }[];
-  paper_types: { label: string; gsm: number | null; is_active: boolean; price_multiplier: number; is_default: boolean }[];
-  finishes: { label: string; is_active: boolean; price_multiplier: number; is_default: boolean }[];
+  sizes: { id?: string | null; label: string; width: number; height: number; unit: string; is_active: boolean; price_multiplier: number; is_default: boolean }[];
+  paper_types: { id?: string | null; label: string; gsm: number | null; is_active: boolean; price_multiplier: number; is_default: boolean }[];
+  finishes: { id?: string | null; label: string; is_active: boolean; price_multiplier: number; is_default: boolean }[];
   // is_active is absent on backends that predate it; absent means active.
   sides_options: { label: string; price_multiplier: number; is_default: boolean; is_active?: boolean }[];
   quantity_steps: number[];
@@ -61,6 +79,7 @@ export interface BackendProductDetail extends BackendProductCard {
     discount_per_unit?: number | null;
   }[];
   discount_ends_at?: string | null;
+  listing_offer?: BackendListingOffer | null;
   turnaround_options: { type: string; days: number; extra_cost: number; is_active: boolean }[];
   seo: { title: string | null; description: string | null; canonical_url: string | null };
   customization_mode: string;
@@ -99,6 +118,8 @@ export interface BackendSearchDoc {
   discount_percent?: number | null;
   discount_amount?: number | null;
   has_discount?: boolean;
+  pack_size?: number | null;
+  unit_label?: string | null;
   // Not indexed by Typesense yet — treated as optional/absent, same posture as
   // category_slug/category_name below, until search results carry it too.
   medium_url?: string | null;
@@ -131,6 +152,43 @@ function discountFields(src: {
   };
 }
 
+function mapListingOffer(o: BackendListingOffer | null | undefined): ListingOffer | null {
+  if (!o) return null;
+  const price = Number(o.price);
+  if (!Number.isFinite(price)) return null;
+  const sale = o.sale_price === null || o.sale_price === undefined ? null : Number(o.sale_price);
+  return {
+    quantity: o.quantity,
+    packSize: normalizePack(o.pack_size).packSize,
+    price,
+    salePrice: sale !== null && Number.isFinite(sale) ? sale : null,
+    saleStartsAt: o.sale_starts_at ?? null,
+    saleEndsAt: o.sale_ends_at ?? null,
+    inStock: o.in_stock ?? true,
+    query: o.query ?? "",
+  };
+}
+
+function packFields(src: {
+  packSize?: number | null;
+  unitLabel?: string | null;
+  priceFrom?: number | null;
+  mrpFrom?: number | null;
+  priceFromPack?: number | null;
+  mrpFromPack?: number | null;
+}): Pick<Product, "packSize" | "unitLabel" | "priceFromPack" | "mrpFromPack"> {
+  const { packSize, unitLabel } = normalizePack(src.packSize, src.unitLabel);
+  if (packSize === 1) return { packSize, unitLabel };
+  // Server pack figures win; otherwise derive from the already-rounded
+  // per-unit price so a card is never left showing a per-unit price.
+  return {
+    packSize,
+    unitLabel,
+    priceFromPack: src.priceFromPack ?? (src.priceFrom != null ? packPrice(src.priceFrom, packSize) : undefined),
+    mrpFromPack: src.mrpFromPack ?? (src.mrpFrom != null ? packPrice(src.mrpFrom, packSize) : undefined),
+  };
+}
+
 export function mapCard(c: BackendProductCard): Product {
   const imageUrl = c.thumbnail_url ?? `https://picsum.photos/seed/${c.slug}/600/400`;
   return {
@@ -157,6 +215,7 @@ export function mapCard(c: BackendProductCard): Product {
     badge: c.badge,
     priceFrom: c.price_from ?? undefined,
     ...discountFields({ mrp: c.mrp_from, percent: c.discount_percent, amount: c.discount_amount, onSale: c.on_sale }),
+    ...packFields({ packSize: c.pack_size, unitLabel: c.unit_label, priceFrom: c.price_from, mrpFrom: c.mrp_from, priceFromPack: c.price_from_pack, mrpFromPack: c.mrp_from_pack }),
     customizationMode: "none" as CustomizationMode,
     templateFields: [],
   };
@@ -172,7 +231,7 @@ export function mapDetail(d: BackendProductDetail): Product {
   const sizes: SizeOption[] = d.sizes
     .filter((s) => s.is_active)
     .map((s) => ({
-      id: slugify(s.label),
+      id: s.id || slugify(s.label),
       label: s.label,
       width: s.width,
       height: s.height,
@@ -184,7 +243,7 @@ export function mapDetail(d: BackendProductDetail): Product {
   const papers = d.paper_types
     .filter((p) => p.is_active)
     .map((p) => ({
-      id: slugify(p.label),
+      id: p.id || slugify(p.label),
       label: p.label,
       weight: p.gsm ? `${p.gsm}gsm` : "",
       description: p.label,
@@ -195,7 +254,7 @@ export function mapDetail(d: BackendProductDetail): Product {
   const finishes = d.finishes
     .filter((f) => f.is_active)
     .map((f) => ({
-      id: slugify(f.label),
+      id: f.id || slugify(f.label),
       label: f.label,
       description: f.label,
       priceMultiplier: f.price_multiplier,
@@ -258,6 +317,8 @@ export function mapDetail(d: BackendProductDetail): Product {
     badge: d.badge,
     priceFrom: d.price_from ?? undefined,
     ...discountFields({ mrp: d.mrp_from, percent: d.discount_percent, amount: d.discount_amount, onSale: d.on_sale }),
+    ...packFields({ packSize: d.pack_size, unitLabel: d.unit_label, priceFrom: d.price_from, mrpFrom: d.mrp_from, priceFromPack: d.price_from_pack, mrpFromPack: d.mrp_from_pack }),
+    listingOffer: mapListingOffer(d.listing_offer),
     discountEndsAt: d.discount_ends_at ?? undefined,
     customizationMode: (d.customization_mode ?? "none") as CustomizationMode,
     templateFields: (d.template_fields ?? []).map((f) => ({
@@ -302,6 +363,7 @@ export function mapSearchDoc(
     badge: d.badge,
     priceFrom: d.base_price ?? undefined,
     ...discountFields({ mrp: d.base_mrp, percent: d.discount_percent, amount: d.discount_amount, onSale: d.has_discount }),
+    ...packFields({ packSize: d.pack_size, unitLabel: d.unit_label, priceFrom: d.base_price, mrpFrom: d.base_mrp }),
     customizationMode: "none" as CustomizationMode,
     templateFields: [],
   };

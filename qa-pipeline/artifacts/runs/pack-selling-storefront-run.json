@@ -1,0 +1,232 @@
+{
+  "feature_name": "Pack Selling Storefront",
+  "plan_path": "qa-pipeline/artifacts/plans/pack-selling-storefront-plan.json",
+  "run_timestamp": "2026-10-06T21:04:50.586Z",
+  "trace_path": "qa-pipeline/artifacts/traces/pack-selling-storefront-trace.zip",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "hp-01",
+      "action": "Open the Stickers & Labels category and read the pack card price",
+      "selector": null,
+      "route": "/products/stickers-labels",
+      "bounding_box": null,
+      "timestamp_ms": 1218,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/pack-selling-storefront/hp-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 1
+        }
+      ],
+      "console_errors": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <RedirectBoundary>\n      <RedirectErrorBoundary router={{...}}>\n        <InnerLayoutRouter url=\"/products/...\" tree={[...]} params={{...}} cacheNode={{rsc:{...}, ...}} ...>\n          <SegmentViewNode type=\"page\" pagePath=\"products/[...\">\n            <SegmentTrieNode>\n            <CategoryPage>\n              <script>\n              <section>\n                <div>\n                <ProductsPageShell products={[...]} total={2} categories={[...]} categoryName={\"Stickers...\"} ...>\n                  <Suspense fallback={<div>}>\n                    <ShellInner products={[...]} total={2} categories={[...]} categoryName={\"Stickers...\"} ...>\n                      <div className=\"max-w-7xl ...\">\n                        <SearchField value=\"\" onChange={function bound dispatchSetState} onClear={function onClear} ...>\n                          <div className=\"relative m...\">\n                            <Search>\n                            <input\n                              ref={{current:null}}\n                              type=\"search\"\n                              name={undefined}\n                              value=\"\"\n                              onChange={function onChange}\n                              placeholder=\"Search this catalog…\"\n                              aria-label=\"Search this catalog\"\n                              autoComplete=\"off\"\n                              autoFocus={undefined}\n                              className={\"[&::-webkit-search-cancel-button]:hidden [&::-webkit-search-cancel-button]:...\"}\n-                             style={{caret-color:\"transparent\"}}\n                            >\n                            ...\n                        <div>\n                        <div>\n                        ...\n                          <FilterControls categories={[...]} showCategoryFilter={undefined} disabled={false}>\n                            <div className=\"flex flex-...\">\n                              <div>\n                              <div>\n                                <p>\n                                <div className=\"flex flex-...\">\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  ...\n                              ...\n                              <div>\n                                <p>\n                                <div className=\"flex items...\">\n                                  <input\n                                    type=\"number\"\n                                    placeholder=\"Min\"\n                                    value=\"\"\n                                    onChange={function onChange}\n                                    onBlur={function applyPrice}\n                                    onKeyDown={function onKeyDown}\n                                    min={0}\n                                    className=\"w-full h-8 rounded-md border border-border bg-background px-3 text-sm f...\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  <span>\n                                  <input\n                                    type=\"number\"\n                                    placeholder=\"Max\"\n                                    value=\"\"\n                                    onChange={function onChange}\n                                    onBlur={function applyPrice}\n                                    onKeyDown={function onKeyDown}\n                                    min={0}\n                                    className=\"w-full h-8 rounded-md border border-border bg-background px-3 text-sm f...\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                              <Separator>\n                              <div>\n                                <p>\n                                <div className=\"flex flex-...\">\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                              <Separator>\n                              <div>\n                                <p>\n                                <div className=\"flex flex-...\">\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n          ...\n        ...\n"
+      ]
+    },
+    {
+      "step_id": "hp-02",
+      "action": "Open the product and read the pack pricing rows",
+      "selector": null,
+      "route": "/products/stickers-labels/custom-diecut-stickers",
+      "bounding_box": null,
+      "timestamp_ms": 2536,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/pack-selling-storefront/hp-02.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 7
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-03",
+      "action": "Select the 5-pack (250 pcs) tier",
+      "selector": "getByRole('button').filter({ hasText: '250 pcs · ₹1,500.00' }).first()",
+      "route": "/products/stickers-labels/custom-diecut-stickers",
+      "bounding_box": {
+        "x": 673,
+        "y": 329,
+        "width": 574,
+        "height": 61
+      },
+      "timestamp_ms": 2796,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/pack-selling-storefront/hp-03.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-04",
+      "action": "Add five packs to the cart",
+      "selector": "getByRole('button', { name: /Add to Cart · ₹1,500\\.00/ }).first()",
+      "route": "/products/stickers-labels/custom-diecut-stickers",
+      "bounding_box": {
+        "x": 672,
+        "y": 336,
+        "width": 576,
+        "height": 48
+      },
+      "timestamp_ms": 3398,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/pack-selling-storefront/hp-04.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-05",
+      "action": "Step the quantity up and back down by one whole pack",
+      "selector": "getByRole('button', { name: 'Increase quantity' }).first()",
+      "route": "/products/stickers-labels/custom-diecut-stickers",
+      "bounding_box": {
+        "x": 1133,
+        "y": 153,
+        "width": 23,
+        "height": 24
+      },
+      "timestamp_ms": 4011,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/pack-selling-storefront/hp-05.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-06",
+      "action": "Open the cart page and confirm the pack quantity and stepper",
+      "selector": null,
+      "route": "/cart",
+      "bounding_box": null,
+      "timestamp_ms": 5179,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/pack-selling-storefront/hp-06.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-01",
+      "action": "Land on the PDP using the shopping feed query string",
+      "selector": null,
+      "route": "/products/stickers-labels/custom-diecut-stickers",
+      "bounding_box": null,
+      "timestamp_ms": 7502,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/pack-selling-storefront/alt-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 7
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-02",
+      "action": "Read the JSON-LD offer emitted for the same page",
+      "selector": null,
+      "route": "/products/stickers-labels/custom-diecut-stickers",
+      "bounding_box": null,
+      "timestamp_ms": 7688,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/pack-selling-storefront/alt-02.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-01",
+      "action": "Open the PDP with invalid preselect params",
+      "selector": null,
+      "route": "/products/stickers-labels/custom-diecut-stickers",
+      "bounding_box": null,
+      "timestamp_ms": 8806,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/pack-selling-storefront/err-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 5
+        }
+      ],
+      "console_errors": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <RedirectBoundary>\n      <RedirectErrorBoundary router={{...}}>\n        <InnerLayoutRouter url={\"/product...\"} tree={[...]} params={{...}} cacheNode={{rsc:{...}, ...}} ...>\n          <SegmentViewNode type=\"page\" pagePath=\"products/[...\">\n            <SegmentTrieNode>\n            <ProductDetailPage>\n              <script>\n              <div className=\"max-w-7xl ...\">\n                <nav>\n                <div className=\"grid grid-...\">\n                  <div>\n                  <div>\n                    <div>\n                    <ProductDetailClient product={{id:\"16\",slug:\"...\", ...}}>\n                      ...\n                        <div className=\"rounded-2x...\">\n                          <p>\n                          <form onSubmit={function handleSubmit} className=\"flex gap-2\">\n                            <Input value=\"\" onValueChange={function onValueChange} inputMode=\"numeric\" maxLength={6} ...>\n                              <Input type={undefined} data-slot=\"input\" className=\"w-full min...\" value=\"\" ...>\n                                <FieldControl ref={null} type={undefined} data-slot=\"input\" className=\"w-full min...\" ...>\n                                  <input\n                                    id=\"base-ui-_R_526iklritpesndelb_\"\n                                    disabled={false}\n                                    name={undefined}\n                                    ref={function}\n                                    aria-labelledby={undefined}\n                                    autoFocus={false}\n                                    value=\"\"\n                                    onChange={function}\n                                    onFocus={function}\n                                    onBlur={function}\n                                    onKeyDown={function}\n                                    type={undefined}\n                                    data-slot=\"input\"\n                                    inputMode=\"numeric\"\n                                    maxLength={6}\n                                    placeholder=\"Enter 6-digit pincode\"\n                                    aria-label=\"Pincode\"\n                                    className=\"w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-...\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                            ...\n                      <div ref={{current:null}} className=\"mt-8 pt-6 ...\">\n                        <p>\n                        <TemplateForm fields={[...]} onChange={function bound dispatchSetState} showErrors={false}>\n                          <div className=\"grid grid-...\">\n                            <div className=\"\">\n                              <label>\n                              <input\n                                type=\"text\"\n                                value=\"\"\n                                onChange={function onChange}\n                                onBlur={function onBlur}\n                                placeholder=\"Enter text for your sticker\"\n                                maxLength={30}\n                                className=\"w-full rounded-xl border px-3 py-2.5 text-sm bg-background transition-color...\"\n-                               style={{caret-color:\"transparent\"}}\n                              >\n                              ...\n                      <div className=\"mt-8 pt-6 ...\">\n                        <ArtworkUpload onChange={function ProductDetailClient.useCallback[handleArtworkChange]}>\n                          <div className=\"flex flex-...\">\n                            <div>\n                            <div onKeyDown={function} onFocus={function} onBlur={function} onClick={function} ...>\n                              <input\n                                accept=\"application/pdf,.pdf,application/postscript,.ai,image/vnd.adobe.photoshop,.psd...\"\n                                multiple={true}\n                                type=\"file\"\n                                style={{\n+                                 border: 0\n+                                 clip: \"rect(0, 0, 0, 0)\"\n-                                 clip: \"rect(0px, 0px, 0px, 0px)\"\n+                                 clipPath: \"inset(50%)\"\n+                                 height: \"1px\"\n-                                 height: \"1px\"\n+                                 margin: \"0 -1px -1px 0\"\n+                                 overflow: \"hidden\"\n+                                 padding: 0\n+                                 position: \"absolute\"\n-                                 position: \"absolute\"\n+                                 width: \"1px\"\n-                                 width: \"1px\"\n+                                 whiteSpace: \"nowrap\"\n-                                 border-top-width: \"0px\"\n-                                 border-right-width: \"0px\"\n-                                 border-bottom-width: \"0px\"\n-                                 border-left-width: \"0px\"\n-                                 border-top-style: \"none\"\n-                                 border-right-style: \"none\"\n-                                 border-bottom-style: \"none\"\n-                                 border-left-style: \"none\"\n-                                 border-top-color: \"currentcolor\"\n-                                 border-right-color: \"currentcolor\"\n-                                 border-bottom-color: \"currentcolor\"\n-                                 border-left-color: \"currentcolor\"\n-                                 border-image-source: \"none\"\n-                                 border-image-slice: \"100%\"\n-                                 border-image-width: \"1\"\n-                                 border-image-outset: \"0\"\n-                                 border-image-repeat: \"stretch\"\n-                                 clip-path: \"inset(50%)\"\n-                                 margin-top: \"0px\"\n-                                 margin-right: \"-1px\"\n-                                 margin-bottom: \"-1px\"\n-                                 margin-left: \"0px\"\n-                                 overflow-x: \"hidden\"\n-                                 overflow-y: \"hidden\"\n-                                 padding-top: \"0px\"\n-                                 padding-right: \"0px\"\n-                                 padding-bottom: \"0px\"\n-                                 padding-left: \"0px\"\n-                                 white-space-collapse: \"collapse\"\n-                                 text-wrap-mode: \"nowrap\"\n-                                 caret-color: \"transparent\"\n                                }}\n                                onChange={function}\n                                onClick={function}\n                                tabIndex={-1}\n                                ref={{current:null}}\n                                aria-label=\"Upload artwork file\"\n                              >\n                              ...\n                            ...\n                        ...\n                      ...\n                ...\n          ...\n        ...\n"
+      ]
+    },
+    {
+      "step_id": "alt-03",
+      "action": "Confirm a non-pack product is unchanged",
+      "selector": null,
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": null,
+      "timestamp_ms": 10073,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/pack-selling-storefront/alt-03.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 9
+        }
+      ],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    }
+  ],
+  "lighthouse": {
+    "initial_load": null,
+    "final_state": null
+  }
+}

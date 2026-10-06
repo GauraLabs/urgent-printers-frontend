@@ -1,17 +1,22 @@
 "use client";
 
 import { Star } from "lucide-react";
-import { PriceDisplay } from "@/components/common/PriceDisplay";
-import { formatPrice, cn } from "@/lib/utils";
+import { DiscountBadge, PriceDisplay, StruckMrp } from "@/components/common/PriceDisplay";
+import { formatPrice, formatPricePerUnit, cn } from "@/lib/utils";
+import { isPack, normalizePack, perUnitSuffix } from "@/lib/pack";
 import type { PricingTier } from "@/types";
 
 interface PricingTableProps {
   tiers: PricingTier[];
   selectedQuantity: number;
   onSelectQuantity: (qty: number) => void;
+  packSize?: number;
+  unitLabel?: string;
 }
 
-export function PricingTable({ tiers, selectedQuantity, onSelectQuantity }: PricingTableProps) {
+export function PricingTable({ tiers, selectedQuantity, onSelectQuantity, packSize, unitLabel }: PricingTableProps) {
+  const pack = normalizePack(packSize, unitLabel);
+  const packMode = isPack(pack.packSize);
   return (
     <div className="rounded-xl border border-border overflow-hidden shadow-sm">
       <div className="bg-muted/50 px-4 py-2.5 flex items-center justify-between border-b border-border">
@@ -28,6 +33,45 @@ export function PricingTable({ tiers, selectedQuantity, onSelectQuantity }: Pric
         {tiers.map((tier) => {
           const isSelected = selectedQuantity === tier.quantity;
           const isBest = tier.isBestValue;
+          const packs = tier.quantity / pack.packSize;
+
+          if (packMode) {
+            const mrpTotal = tier.mrpPerUnit !== undefined ? Math.round(tier.mrpPerUnit * 100) * tier.quantity / 100 : undefined;
+            const showDiscount = mrpTotal !== undefined && tier.discountPercent !== undefined && mrpTotal > tier.totalPrice;
+            return (
+              <button
+                key={tier.quantity}
+                onClick={() => onSelectQuantity(tier.quantity)}
+                className={cn(
+                  "w-full flex items-center justify-between gap-3 px-4 py-3 text-left border-l-2 border-transparent transition-colors duration-200 text-sm",
+                  "hover:bg-muted/50",
+                  isSelected && "bg-primary/5 border-primary",
+                  isBest && !isSelected && "bg-brand-orange/5"
+                )}
+              >
+                <span className="min-w-0">
+                  <span className={cn("block font-medium transition-colors duration-200", isSelected && "text-primary")}>
+                    {tier.quantity.toLocaleString("en-IN")} {pack.unitLabel} · {formatPrice(tier.totalPrice)}
+                    {isBest && (
+                      <span className="ml-1.5 inline-flex items-center gap-0.5 text-[9px] font-bold text-brand-orange bg-brand-orange/10 px-1.5 py-0.5 rounded-full">
+                        <Star size={8} className="fill-brand-orange text-brand-orange" /> BEST
+                      </span>
+                    )}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    {formatPricePerUnit(tier.pricePerUnit)}{perUnitSuffix(pack.unitLabel)}
+                    {packs > 1 ? ` · ${packs.toLocaleString("en-IN")} packs` : ""}
+                  </span>
+                </span>
+                {showDiscount && (
+                  <span className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 text-xs">
+                    <StruckMrp mrp={mrpTotal} />
+                    <DiscountBadge percent={tier.discountPercent!} />
+                  </span>
+                )}
+              </button>
+            );
+          }
 
           return (
             <button

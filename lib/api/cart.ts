@@ -1,6 +1,7 @@
 import type { CartItem } from "@/types";
 import { apiFetch } from "./client";
 import { makeCartItemId } from "@/features/cart/cartItemId";
+import { normalizePack, isPack } from "@/lib/pack";
 
 const BASE = "/cart";
 
@@ -32,11 +33,18 @@ export interface BackendCartItem {
   discountPerUnit?: number | null;
   artworkFileKey: string | null;
   templateData: Record<string, string> | null;
+  // Absent on a backend that predates pack selling. The server derives pack data;
+  // these are never sent on sync.
+  packSize?: number | null;
+  unitLabel?: string | null;
+  quantityCorrected?: boolean | null;
+  originalQuantity?: number | null;
 }
 
 // ─── Mappers ──────────────────────────────────────────────────────────────────
 
 export function mapCartItem(b: BackendCartItem): CartItem {
+  const pack = normalizePack(b.packSize, b.unitLabel);
   const cartItemId = makeCartItemId(
     b.productId, b.sizeId ?? "", b.paperId ?? "", b.finishId ?? "", b.sides ?? "", b.turnaroundId,
     b.artworkFileKey ?? undefined, b.templateData ?? undefined
@@ -69,10 +77,12 @@ export function mapCartItem(b: BackendCartItem): CartItem {
       turnaroundExtraCost: parseFloat((b.totalPrice - b.pricePerUnit * b.quantity).toFixed(2)),
       artworkFileKey: b.artworkFileKey ?? undefined,
       templateData: b.templateData ?? undefined,
+      ...(isPack(pack.packSize) && { packSize: pack.packSize, unitLabel: pack.unitLabel }),
     },
     pricePerUnit: b.pricePerUnit,
     totalPrice: b.totalPrice,
     mrpPerUnit: b.mrpPerUnit ?? undefined,
+    ...(b.quantityCorrected && { quantityCorrected: true, originalQuantity: b.originalQuantity ?? undefined }),
   };
 }
 
@@ -111,11 +121,13 @@ export async function getCart(token: string): Promise<CartItem[]> {
   return data.map(mapCartItem);
 }
 
-export async function syncCart(items: CartItem[], token: string): Promise<void> {
+/** Resolves to the lines the server snapped to whole packs (empty when none). */
+export async function syncCart(items: CartItem[], token: string): Promise<CartItem[]> {
   // REAL API: POST /api/v1/cart/sync — atomically replaces server cart
-  await apiFetch<BackendCartItem[]>(`${BASE}/sync`, {
+  const data = await apiFetch<BackendCartItem[] | null>(`${BASE}/sync`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify({ items: items.map(toSyncItem) }),
   });
+  return Array.isArray(data) ? data.filter((b) => b.quantityCorrected).map(mapCartItem) : [];
 }

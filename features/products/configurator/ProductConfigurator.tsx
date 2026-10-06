@@ -6,6 +6,7 @@ import { motion, AnimatePresence, usePresence, useAnimationControls } from "moti
 import { toast } from "sonner";
 import { PricingTable } from "./PricingTable";
 import { priceTier } from "./pricing";
+import type { Preselection } from "./preselect";
 import { PriceDisplay } from "@/components/common/PriceDisplay";
 import { DeliveryCheck } from "../DeliveryCheck";
 import { SizeSpecGuide } from "./SizeSpecGuide";
@@ -14,6 +15,7 @@ import { SelectableCard } from "@/components/ui/selectable-card";
 import { useCartStore } from "@/features/cart/store";
 import { makeCartItemId } from "@/features/cart/cartItemId";
 import { formatPrice, formatPricePerUnit, round2, cn } from "@/lib/utils";
+import { formatPackSize, formatQuantity, formatQuantityLine, isPack, normalizePack, packPrice, perUnitSuffix } from "@/lib/pack";
 import { ROUTES } from "@/lib/constants/routes";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import Link from "next/link";
@@ -25,7 +27,9 @@ interface ProductConfiguratorProps {
   artworkFileName?: string;
   templateData?: Record<string, string>;
   onBlockedByTemplate?: () => void;
-  onStateChange?: (state: { isInCart: boolean; totalPrice: number; savings: number }) => void;
+  /** Landing configuration from feed-link query params (already validated). */
+  preselection?: Preselection;
+  onStateChange?: (state: { isInCart: boolean; totalPrice: number; savings: number; quantityLabel?: string }) => void;
 }
 
 function OptionButton({
@@ -168,22 +172,33 @@ function SectionLabel({ children, action }: { children: React.ReactNode; action?
 
 // Exposed via ref so StickyAddToCart can observe the button
 export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfiguratorProps>(
-  function ProductConfigurator({ product, artworkFileKey, artworkFileName, templateData, onBlockedByTemplate, onStateChange }, ref) {
+  function ProductConfigurator({ product, artworkFileKey, artworkFileName, templateData, onBlockedByTemplate, preselection, onStateChange }, ref) {
     const { pricingTiers, turnaroundOptions, printSpec } = product;
     const defaultTier = pricingTiers.find((t) => t.isBestValue) ?? pricingTiers[0];
 
-    const [selectedSize, setSelectedSize] = useState(() => getDefault(printSpec.sizes));
-    const [selectedPaper, setSelectedPaper] = useState(() => getDefault(printSpec.papers));
-    const [selectedFinish, setSelectedFinish] = useState(() => getDefault(printSpec.finishes));
-    const [selectedSides, setSelectedSides] = useState<SidesOption | undefined>(() => getDefault(printSpec.sides));
-    const [selectedQuantity, setSelectedQuantity] = useState(defaultTier.quantity);
+    const [selectedSize, setSelectedSize] = useState(
+      () => printSpec.sizes.find((o) => o.id === preselection?.sizeId) ?? getDefault(printSpec.sizes)
+    );
+    const [selectedPaper, setSelectedPaper] = useState(
+      () => printSpec.papers.find((o) => o.id === preselection?.paperId) ?? getDefault(printSpec.papers)
+    );
+    const [selectedFinish, setSelectedFinish] = useState(
+      () => printSpec.finishes.find((o) => o.id === preselection?.finishId) ?? getDefault(printSpec.finishes)
+    );
+    const [selectedSides, setSelectedSides] = useState<SidesOption | undefined>(
+      () => printSpec.sides.find((o) => o.label === preselection?.sides) ?? getDefault(printSpec.sides)
+    );
+    const [selectedQuantity, setSelectedQuantity] = useState(preselection?.quantity ?? defaultTier.quantity);
     // Some legacy/seed-data products have an empty turnaround_options array
     // from the backend — unlike size/paper/finish, turnaround is required by
     // CartItemConfig, so a missing selection here blocks Add to Cart below
     // rather than being silently treated as "not applicable."
     const [selectedTurnaround, setSelectedTurnaround] = useState<TurnaroundOption | undefined>(
-      () => turnaroundOptions[0]
+      () => turnaroundOptions.find((o) => o.id === preselection?.turnaroundId) ?? turnaroundOptions[0]
     );
+
+    const { packSize, unitLabel } = normalizePack(product.packSize, product.unitLabel);
+    const packMode = isPack(packSize);
 
     const prefersReducedMotion = usePrefersReducedMotion();
     // Transient click-confirmation pulse on the Add to Cart button content —
@@ -217,6 +232,11 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     const selectedPricing = priceTier(baseTier, optionMultiplier);
     const pricePerUnit = selectedPricing.pricePerUnit;
     const totalPrice = round2(pricePerUnit * selectedQuantity + (selectedTurnaround?.extraCost ?? 0));
+    const displayUnitOrPack = packMode ? packPrice(pricePerUnit, packSize) : pricePerUnit;
+    const displayMrp =
+      selectedPricing.mrpPerUnit !== undefined && packMode
+        ? packPrice(selectedPricing.mrpPerUnit, packSize)
+        : selectedPricing.mrpPerUnit;
     const lineSavings =
       selectedPricing.mrpPerUnit !== undefined
         ? round2((selectedPricing.mrpPerUnit - pricePerUnit) * selectedQuantity)
@@ -241,9 +261,10 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     // Notify parent (ProductDetailClient) so StickyAddToCart stays in sync
     // Savings only count while the discount is actually displayed (percent >= 1).
     const shownSavings = selectedPricing.discountPercent !== undefined ? lineSavings : 0;
+    const quantityLabel = packMode ? formatQuantity(selectedQuantity, packSize, unitLabel) : undefined;
     useEffect(() => {
-      onStateChange?.({ isInCart, totalPrice, savings: shownSavings });
-    }, [isInCart, totalPrice, shownSavings, onStateChange]);
+      onStateChange?.({ isInCart, totalPrice, savings: shownSavings, quantityLabel });
+    }, [isInCart, totalPrice, shownSavings, quantityLabel, onStateChange]);
 
     // Delta helpers — show cost impact vs cheapest option in each category
     // (Math.min(...[]) is -Infinity, but these are only read while mapping a
@@ -312,6 +333,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
         turnaroundId: selectedTurnaround.id,
         turnaroundLabel: selectedTurnaround.label,
         turnaroundExtraCost: selectedTurnaround.extraCost,
+        ...(packMode && { packSize, unitLabel }),
         artworkFileKey,
         artworkFileName,
         templateData,
@@ -333,7 +355,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
       );
 
       toast.success(`${product.name} added to cart`, {
-        description: `${selectedQuantity.toLocaleString("en-IN")} units · ${formatPrice(totalPrice)}`,
+        description: `${formatQuantityLine(selectedQuantity, packSize, unitLabel)} · ${formatPrice(totalPrice)}`,
       });
 
       // Transient confirmation pulse — layered on top of the toast and the
@@ -352,17 +374,19 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
         <div className="rounded-2xl border border-border bg-secondary/30 p-4 shadow-sm">
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-xs text-muted-foreground mb-1">Price per unit</p>
+              <p className="text-xs text-muted-foreground mb-1">
+                {packMode ? `Price per pack of ${formatPackSize(packSize, unitLabel)}` : "Price per unit"}
+              </p>
               <PriceDisplay
                 variant="pdp"
-                price={pricePerUnit}
-                mrp={selectedPricing.mrpPerUnit}
+                price={displayUnitOrPack}
+                mrp={displayMrp}
                 percent={selectedPricing.discountPercent}
                 endsAt={product.discountEndsAt}
                 priceSlot={
                   <PriceValue
-                    value={pricePerUnit}
-                    formatted={formatPricePerUnit(pricePerUnit)}
+                    value={displayUnitOrPack}
+                    formatted={formatPricePerUnit(displayUnitOrPack)}
                     className="font-heading font-bold text-3xl tabular-nums"
                     prefersReducedMotion={prefersReducedMotion}
                   />
@@ -371,7 +395,9 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
             </div>
             <div className="text-right">
               <p className="text-xs text-muted-foreground mb-1">
-                Total for {selectedQuantity.toLocaleString("en-IN")} units
+                {packMode
+                  ? `Total for ${formatQuantity(selectedQuantity, packSize, unitLabel)}`
+                  : `Total for ${selectedQuantity.toLocaleString("en-IN")} units`}
               </p>
               <PriceValue
                 value={totalPrice}
@@ -381,6 +407,11 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
               />
             </div>
           </div>
+          {packMode && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {formatPricePerUnit(pricePerUnit)}{perUnitSuffix(unitLabel)}
+            </p>
+          )}
           {selectedPricing.discountPercent !== undefined && lineSavings > 0 && (
             <p className="text-xs font-medium text-foreground mt-2">
               You save {formatPrice(lineSavings)} on this quantity
@@ -495,6 +526,8 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
             tiers={adjustedTiers}
             selectedQuantity={selectedQuantity}
             onSelectQuantity={setSelectedQuantity}
+            packSize={packSize}
+            unitLabel={unitLabel}
           />
         </div>
 

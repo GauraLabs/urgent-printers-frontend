@@ -13,11 +13,13 @@ interface StickyAddToCartProps {
   mrpTotal?: number;
   savings?: number;
   isInCart?: boolean;
+  /** e.g. "3 packs (150 pcs)"; only for pack products. */
+  quantityLabel?: string;
   observeRef: React.RefObject<HTMLButtonElement | null>;
   onAddToCart: () => void;
 }
 
-export function StickyAddToCart({ productName, price, mrpTotal, savings, isInCart = false, observeRef, onAddToCart }: StickyAddToCartProps) {
+export function StickyAddToCart({ productName, price, mrpTotal, savings, isInCart = false, quantityLabel, observeRef, onAddToCart }: StickyAddToCartProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -48,6 +50,7 @@ export function StickyAddToCart({ productName, price, mrpTotal, savings, isInCar
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-4">
             <div className="flex-1 min-w-0">
               <p className="font-heading font-semibold text-sm truncate">{productName}</p>
+              {quantityLabel && <p className="text-[11px] text-muted-foreground truncate">{quantityLabel}</p>}
               {mrpTotal !== undefined && savings !== undefined ? (
                 <p className="flex items-center gap-x-1.5 text-xs text-muted-foreground truncate">
                   <StruckMrp mrp={mrpTotal} className="shrink-0" />

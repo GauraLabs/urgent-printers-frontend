@@ -13,7 +13,9 @@ import { ROUTES } from "@/lib/constants/routes";
 import { buttonVariants } from "@/components/ui/button";
 import { PriceDisplay } from "@/components/common/PriceDisplay";
 import { SavingsSummary, savingsFromPricing } from "@/components/common/SavingsSummary";
-import { formatPrice, getUnitDiscount, cn } from "@/lib/utils";
+import { formatPrice, cn } from "@/lib/utils";
+import { formatQuantityLine } from "@/lib/pack";
+import { orderLinePrice } from "@/features/cart/savings";
 import { getOrderById, downloadReceipt } from "@/lib/api";
 import { useAuthStore } from "@/features/auth/store";
 import { useOrderItemCategorySlugs } from "@/hooks/useOrderItemCategorySlugs";
@@ -131,7 +133,7 @@ export default function OrderConfirmationPage() {
                         ) : null;
                       })()}
                       <p className="text-xs text-muted-foreground">
-                        {item.quantity.toLocaleString("en-IN")} units · {item.turnaroundLabel}
+                        {formatQuantityLine(item.quantity, item.packSize, item.unitLabel)} · {item.turnaroundLabel}
                       </p>
                     </div>
                     <div className="text-right shrink-0">
@@ -139,10 +141,7 @@ export default function OrderConfirmationPage() {
                       <PriceDisplay
                         variant="line"
                         align="end"
-                        price={item.pricePerUnit}
-                        mrp={getUnitDiscount(item.pricePerUnit, item.mrpPerUnit)?.mrp}
-                        percent={getUnitDiscount(item.pricePerUnit, item.mrpPerUnit)?.percent}
-                        unitLabel="/unit"
+                        {...orderLinePrice(item)}
                       />
                     </div>
                   </div>

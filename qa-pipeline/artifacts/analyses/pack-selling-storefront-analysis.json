@@ -1,0 +1,65 @@
+{
+  "feature_name": "Pack Selling Storefront",
+  "pass_count": 10,
+  "fail_count": 0,
+  "failures": [],
+  "accessibility_summary": {
+    "critical": [],
+    "serious": [
+      "color-contrast on every page visited (1 node on the category listing, 7 on the pack PDP, 3 on the cart, 9 on a non-pack PDP). The pack feature adds two new muted-foreground lines — the card's 'per 50 pcs' caption and the tier row's '₹6.00/pc' secondary — rendered with the same low-contrast token the rest of the storefront already uses, so pack text plausibly contributes nodes but is not the origin of the rule failure. The non-pack control page scores worst (9 nodes), which is the clearest evidence this is pre-existing storefront theming debt rather than something pack selling introduced."
+    ],
+    "moderate": [],
+    "coverage_caveat": "automated scan only — manual/screen-reader review still needed"
+  },
+  "performance_summary": {
+    "initial_load": "Not measured — lighthouse was deliberately set to 'off' for this run (both checkpoints are null in the run log).",
+    "final_state": "Not measured, same reason.",
+    "concerns": [
+      "Lighthouse was switched off because this run's question is pricing correctness, not load time, and each checkpoint costs ~10-20s against a 10-step single-test budget. A dedicated perf pass on the pack PDP is still worth doing: PricingTable now renders a second text line per tier row, and ProductConfigurator reads useSearchParams inside a Suspense boundary, which moves the preselect resolution to the client and is exactly the kind of change that can shift LCP/INP on the PDP without failing any assertion here."
+    ]
+  },
+  "ux_gaps": [
+    {
+      "issue": "OptionButton conveys the selected size/paper/finish purely through colour and font weight — it sets no aria-pressed, aria-checked or role=radio. A screen-reader or keyboard user landing from a shopping-feed URL cannot tell which option was preselected for them, which is precisely the moment the feature depends on the selection being legible. Pre-existing component behaviour, not introduced by pack selling, but the feed-landing flow raises its cost. The spec step alt-01 had to assert price (₹300 vs ₹480 at the 3x3 size) instead of selection state for this reason.",
+      "related_edge_case": null
+    },
+    {
+      "issue": "The checkout review step, order confirmation, account order history and the quantityCorrected 'Quantity adjusted to full packs (was N)' toast were NOT exercised in a browser. All four sit behind customer authentication, which is OTP-only with the one-time code delivered to the backend's fake SMS provider's stdout (a terminal this run cannot read); signing a token directly was attempted and correctly refused by the permission system as credential forging. These surfaces are covered instead by the storefront's own vitest suites (tests/pack-display.test.tsx covers cartLinePrice per-pack, clientPricing telemetry staying in pieces/per-unit for pack lines, and the cart-store correction path; tests/checkout-price-changed.test.tsx covers the expectedTotal/409 re-preview flow) plus the backend's tests/api/test_pack_selling.py. That is real coverage, but it is unit-level, not an end-to-end confirmation that the rendered review total equals the server preview.",
+      "related_edge_case": "Cart store rehydration before useMounted renders SSR defaults"
+    },
+    {
+      "issue": "Four 404 resource requests fire on the non-pack control PDP (/products/business-cards/matte-finish-business-cards, step alt-03). That product has a single stored image while the PDP gallery requests several variants, so these read as missing media in the dev dataset rather than a code defect — but they are unexplained console errors on a product page and would need resolving before any public cut of that screen.",
+      "related_edge_case": null
+    },
+    {
+      "issue": "GET /api/v1/feeds/products.xml is unreachable over HTTP in this environment: resolve_link_base refuses any localhost FRONTEND_URL and the route returns 503 feed_not_configured, which this run confirmed. Note the implementation is stricter than spec section 10, which scopes the guard to app_env == 'production'; as built, dev and staging also refuse to publish. That is a defensible hardening choice (a feed of localhost links is worse than no feed) but it means the route itself can never be smoke-tested outside production without an env override.",
+      "related_edge_case": null
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": "high",
+      "action": "Run the authenticated half of this flow end to end before release: add a pack line to a logged-in cart, confirm the ReviewStep total equals the POST /orders/preview total to the paisa, place the order, and confirm no price-mismatch telemetry row is written and the confirmation page reads 'N packs (M pcs)'. This is the one claim in the spec that unit tests can support but not establish, and it is the claim with money attached."
+    },
+    {
+      "priority": "high",
+      "action": "Verify the quantityCorrected path against a real legacy cart: seed an authenticated cart line at a non-multiple quantity (e.g. 120 pcs of a pack-50 product), reload, and confirm the server snaps it to 100, the store adopts the corrected value, and exactly one toast appears rather than one per line."
+    },
+    {
+      "priority": "medium",
+      "action": "Give OptionButton a real selected semantic (aria-pressed on the button, or role=radio within a radiogroup). The feed-landing flow makes an invisible preselection a functional problem, not just an a11y nicety."
+    },
+    {
+      "priority": "medium",
+      "action": "Decide deliberately whether the feed's localhost guard should remain unconditional or follow the spec's app_env == 'production' scoping. If it stays unconditional, document it in the admin FeedUrlCard copy, which currently shows a URL with no hint that it will 503 anywhere but production."
+    },
+    {
+      "priority": "low",
+      "action": "Re-run this spec with lighthouse: 'on' once the pack PDP is otherwise stable, to get a baseline for the extra per-tier text and the client-side preselect read."
+    },
+    {
+      "priority": "low",
+      "action": "Triage the storefront's color-contrast debt as its own piece of work. It is pre-existing and affects non-pack pages more than pack pages, so it should not be filed against this feature, but it does currently sit at 'serious' on every page this feature touches."
+    }
+  ]
+}
