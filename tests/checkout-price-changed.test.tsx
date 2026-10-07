@@ -14,7 +14,7 @@ const api = vi.hoisted(() => ({
 const replace = vi.hoisted(() => vi.fn());
 const toast = vi.hoisted(() => Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn() }));
 
-vi.mock("@/lib/api", () => ({ ...api, isPriceChangedError, isInvalidPackMultipleError: () => false }));
+vi.mock("@/lib/api", () => ({ ...api, isPriceChangedError, isQuantityLimitError: () => false, getCart: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace }) }));
 vi.mock("sonner", () => ({ toast }));
 vi.mock("@/features/site-status/trackConnectivity", () => ({ trackConnectivity: <T,>(p: Promise<T>) => p }));

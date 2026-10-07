@@ -10,7 +10,7 @@ import { useCartStore } from "@/features/cart/store";
 import { PriceDisplay } from "@/components/common/PriceDisplay";
 import { SavingsSummary, savingsFromPricing, type Savings } from "@/components/common/SavingsSummary";
 import { cartLinePrice, cartMrpSavings, cartTotalSavings } from "@/features/cart/savings";
-import { formatQuantityLine } from "@/lib/pack";
+import { formatQty } from "@/lib/quantity";
 import { formatPrice, cn } from "@/lib/utils";
 import type { CartItem, Address, OrderPreview } from "@/types";
 import type { PaymentMethod } from "./PaymentStep";
@@ -105,7 +105,7 @@ export function ReviewStep({
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm line-clamp-1">{item.product.name}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {formatQuantityLine(item.config.quantity, item.config.packSize, item.config.unitLabel)}
+                  {formatQty(item.config.quantity, item.config.unitLabel)}
                   {item.config.sizeLabel ? ` · ${item.config.sizeLabel}` : ""}
                 </p>
                 <p className="text-xs text-muted-foreground">

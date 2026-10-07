@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { SafeImage } from "@/components/common/SafeImage";
 import { ROUTES } from "@/lib/constants/routes";
 import { formatPrice } from "@/lib/utils";
-import { summarizeOrderQuantity } from "@/lib/pack";
+import { summarizeOrderQuantity } from "@/lib/quantity";
 import { ORDER_STATUS_LABELS } from "@/lib/constants/print-specs";
 import { ORDER_STATUS_COLORS } from "@/lib/constants/order-status";
 import type { OrderCard } from "@/types";

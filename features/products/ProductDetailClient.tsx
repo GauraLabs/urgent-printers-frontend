@@ -16,6 +16,7 @@ interface ConfiguratorState {
   totalPrice: number;
   savings: number;
   quantityLabel?: string;
+  quantityEmpty?: boolean;
 }
 
 interface ProductDetailClientProps {
@@ -118,6 +119,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         savings={configuratorState.savings > 0 ? configuratorState.savings : undefined}
         isInCart={configuratorState.isInCart}
         quantityLabel={configuratorState.quantityLabel}
+        disabled={configuratorState.quantityEmpty}
         observeRef={addItemRef}
         onAddToCart={handleStickyAdd}
       />

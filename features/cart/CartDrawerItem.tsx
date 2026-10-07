@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Trash2, Plus, Minus } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { SafeImage } from "@/components/common/SafeImage";
 import { useCartStore } from "./store";
 import { PriceDisplay } from "@/components/common/PriceDisplay";
 import { cartItemDiscount, cartLinePrice } from "./savings";
-import { formatPrice, slugify, cn } from "@/lib/utils";
-import { formatQuantity, isPack, normalizePack, stepQuantity } from "@/lib/pack";
+import { LineRateStatus } from "./LineRateStatus";
+import { QuantityInput } from "@/components/common/QuantityInput";
+import { formatPrice, slugify } from "@/lib/utils";
+import { effectiveBounds } from "@/lib/quantity";
 import { ROUTES } from "@/lib/constants/routes";
 import type { CartItem } from "@/types";
 
@@ -19,13 +21,14 @@ export function CartDrawerItem({ item }: CartDrawerItemProps) {
   const removeItem = useCartStore((s) => s.removeItem);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const closeCart = useCartStore((s) => s.closeCart);
+  const showUpdating = useCartStore((s) => Boolean(item.pricePending) && !s.unavailableIds.includes(item.cartItemId) && !s.rateErrorIds.includes(item.cartItemId));
 
   const categorySlug = item.product.categorySlug || slugify(item.product.categoryName) || "products";
   const productHref = ROUTES.product(categorySlug, item.product.slug);
 
   const discount = cartItemDiscount(item);
   const linePrice = cartLinePrice(item);
-  const { packSize, unitLabel } = normalizePack(item.config.packSize, item.config.unitLabel);
+  const bounds = effectiveBounds({ minOrderQuantity: item.config.minQuantity, maxOrderQuantity: item.config.maxQuantity });
 
   const specLine = [item.config.sizeLabel, item.config.paperLabel, item.config.finishLabel].filter(
     (v): v is string => Boolean(v)
@@ -75,43 +78,23 @@ export function CartDrawerItem({ item }: CartDrawerItemProps) {
           {item.config.turnaroundLabel.split(" ")[0]}
         </p>
 
+        <LineRateStatus cartItemId={item.cartItemId} compact />
         {discount && (
           <PriceDisplay variant="line" {...linePrice} className="mt-1" />
         )}
 
         {/* Quantity + price row */}
         <div className="flex items-center justify-between mt-2">
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() =>
-                updateQuantity(item.cartItemId, stepQuantity(item.config.quantity, "down", packSize))
-              }
-              aria-label="Decrease quantity"
-              className={cn(
-                "w-6 h-6 flex items-center justify-center rounded border border-border",
-                "hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Minus size={10} />
-            </button>
-            <span className={cn("text-xs font-medium text-center", isPack(packSize) ? "min-w-10" : "w-10")}>
-              {isPack(packSize) ? formatQuantity(item.config.quantity, packSize, unitLabel) : item.config.quantity}
-            </span>
-            <button
-              onClick={() =>
-                updateQuantity(item.cartItemId, stepQuantity(item.config.quantity, "up", packSize))
-              }
-              aria-label="Increase quantity"
-              className={cn(
-                "w-6 h-6 flex items-center justify-center rounded border border-border",
-                "hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Plus size={10} />
-            </button>
-          </div>
+          <QuantityInput
+            compact
+            value={item.config.quantity}
+            min={bounds.min}
+            max={bounds.max}
+            unitLabel={item.config.unitLabel}
+            onChange={(q) => updateQuantity(item.cartItemId, q)}
+          />
           <span className="font-semibold text-sm">
-            {formatPrice(item.totalPrice)}
+            {showUpdating ? <span className="text-xs font-medium text-muted-foreground">Updating…</span> : formatPrice(item.totalPrice)}
           </span>
         </div>
       </div>

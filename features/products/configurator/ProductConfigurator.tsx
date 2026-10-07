@@ -4,18 +4,22 @@ import { useState, forwardRef, useEffect } from "react";
 import { ShoppingBag, CheckCircle2, Info } from "lucide-react";
 import { motion, AnimatePresence, usePresence, useAnimationControls } from "motion/react";
 import { toast } from "sonner";
-import { PricingTable } from "./PricingTable";
-import { priceTier } from "./pricing";
+import { TierRateGuide } from "./TierRateGuide";
+import { TierNudge } from "./TierNudge";
 import type { Preselection } from "./preselect";
 import { PriceDisplay } from "@/components/common/PriceDisplay";
+import { QuantityInput } from "@/components/common/QuantityInput";
 import { DeliveryCheck } from "../DeliveryCheck";
 import { SizeSpecGuide } from "./SizeSpecGuide";
 import { ProductTrustBadges } from "../ProductTrustBadges";
 import { SelectableCard } from "@/components/ui/selectable-card";
 import { useCartStore } from "@/features/cart/store";
 import { makeCartItemId } from "@/features/cart/cartItemId";
-import { formatPrice, formatPricePerUnit, round2, cn } from "@/lib/utils";
-import { formatPackSize, formatQuantity, formatQuantityLine, isPack, normalizePack, packPrice, perUnitSuffix } from "@/lib/pack";
+import { formatPrice, formatPricePerUnit, cn } from "@/lib/utils";
+import {
+  clampQuantity, effectiveBounds, formatQty, nextTierNudge, normalizeUnitLabel, perPieceSuffix,
+  priceForQuantity, tierGuideEntries,
+} from "@/lib/quantity";
 import { ROUTES } from "@/lib/constants/routes";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import Link from "next/link";
@@ -29,7 +33,7 @@ interface ProductConfiguratorProps {
   onBlockedByTemplate?: () => void;
   /** Landing configuration from feed-link query params (already validated). */
   preselection?: Preselection;
-  onStateChange?: (state: { isInCart: boolean; totalPrice: number; savings: number; quantityLabel?: string }) => void;
+  onStateChange?: (state: { isInCart: boolean; totalPrice: number; savings: number; quantityLabel?: string; quantityEmpty?: boolean }) => void;
 }
 
 function OptionButton({
@@ -174,7 +178,8 @@ function SectionLabel({ children, action }: { children: React.ReactNode; action?
 export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfiguratorProps>(
   function ProductConfigurator({ product, artworkFileKey, artworkFileName, templateData, onBlockedByTemplate, preselection, onStateChange }, ref) {
     const { pricingTiers, turnaroundOptions, printSpec } = product;
-    const defaultTier = pricingTiers.find((t) => t.isBestValue) ?? pricingTiers[0];
+    const bounds = effectiveBounds(product);
+    const unitLabel = normalizeUnitLabel(product.unitLabel);
 
     const [selectedSize, setSelectedSize] = useState(
       () => printSpec.sizes.find((o) => o.id === preselection?.sizeId) ?? getDefault(printSpec.sizes)
@@ -188,7 +193,8 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     const [selectedSides, setSelectedSides] = useState<SidesOption | undefined>(
       () => printSpec.sides.find((o) => o.label === preselection?.sides) ?? getDefault(printSpec.sides)
     );
-    const [selectedQuantity, setSelectedQuantity] = useState(preselection?.quantity ?? defaultTier.quantity);
+    const [selectedQuantity, setSelectedQuantity] = useState(preselection?.quantity ?? bounds.listing);
+    const [quantityEmpty, setQuantityEmpty] = useState(false);
     // Some legacy/seed-data products have an empty turnaround_options array
     // from the backend — unlike size/paper/finish, turnaround is required by
     // CartItemConfig, so a missing selection here blocks Add to Cart below
@@ -196,9 +202,6 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     const [selectedTurnaround, setSelectedTurnaround] = useState<TurnaroundOption | undefined>(
       () => turnaroundOptions.find((o) => o.id === preselection?.turnaroundId) ?? turnaroundOptions[0]
     );
-
-    const { packSize, unitLabel } = normalizePack(product.packSize, product.unitLabel);
-    const packMode = isPack(packSize);
 
     const prefersReducedMotion = usePrefersReducedMotion();
     // Transient click-confirmation pulse on the Add to Cart button content —
@@ -219,52 +222,33 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     );
     const isInCart = cartItems.some((i) => i.cartItemId === currentCartItemId);
 
-    // Price = tier base × spec multipliers; turnaround extraCost is flat INR added once
-    const baseTier =
-      pricingTiers.find((t) => t.quantity === selectedQuantity) ?? pricingTiers[0];
+    // Price = tier rate for the quantity x spec multipliers; turnaround extraCost is flat INR added once
     const sizeM   = selectedSize?.priceMultiplier ?? 1;
     const paperM  = selectedPaper?.priceMultiplier ?? 1;
     const finishM = selectedFinish?.priceMultiplier ?? 1;
     const sidesM  = selectedSides?.priceMultiplier ?? 1;
     const optionMultiplier = sizeM * paperM * finishM * sidesM;
+    const turnaroundExtra = selectedTurnaround?.extraCost ?? 0;
     // MRP and price are scaled and rounded together (see ./pricing) so the
     // discount shown here equals what the server computes at cart sync and order.
-    const selectedPricing = priceTier(baseTier, optionMultiplier);
-    const pricePerUnit = selectedPricing.pricePerUnit;
-    const totalPrice = round2(pricePerUnit * selectedQuantity + (selectedTurnaround?.extraCost ?? 0));
-    const displayUnitOrPack = packMode ? packPrice(pricePerUnit, packSize) : pricePerUnit;
-    const displayMrp =
-      selectedPricing.mrpPerUnit !== undefined && packMode
-        ? packPrice(selectedPricing.mrpPerUnit, packSize)
-        : selectedPricing.mrpPerUnit;
-    const lineSavings =
-      selectedPricing.mrpPerUnit !== undefined
-        ? round2((selectedPricing.mrpPerUnit - pricePerUnit) * selectedQuantity)
-        : 0;
-
-    // PricingTable must reflect the currently selected size/paper/finish/sides
-    // combination for every quantity row, not just the raw base tiers from the
-    // product payload — otherwise it stays frozen at the default combination's
-    // prices while the summary card above updates.
-    const adjustedTiers = pricingTiers.map((tier) => {
-      const p = priceTier(tier, optionMultiplier);
-      return {
-        ...tier,
-        pricePerUnit: p.pricePerUnit,
-        totalPrice: p.totalPrice,
-        mrpPerUnit: p.mrpPerUnit,
-        discountPercent: p.discountPercent,
-        discountPerUnit: undefined,
-      };
-    });
+    const pricing = priceForQuantity(pricingTiers, selectedQuantity, optionMultiplier, turnaroundExtra);
+    const baseTier = pricing?.tier ?? pricingTiers[0];
+    const pricePerUnit = pricing?.pricePerUnit ?? 0;
+    const totalPrice = pricing?.total ?? 0;
+    const lineSavings = pricing?.savings ?? 0;
+    const hasOptionPricing = [printSpec.sizes, printSpec.papers, printSpec.finishes, printSpec.sides].some(
+      (opts) => opts.some((o) => o.priceMultiplier !== 1)
+    );
+    const guideEntries = tierGuideEntries(pricingTiers, selectedQuantity, optionMultiplier, bounds.min, bounds.max);
+    const nudge = nextTierNudge(selectedQuantity, pricingTiers, optionMultiplier, turnaroundExtra, bounds.max);
 
     // Notify parent (ProductDetailClient) so StickyAddToCart stays in sync
     // Savings only count while the discount is actually displayed (percent >= 1).
-    const shownSavings = selectedPricing.discountPercent !== undefined ? lineSavings : 0;
-    const quantityLabel = packMode ? formatQuantity(selectedQuantity, packSize, unitLabel) : undefined;
+    const shownSavings = pricing?.discountPercent !== undefined ? lineSavings : 0;
+    const quantityLabel = formatQty(selectedQuantity, unitLabel);
     useEffect(() => {
-      onStateChange?.({ isInCart, totalPrice, savings: shownSavings, quantityLabel });
-    }, [isInCart, totalPrice, shownSavings, quantityLabel, onStateChange]);
+      onStateChange?.({ isInCart, totalPrice, savings: shownSavings, quantityLabel, quantityEmpty });
+    }, [isInCart, totalPrice, shownSavings, quantityLabel, quantityEmpty, onStateChange]);
 
     // Delta helpers — show cost impact vs cheapest option in each category
     // (Math.min(...[]) is -Infinity, but these are only read while mapping a
@@ -274,10 +258,10 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     const minFinishM = printSpec.finishes.length ? Math.min(...printSpec.finishes.map((f) => f.priceMultiplier)) : 1;
     const minSidesM  = printSpec.sides.length   ? Math.min(...printSpec.sides.map((s) => s.priceMultiplier))   : 1;
     // "base without this category" = what the per-unit price would be using the cheapest option there
-    const baseWithoutSize   = baseTier.pricePerUnit * paperM  * finishM * sidesM;
-    const baseWithoutPaper  = baseTier.pricePerUnit * sizeM   * finishM * sidesM;
-    const baseWithoutFinish = baseTier.pricePerUnit * sizeM   * paperM  * sidesM;
-    const baseWithoutSides  = baseTier.pricePerUnit * sizeM   * paperM  * finishM;
+    const baseWithoutSize   = (baseTier?.pricePerUnit ?? 0) * paperM  * finishM * sidesM;
+    const baseWithoutPaper  = (baseTier?.pricePerUnit ?? 0) * sizeM   * finishM * sidesM;
+    const baseWithoutFinish = (baseTier?.pricePerUnit ?? 0) * sizeM   * paperM  * sidesM;
+    const baseWithoutSides  = (baseTier?.pricePerUnit ?? 0) * sizeM   * paperM  * finishM;
     const sizeDelta   = (m: number) => parseFloat((baseWithoutSize   * (m - minSizeM)).toFixed(2));
     const paperDelta  = (m: number) => parseFloat((baseWithoutPaper  * (m - minPaperM)).toFixed(2));
     const finishDelta = (m: number) => parseFloat((baseWithoutFinish * (m - minFinishM)).toFixed(2));
@@ -329,11 +313,15 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
         finishId: selectedFinish?.id,
         finishLabel: selectedFinish?.label,
         sides: selectedSides?.label,
-        quantity: selectedQuantity,
+        quantity: clampQuantity(selectedQuantity, bounds.min, bounds.max),
         turnaroundId: selectedTurnaround.id,
         turnaroundLabel: selectedTurnaround.label,
         turnaroundExtraCost: selectedTurnaround.extraCost,
-        ...(packMode && { packSize, unitLabel }),
+        unitLabel,
+        minQuantity: bounds.min,
+        maxQuantity: bounds.max,
+        rateTiers: pricingTiers.map((t) => ({ quantity: t.quantity, pricePerUnit: t.pricePerUnit, mrpPerUnit: t.mrpPerUnit })),
+        optionMultiplier,
         artworkFileKey,
         artworkFileName,
         templateData,
@@ -351,11 +339,11 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
         },
         config,
         pricePerUnit,
-        selectedPricing.mrpPerUnit
+        pricing?.mrpPerUnit
       );
 
       toast.success(`${product.name} added to cart`, {
-        description: `${formatQuantityLine(selectedQuantity, packSize, unitLabel)} · ${formatPrice(totalPrice)}`,
+        description: `${quantityLabel} · ${formatPrice(totalPrice)}`,
       });
 
       // Transient confirmation pulse — layered on top of the toast and the
@@ -370,59 +358,6 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
 
     return (
       <div className="flex flex-col gap-6">
-        {/* Live price display */}
-        <div className="rounded-2xl border border-border bg-secondary/30 p-4 shadow-sm">
-          <div className="flex items-end justify-between">
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">
-                {packMode ? `Price per pack of ${formatPackSize(packSize, unitLabel)}` : "Price per unit"}
-              </p>
-              <PriceDisplay
-                variant="pdp"
-                price={displayUnitOrPack}
-                mrp={displayMrp}
-                percent={selectedPricing.discountPercent}
-                endsAt={product.discountEndsAt}
-                priceSlot={
-                  <PriceValue
-                    value={displayUnitOrPack}
-                    formatted={formatPricePerUnit(displayUnitOrPack)}
-                    className="font-heading font-bold text-3xl tabular-nums"
-                    prefersReducedMotion={prefersReducedMotion}
-                  />
-                }
-              />
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground mb-1">
-                {packMode
-                  ? `Total for ${formatQuantity(selectedQuantity, packSize, unitLabel)}`
-                  : `Total for ${selectedQuantity.toLocaleString("en-IN")} units`}
-              </p>
-              <PriceValue
-                value={totalPrice}
-                formatted={formatPrice(totalPrice)}
-                className="font-heading font-bold text-xl text-primary tabular-nums"
-                prefersReducedMotion={prefersReducedMotion}
-              />
-            </div>
-          </div>
-          {packMode && (
-            <p className="text-xs text-muted-foreground mt-1">
-              {formatPricePerUnit(pricePerUnit)}{perUnitSuffix(unitLabel)}
-            </p>
-          )}
-          {selectedPricing.discountPercent !== undefined && lineSavings > 0 && (
-            <p className="text-xs font-medium text-foreground mt-2">
-              You save {formatPrice(lineSavings)} on this quantity
-            </p>
-          )}
-          <p className="text-[11px] text-muted-foreground mt-2 flex items-center gap-1">
-            <Info size={11} />
-            GST and shipping calculated at checkout
-          </p>
-        </div>
-
         <DeliveryCheck turnaroundDays={selectedTurnaround?.businessDays} />
 
         {/* Size — category omitted entirely when not applicable to this product */}
@@ -519,18 +454,6 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
           </div>
         )}
 
-        {/* Quantity — pricing table */}
-        <div>
-          <SectionLabel>Quantity</SectionLabel>
-          <PricingTable
-            tiers={adjustedTiers}
-            selectedQuantity={selectedQuantity}
-            onSelectQuantity={setSelectedQuantity}
-            packSize={packSize}
-            unitLabel={unitLabel}
-          />
-        </div>
-
         {/* Turnaround — an empty list means this product's turnaround_options
             weren't set up on the backend; it isn't orderable until they are,
             so we surface that instead of rendering an empty/broken picker. */}
@@ -578,6 +501,72 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
           </div>
         )}
 
+        {/* Quantity — free entry within the product's allowed range */}
+        <div>
+          <SectionLabel>Quantity</SectionLabel>
+          <QuantityInput
+            value={selectedQuantity}
+            min={bounds.min}
+            max={bounds.max}
+            unitLabel={unitLabel}
+            onChange={setSelectedQuantity}
+            onEmptyChange={setQuantityEmpty}
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Min {formatQty(bounds.min, unitLabel)}
+            {bounds.max !== null && ` · Max ${formatQty(bounds.max, unitLabel)}`}
+          </p>
+        </div>
+
+        {/* Live price display */}
+        <div className="rounded-2xl border border-border bg-secondary/30 p-4 shadow-sm">
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">{formatQty(selectedQuantity, unitLabel)}</p>
+              <PriceDisplay
+                variant="pdp"
+                price={pricePerUnit}
+                mrp={pricing?.mrpPerUnit}
+                percent={pricing?.discountPercent}
+                endsAt={product.discountEndsAt}
+                priceSlot={
+                  <PriceValue
+                    value={pricePerUnit}
+                    formatted={`${formatPricePerUnit(pricePerUnit)}${perPieceSuffix(unitLabel)}`}
+                    className="font-heading font-bold text-3xl tabular-nums"
+                    prefersReducedMotion={prefersReducedMotion}
+                  />
+                }
+              />
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground mb-1">Total</p>
+              <PriceValue
+                value={totalPrice}
+                formatted={formatPrice(totalPrice)}
+                className="font-heading font-bold text-xl text-primary tabular-nums"
+                prefersReducedMotion={prefersReducedMotion}
+              />
+            </div>
+          </div>
+          {pricing?.discountPercent !== undefined && lineSavings > 0 && (
+            <p className="text-xs font-medium text-foreground mt-2">
+              You save {formatPrice(lineSavings)} on this quantity
+            </p>
+          )}
+          {hasOptionPricing && (
+            <p className="text-[11px] text-muted-foreground mt-2">Price shown is for the options selected</p>
+          )}
+          <p className="text-[11px] text-muted-foreground mt-2 flex items-center gap-1">
+            <Info size={11} />
+            GST and shipping calculated at checkout
+          </p>
+        </div>
+
+        <TierRateGuide entries={guideEntries} unitLabel={unitLabel} onSelect={(q) => setSelectedQuantity(clampQuantity(q, bounds.min, bounds.max))} />
+
+        {nudge && <TierNudge nudge={nudge} unitLabel={unitLabel} onAccept={setSelectedQuantity} />}
+
         <ProductTrustBadges />
 
         {/* Add to Cart / Update Cart button */}
@@ -585,7 +574,9 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
           <button
             ref={ref}
             onClick={handleAddToCart}
+            disabled={quantityEmpty}
             className={cn(
+              "disabled:opacity-60 disabled:cursor-not-allowed",
               "w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2",
               "transition-all active:scale-[0.98] shadow-md",
               isInCart
@@ -599,7 +590,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
               className="flex items-center justify-center gap-2"
             >
               {isInCart ? <CheckCircle2 size={18} /> : <ShoppingBag size={18} />}
-              {isInCart ? "Update Cart" : "Add to Cart"} · {formatPrice(totalPrice)}
+              {quantityEmpty ? "Enter a quantity" : `${isInCart ? "Update Cart" : "Add to Cart"} · ${formatPrice(totalPrice)}`}
             </motion.span>
           </button>
 

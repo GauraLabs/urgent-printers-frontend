@@ -30,9 +30,16 @@ describe("resolvePreselection", () => {
     expect(resolvePreselection(product, q("sides=single-side"))).toEqual({ sides: "Single Side" });
   });
   it("ignores invalid values and keeps the valid ones (partial)", () => {
-    expect(resolvePreselection(product, q("qty=75&size=nope&paper=vinyl&finish=&turnaround=express&sides=Triple"))).toEqual({ paperId: "vinyl" });
+    expect(resolvePreselection(product, q("qty=75&size=nope&paper=vinyl&finish=&turnaround=express&sides=Triple"))).toEqual({ quantity: 75, paperId: "vinyl" });
   });
-  it("rejects non-numeric and non-tier quantities", () => {
+  it("accepts any in-range quantity and clamps the rest into the allowed range", () => {
+    expect(resolvePreselection(product, q("qty=120"))).toEqual({ quantity: 120 });
+    expect(resolvePreselection(product, q("qty=10"))).toEqual({ quantity: 50 });
+    expect(resolvePreselection({ ...product, maxOrderQuantity: 500 }, q("qty=900"))).toEqual({ quantity: 500 });
+    expect(resolvePreselection({ ...product, minOrderQuantity: 20 }, q("qty=10"))).toEqual({ quantity: 20 });
+    expect(resolvePreselection(product, q("qty=99999999"))).toEqual({ quantity: 1_000_000 });
+  });
+  it("rejects non-numeric quantities", () => {
     expect(resolvePreselection(product, q("qty=abc"))).toEqual({});
     expect(resolvePreselection(product, q("qty=50.5"))).toEqual({});
     expect(resolvePreselection(product, q("qty=-50"))).toEqual({});

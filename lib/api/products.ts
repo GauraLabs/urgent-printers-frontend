@@ -9,11 +9,10 @@ import type {
   TemplateField,
   ListingOffer,
 } from "@/types";
-import { normalizePack, packPrice } from "@/lib/pack";
 import { mockProducts } from "@/lib/mock-data";
 import { getDisplayPricePerUnit, minOptionMultiplier, round2, slugify } from "@/lib/utils";
 import { delay } from "./delay";
-import { apiFetch, apiFetchPage } from "./client";
+import { apiFetch, apiFetchPage, ApiError } from "./client";
 import { getCategories } from "./categories";
 import { logApiError } from "./logApiError";
 
@@ -39,18 +38,21 @@ export interface BackendProductCard {
   discount_percent?: number | null;
   discount_amount?: number | null;
   on_sale?: boolean;
-  // Pack fields are absent from a backend that predates pack selling.
-  pack_size?: number | null;
+  // Quantity-pricing fields are absent from a backend that predates them.
+  // listing/min/max are the server's EFFECTIVE values; max is null with no limit.
   unit_label?: string | null;
-  price_from_pack?: number | null;
-  mrp_from_pack?: number | null;
+  listing_quantity?: number | null;
+  min_order_quantity?: number | null;
+  max_order_quantity?: number | null;
+  listing_price?: number | null;
+  listing_mrp?: number | null;
+  listing_discount_percent?: number | null;
   rating: number;
   review_count: number;
 }
 
 export interface BackendListingOffer {
   quantity: number;
-  pack_size?: number | null;
   price: number | string;
   sale_price?: number | string | null;
   sale_starts_at?: string | null;
@@ -118,8 +120,11 @@ export interface BackendSearchDoc {
   discount_percent?: number | null;
   discount_amount?: number | null;
   has_discount?: boolean;
-  pack_size?: number | null;
   unit_label?: string | null;
+  listing_quantity?: number | null;
+  listing_price?: number | null;
+  listing_mrp?: number | null;
+  listing_discount_percent?: number | null;
   // Not indexed by Typesense yet — treated as optional/absent, same posture as
   // category_slug/category_name below, until search results carry it too.
   medium_url?: string | null;
@@ -159,7 +164,6 @@ function mapListingOffer(o: BackendListingOffer | null | undefined): ListingOffe
   const sale = o.sale_price === null || o.sale_price === undefined ? null : Number(o.sale_price);
   return {
     quantity: o.quantity,
-    packSize: normalizePack(o.pack_size).packSize,
     price,
     salePrice: sale !== null && Number.isFinite(sale) ? sale : null,
     saleStartsAt: o.sale_starts_at ?? null,
@@ -169,24 +173,33 @@ function mapListingOffer(o: BackendListingOffer | null | undefined): ListingOffe
   };
 }
 
-function packFields(src: {
-  packSize?: number | null;
-  unitLabel?: string | null;
-  priceFrom?: number | null;
-  mrpFrom?: number | null;
-  priceFromPack?: number | null;
-  mrpFromPack?: number | null;
-}): Pick<Product, "packSize" | "unitLabel" | "priceFromPack" | "mrpFromPack"> {
-  const { packSize, unitLabel } = normalizePack(src.packSize, src.unitLabel);
-  if (packSize === 1) return { packSize, unitLabel };
-  // Server pack figures win; otherwise derive from the already-rounded
-  // per-unit price so a card is never left showing a per-unit price.
-  return {
-    packSize,
-    unitLabel,
-    priceFromPack: src.priceFromPack ?? (src.priceFrom != null ? packPrice(src.priceFrom, packSize) : undefined),
-    mrpFromPack: src.mrpFromPack ?? (src.mrpFrom != null ? packPrice(src.mrpFrom, packSize) : undefined),
-  };
+interface QuantityFieldSource {
+  unit_label?: string | null;
+  listing_quantity?: number | null;
+  min_order_quantity?: number | null;
+  max_order_quantity?: number | null;
+  listing_price?: number | null;
+  listing_mrp?: number | null;
+  listing_discount_percent?: number | null;
+}
+
+type QuantityProductFields = Pick<
+  Product,
+  "unitLabel" | "listingQuantity" | "minOrderQuantity" | "maxOrderQuantity" | "listingPrice" | "listingMrp" | "listingDiscountPercent"
+>;
+
+// Only fields the server actually sent are set, so an old backend yields a
+// product with none of them and every consumer falls back to per-unit display.
+function quantityFields(src: QuantityFieldSource): QuantityProductFields {
+  const out: QuantityProductFields = {};
+  if (src.unit_label) out.unitLabel = src.unit_label;
+  if (src.listing_quantity != null) out.listingQuantity = src.listing_quantity;
+  if (src.min_order_quantity != null) out.minOrderQuantity = src.min_order_quantity;
+  if (src.max_order_quantity !== undefined) out.maxOrderQuantity = src.max_order_quantity;
+  if (src.listing_price != null) out.listingPrice = src.listing_price;
+  if (src.listing_mrp != null) out.listingMrp = src.listing_mrp;
+  if (src.listing_discount_percent != null) out.listingDiscountPercent = src.listing_discount_percent;
+  return out;
 }
 
 export function mapCard(c: BackendProductCard): Product {
@@ -215,7 +228,7 @@ export function mapCard(c: BackendProductCard): Product {
     badge: c.badge,
     priceFrom: c.price_from ?? undefined,
     ...discountFields({ mrp: c.mrp_from, percent: c.discount_percent, amount: c.discount_amount, onSale: c.on_sale }),
-    ...packFields({ packSize: c.pack_size, unitLabel: c.unit_label, priceFrom: c.price_from, mrpFrom: c.mrp_from, priceFromPack: c.price_from_pack, mrpFromPack: c.mrp_from_pack }),
+    ...quantityFields(c),
     customizationMode: "none" as CustomizationMode,
     templateFields: [],
   };
@@ -317,7 +330,7 @@ export function mapDetail(d: BackendProductDetail): Product {
     badge: d.badge,
     priceFrom: d.price_from ?? undefined,
     ...discountFields({ mrp: d.mrp_from, percent: d.discount_percent, amount: d.discount_amount, onSale: d.on_sale }),
-    ...packFields({ packSize: d.pack_size, unitLabel: d.unit_label, priceFrom: d.price_from, mrpFrom: d.mrp_from, priceFromPack: d.price_from_pack, mrpFromPack: d.mrp_from_pack }),
+    ...quantityFields(d),
     listingOffer: mapListingOffer(d.listing_offer),
     discountEndsAt: d.discount_ends_at ?? undefined,
     customizationMode: (d.customization_mode ?? "none") as CustomizationMode,
@@ -363,7 +376,7 @@ export function mapSearchDoc(
     badge: d.badge,
     priceFrom: d.base_price ?? undefined,
     ...discountFields({ mrp: d.base_mrp, percent: d.discount_percent, amount: d.discount_amount, onSale: d.has_discount }),
-    ...packFields({ packSize: d.pack_size, unitLabel: d.unit_label, priceFrom: d.base_price, mrpFrom: d.base_mrp }),
+    ...quantityFields(d),
     customizationMode: "none" as CustomizationMode,
     templateFields: [],
   };
@@ -490,6 +503,26 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   } catch (err) {
     logApiError(`getProductBySlug(${slug})`, err);
     return null;
+  }
+}
+
+export type ProductLookup =
+  | { status: "ok"; product: Product }
+  | { status: "gone" }
+  | { status: "error" };
+
+// Unlike getProductBySlug this tells "no such product" (404/410) from a failed
+// request, which callers must not treat as the product being gone.
+export async function lookupProductBySlug(slug: string): Promise<ProductLookup> {
+  if (!process.env.NEXT_PUBLIC_API_URL) {
+    const p = mockProducts.find((m) => m.slug === slug);
+    return p ? { status: "ok", product: p } : { status: "gone" };
+  }
+  try {
+    return { status: "ok", product: mapDetail(await apiFetch<BackendProductDetail>(`/products/${slug}`)) };
+  } catch (err) {
+    if (err instanceof ApiError && (err.status === 404 || err.status === 410)) return { status: "gone" };
+    return { status: "error" };
   }
 }
 

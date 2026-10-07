@@ -102,7 +102,6 @@ export interface TurnaroundOption {
 // Canonical "landing" configuration the shopping feed advertises (server-built).
 export interface ListingOffer {
   quantity: number;
-  packSize: number;
   price: number;
   salePrice: number | null;
   saleStartsAt: string | null;
@@ -153,18 +152,25 @@ export interface Product {
   discountAmount?: number;
   onSale?: boolean;
   discountEndsAt?: string;
-  // Pack/set selling. Absent on an old backend and in mock data: treat as
-  // packSize 1 / "pcs" (see lib/pack.ts normalizePack).
-  packSize?: number;
+  // Quantity pricing. All absent on an old backend and in mock data; see
+  // lib/quantity.ts effectiveBounds for the fallbacks. These are the server's
+  // EFFECTIVE values (max is null when the product has no upper limit).
   unitLabel?: string;
-  priceFromPack?: number;
-  mrpFromPack?: number;
+  listingQuantity?: number;
+  minOrderQuantity?: number;
+  maxOrderQuantity?: number | null;
+  // "N pcs for ₹X": price of listingQuantity at the cheapest options.
+  listingPrice?: number;
+  listingMrp?: number;
+  listingDiscountPercent?: number;
   listingOffer?: ListingOffer | null;
   customizationMode: CustomizationMode;
   templateFields: TemplateField[];
 }
 
 // ─── Cart ─────────────────────────────────────────────────────────────────────
+
+export type RateTier = Pick<PricingTier, "quantity" | "pricePerUnit" | "mrpPerUnit">;
 
 export interface CartItemConfig {
   // Absent when the corresponding option category doesn't apply to this product
@@ -182,8 +188,13 @@ export interface CartItemConfig {
   // since it can't be reconstructed from turnaroundId alone once in the cart.
   turnaroundExtraCost: number;
   // Copied from the product at add time; server values win after sync.
-  packSize?: number;
   unitLabel?: string;
+  minQuantity?: number;
+  maxQuantity?: number | null;
+  // Rate card + selected-option multiplier, kept so a quantity edit can be
+  // repriced locally (guests, and until the next server sync).
+  rateTiers?: RateTier[];
+  optionMultiplier?: number;
   artworkFileName?: string;
   artworkFileSize?: number;
   artworkFileKey?: string;
@@ -204,6 +215,8 @@ export interface CartItem {
   // (toast) and never persisted.
   quantityCorrected?: boolean;
   originalQuantity?: number;
+  // Set after a quantity edit that could not be repriced locally; cleared by the next server sync.
+  pricePending?: boolean;
 }
 
 // ─── User / Auth ──────────────────────────────────────────────────────────────
@@ -331,7 +344,6 @@ export interface OrderPreviewItem {
   mrpPerUnit?: number;
   discountPerUnit?: number;
   lineSavings?: number;
-  packSize?: number;
   unitLabel?: string;
 }
 

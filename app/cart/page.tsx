@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { Trash2, ShoppingBag, ArrowRight, Tag, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { EmptyState } from "@/components/common/EmptyState";
 import { SafeImage } from "@/components/common/SafeImage";
@@ -16,7 +16,24 @@ import { PriceDisplay } from "@/components/common/PriceDisplay";
 import { SavingsSummary } from "@/components/common/SavingsSummary";
 import { cartLinePrice, cartMrpSavings, cartTotalSavings, eligibleSubtotal } from "@/features/cart/savings";
 import { formatPrice, slugify, cn } from "@/lib/utils";
-import { formatQuantity, isPack, stepQuantity } from "@/lib/pack";
+import type { CartItem } from "@/types";
+import { LineRateStatus } from "@/features/cart/LineRateStatus";
+import { QuantityInput } from "@/components/common/QuantityInput";
+import { effectiveBounds } from "@/lib/quantity";
+
+function CartLineQuantity({ item, onChange }: { item: CartItem; onChange: (quantity: number) => void }) {
+  const bounds = effectiveBounds({ minOrderQuantity: item.config.minQuantity, maxOrderQuantity: item.config.maxQuantity });
+  return (
+    <QuantityInput
+      compact
+      value={item.config.quantity}
+      min={bounds.min}
+      max={bounds.max}
+      unitLabel={item.config.unitLabel}
+      onChange={onChange}
+    />
+  );
+}
 
 function CartSkeleton() {
   return (
@@ -68,6 +85,10 @@ export default function CartPage() {
   const removeItem        = useCartStore((s) => s.removeItem);
   const updateQuantity    = useCartStore((s) => s.updateQuantity);
   const subtotal          = useCartStore((s) => s.subtotal());
+  const unavailableIds    = useCartStore((s) => s.unavailableIds);
+  const rateErrorIds      = useCartStore((s) => s.rateErrorIds);
+  const hasPending        = useCartStore((s) => s.items.some((i) => i.pricePending && !unavailableIds.includes(i.cartItemId) && !rateErrorIds.includes(i.cartItemId)));
+  const hasUnavailable    = useCartStore((s) => s.items.some((i) => s.unavailableIds.includes(i.cartItemId)));
   const appliedCoupon     = useCartStore((s) => s.appliedCoupon);
   const setAppliedCoupon  = useCartStore((s) => s.setAppliedCoupon);
   const isAuthenticated   = useAuthStore((s) => s.isAuthenticated);
@@ -187,32 +208,8 @@ export default function CartPage() {
 
                     {/* Qty + price row — stacked on mobile, side-by-side on sm+ */}
                     <div className="mt-3 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() =>
-                            updateQuantity(
-                              item.cartItemId,
-                              stepQuantity(item.config.quantity, "down", item.config.packSize, { legacyMin: 25 })
-                            )
-                          }
-                          aria-label="Decrease quantity"
-                          className="w-7 h-7 flex items-center justify-center rounded-lg border border-border hover:bg-muted transition-colors"
-                        >
-                          <Minus size={12} />
-                        </button>
-                        <span className={cn("text-sm font-semibold text-center", isPack(item.config.packSize) ? "min-w-12" : "w-12")}>
-                          {formatQuantity(item.config.quantity, item.config.packSize, item.config.unitLabel)}
-                        </span>
-                        <button
-                          onClick={() =>
-                            updateQuantity(item.cartItemId, stepQuantity(item.config.quantity, "up", item.config.packSize))
-                          }
-                          aria-label="Increase quantity"
-                          className="w-7 h-7 flex items-center justify-center rounded-lg border border-border hover:bg-muted transition-colors"
-                        >
-                          <Plus size={12} />
-                        </button>
-                      </div>
+                      <LineRateStatus cartItemId={item.cartItemId} />
+                      <CartLineQuantity item={item} onChange={(q) => updateQuantity(item.cartItemId, q)} />
                       <div className="flex items-center justify-between">
                         <PriceDisplay
                           variant="line"
@@ -220,7 +217,7 @@ export default function CartPage() {
                           {...cartLinePrice(item)}
                         />
                         <p className="font-heading font-bold text-base">
-                          {formatPrice(item.totalPrice)}
+                          {item.pricePending && !unavailableIds.includes(item.cartItemId) && !rateErrorIds.includes(item.cartItemId) ? <span className="text-sm font-medium text-muted-foreground">Updating price…</span> : formatPrice(item.totalPrice)}
                         </p>
                       </div>
                     </div>
@@ -262,7 +259,7 @@ export default function CartPage() {
               <div className="space-y-2.5 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Items subtotal</span>
-                  <span className="font-medium">{formatPrice(subtotal)}</span>
+                  <span className="font-medium">{hasPending ? "Updating…" : formatPrice(subtotal)}</span>
                 </div>
 
                 {appliedCoupon && (
@@ -280,7 +277,7 @@ export default function CartPage() {
                     </div>
                     <div className="flex justify-between border-t border-dashed border-border pt-2">
                       <span className="text-muted-foreground text-xs">After coupon</span>
-                      <span className="font-semibold text-xs">{formatPrice(discountedSub)}</span>
+                      <span className="font-semibold text-xs">{hasPending ? "…" : formatPrice(discountedSub)}</span>
                     </div>
                   </>
                 )}
@@ -306,9 +303,9 @@ export default function CartPage() {
               <div className="flex justify-between items-baseline">
                 <div>
                   <p className="font-heading font-bold text-base">Total</p>
-                  <p className="text-[10px] text-muted-foreground">Incl. GST: {formatPrice(gst)}</p>
+                  <p className="text-[10px] text-muted-foreground">Incl. GST: {hasPending ? "…" : formatPrice(gst)}</p>
                 </div>
-                <p className="font-heading font-bold text-xl text-primary">{formatPrice(total)}</p>
+                <p className="font-heading font-bold text-xl text-primary">{hasPending ? "Updating…" : formatPrice(total)}</p>
               </div>
 
               <SavingsSummary
@@ -362,7 +359,9 @@ export default function CartPage() {
               {isAuthenticated ? (
                 <Link
                   href={ROUTES.checkout}
+                  aria-disabled={hasPending || hasUnavailable}
                   className={cn(
+                    (hasPending || hasUnavailable) && "pointer-events-none opacity-60",
                     "w-full h-11 rounded-xl font-bold text-sm flex items-center justify-center gap-2",
                     "bg-brand-orange hover:bg-brand-orange/90 text-brand-orange-foreground",
                     "transition-all shadow-md shadow-brand-orange/20"

@@ -7,7 +7,7 @@ import type {
 } from "@/types";
 import { apiFetch, apiFetchPage, API_URL, ApiError } from "./client";
 import { logApiError } from "./logApiError";
-import { normalizePack } from "@/lib/pack";
+import { normalizeUnitLabel } from "@/lib/quantity";
 
 // ─── Backend shapes (camelCase from server, totalAmount as string) ────────────
 
@@ -82,7 +82,6 @@ interface BackendPreviewItem {
   mrpPerUnit?: string | number | null;
   discountPerUnit?: string | number | null;
   lineSavings?: string | number | null;
-  packSize?: number | null;
   unitLabel?: string | null;
 }
 
@@ -130,17 +129,22 @@ const n = (v: string | number | undefined): number =>
 const nOpt = (v: string | number | null | undefined): number | undefined =>
   v === undefined || v === null ? undefined : parseFloat(String(v));
 
-// Display-only pack snapshot. Non-pack lines carry no pack fields at all so
-// they render exactly as before.
-function packSnapshot(i: { packSize?: number | null; unitLabel?: string | null }): { packSize?: number; unitLabel?: string } {
-  const pack = normalizePack(i.packSize, i.unitLabel);
-  return pack.packSize > 1 ? pack : {};
+// Display-only snapshot. packSize is kept only so historical pack lines still
+// read "3 packs (150 pcs)"; new lines are always pack_size 1.
+function quantitySnapshot(i: { packSize?: number | null; unitLabel?: string | null }): { packSize?: number; unitLabel: string } {
+  const unitLabel = normalizeUnitLabel(i.unitLabel);
+  return typeof i.packSize === "number" && i.packSize > 1 ? { packSize: i.packSize, unitLabel } : { unitLabel };
 }
 
-export const INVALID_PACK_MULTIPLE_CODE = "invalid_pack_multiple";
+export const QUANTITY_BELOW_MINIMUM_CODE = "quantity_below_minimum";
+export const QUANTITY_ABOVE_MAXIMUM_CODE = "quantity_above_maximum";
 
-export function isInvalidPackMultipleError(err: unknown): boolean {
-  return err instanceof ApiError && err.status === 422 && err.code === INVALID_PACK_MULTIPLE_CODE;
+export function isQuantityLimitError(err: unknown): boolean {
+  return (
+    err instanceof ApiError &&
+    err.status === 422 &&
+    (err.code === QUANTITY_BELOW_MINIMUM_CODE || err.code === QUANTITY_ABOVE_MAXIMUM_CODE)
+  );
 }
 
 export const PRICE_CHANGED_CODE = "price_changed";
@@ -179,7 +183,7 @@ function mapOrderCard(b: BackendOrderCard): OrderCard {
       productName: i.productName,
       thumbnailUrl: i.thumbnailUrl,
       quantity: i.quantity,
-      ...packSnapshot(i),
+      ...quantitySnapshot(i),
     })),
   };
 }
@@ -211,7 +215,7 @@ export function mapOrderDetail(b: BackendOrderDetail): Order {
     artworkStatus:  i.artworkStatus,
     templateData:   i.templateData,
     canReview:      i.canReview ?? false,
-    ...packSnapshot(i),
+    ...quantitySnapshot(i),
   }));
 
   const statusHistory: OrderStatusEvent[] = b.statusHistory.map((s) => ({
@@ -306,7 +310,7 @@ export function mapPreview(raw: BackendPreview): OrderPreview {
     mrpPerUnit:      nOpt(i.mrpPerUnit),
     discountPerUnit: nOpt(i.discountPerUnit),
     lineSavings:     nOpt(i.lineSavings),
-    ...packSnapshot(i),
+    unitLabel:       normalizeUnitLabel(i.unitLabel),
   }));
   return { pricing: mapPricing(raw.pricing), items, estimatedDelivery: raw.estimatedDelivery };
 }

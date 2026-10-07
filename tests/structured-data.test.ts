@@ -3,14 +3,14 @@ import { buildProductJsonLd, structuredProductName } from "@/lib/structured-data
 import type { ListingOffer } from "@/types";
 
 const offer: ListingOffer = {
-  quantity: 50, packSize: 50, price: 300, salePrice: 270,
+  quantity: 50, price: 300, salePrice: 270,
   saleStartsAt: "2026-10-01T00:00:00+00:00", saleEndsAt: "2026-11-01T00:00:00+00:00",
   inStock: true, query: "qty=50&size=2x2-in&paper=vinyl&finish=matte",
 };
 
 const base = {
   name: "Matte Vinyl Stickers", description: "d", images: ["https://cdn/x.webp"], slug: "matte-vinyl-stickers",
-  categorySlug: "stickers", packSize: 50, unitLabel: "pcs", reviewCount: 0, averageRating: 0, listingOffer: offer,
+  categorySlug: "stickers", unitLabel: "pcs", reviewCount: 0, averageRating: 0, listingOffer: offer,
 };
 const now = new Date("2026-10-07T00:00:00Z");
 
@@ -42,13 +42,18 @@ describe("buildProductJsonLd", () => {
     expect(buildProductJsonLd({ ...base, listingOffer: null }, "https://x.test", now)).not.toHaveProperty("offers");
     expect(buildProductJsonLd({ ...base, listingOffer: undefined }, "https://x.test", now)).not.toHaveProperty("offers");
   });
-  it("names the priced quantity when the lowest tier is several packs", () => {
+  it("names the listing quantity in the title, like the feed", () => {
     const ld = buildProductJsonLd({ ...base, listingOffer: { ...offer, quantity: 100 } }, "https://x.test", now);
-    expect(ld.name).toBe("Matte Vinyl Stickers - 100 pcs (2 packs of 50)");
+    expect(ld.name).toBe("Matte Vinyl Stickers - 100 pcs");
   });
-  it("titles pack products like the feed and leaves non-pack names alone", () => {
-    expect(structuredProductName(base)).toBe("Matte Vinyl Stickers - Pack of 50 pcs");
-    expect(structuredProductName({ name: "Cards", packSize: 1, unitLabel: "pcs" })).toBe("Cards");
+  it("uses the singular for one piece and leaves the name alone without an offer", () => {
+    expect(structuredProductName({ ...base, listingOffer: { ...offer, quantity: 1 } })).toBe("Matte Vinyl Stickers - 1 pc");
+    expect(structuredProductName({ name: "Cards", unitLabel: "pcs" })).toBe("Cards");
     expect(structuredProductName({ name: "Cards" })).toBe("Cards");
+  });
+  it("offer price equals the listing offer price and name carries the same quantity", () => {
+    const ld = buildProductJsonLd({ ...base, listingOffer: { ...offer, salePrice: null, saleEndsAt: null } }, "https://x.test", now);
+    expect(ld.offers).toMatchObject({ price: "300.00" });
+    expect(ld.name).toBe("Matte Vinyl Stickers - 50 pcs");
   });
 });

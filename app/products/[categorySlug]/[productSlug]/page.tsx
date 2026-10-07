@@ -13,8 +13,8 @@ import { ReviewsSection } from "@/features/products/ReviewsSection";
 import { RelatedProducts } from "@/features/products/RelatedProducts";
 import { RecentlyViewedCarousel } from "@/features/products/recentlyViewed/RecentlyViewedCarousel";
 import { ROUTES } from "@/lib/constants/routes";
-import { formatPricePerUnit, getDisplayPricePerUnit, getFromPackPrice, formatPrice } from "@/lib/utils";
-import { formatPackSize, normalizePack } from "@/lib/pack";
+import { formatPricePerUnit, getDisplayPricePerUnit, getListingPrice, formatPrice } from "@/lib/utils";
+import { formatQty } from "@/lib/quantity";
 import { buildProductJsonLd, SITE_URL } from "@/lib/structured-data";
 
 interface PageProps {
@@ -73,8 +73,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
   if (!product.categorySlug || product.categorySlug !== categorySlug) notFound();
 
   const displayPrice = getDisplayPricePerUnit(product);
-  const fromPack = getFromPackPrice(product).price;
-  const packInfo = normalizePack(product.packSize, product.unitLabel);
+  const listing = getListingPrice(product);
 
   const jsonLd = buildProductJsonLd(product, SITE_URL);
 
@@ -133,8 +132,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   </span>
                 )}
                 <span className="text-xs text-muted-foreground">
-                  {packInfo.packSize > 1 ? (
-                    <>From <span className="font-semibold text-foreground">{formatPrice(fromPack)}</span> / {formatPackSize(packInfo.packSize, packInfo.unitLabel)}</>
+                  {listing ? (
+                    <>{formatQty(listing.quantity, product.unitLabel)} for <span className="font-semibold text-foreground">{formatPrice(listing.price)}</span> · Options may change the price</>
                   ) : (
                     <>From <span className="font-semibold text-foreground">{formatPricePerUnit(displayPrice)}</span> / unit</>
                   )}

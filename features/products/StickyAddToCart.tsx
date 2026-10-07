@@ -13,13 +13,15 @@ interface StickyAddToCartProps {
   mrpTotal?: number;
   savings?: number;
   isInCart?: boolean;
-  /** e.g. "3 packs (150 pcs)"; only for pack products. */
+  /** e.g. "120 pcs". */
   quantityLabel?: string;
+  /** Same gate as the PDP button: the quantity field is empty. */
+  disabled?: boolean;
   observeRef: React.RefObject<HTMLButtonElement | null>;
   onAddToCart: () => void;
 }
 
-export function StickyAddToCart({ productName, price, mrpTotal, savings, isInCart = false, quantityLabel, observeRef, onAddToCart }: StickyAddToCartProps) {
+export function StickyAddToCart({ productName, price, mrpTotal, savings, isInCart = false, quantityLabel, disabled = false, observeRef, onAddToCart }: StickyAddToCartProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -63,7 +65,9 @@ export function StickyAddToCart({ productName, price, mrpTotal, savings, isInCar
             </div>
             <button
               onClick={onAddToCart}
+              disabled={disabled}
               className={cn(
+                "disabled:opacity-60 disabled:cursor-not-allowed",
                 "shrink-0 flex items-center gap-2 h-10 px-5 rounded-xl font-semibold text-sm",
                 "transition-all active:scale-[0.98] shadow-md",
                 isInCart
@@ -72,7 +76,7 @@ export function StickyAddToCart({ productName, price, mrpTotal, savings, isInCar
               )}
             >
               {isInCart ? <CheckCircle2 size={16} /> : <ShoppingBag size={16} />}
-              {isInCart ? "Update Cart" : "Add to Cart"}
+              {disabled ? "Enter a quantity" : isInCart ? "Update Cart" : "Add to Cart"}
             </button>
           </div>
         </motion.div>

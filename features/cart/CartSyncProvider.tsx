@@ -6,6 +6,8 @@ import { useAuthStore } from "@/features/auth/store";
 import { useCartStore } from "./store";
 import { getCart, syncCart } from "@/lib/api";
 import { trackConnectivity } from "@/features/site-status/trackConnectivity";
+import { correctionMessage } from "./corrections";
+import { loadLineRates } from "./rateResolver";
 import type { CartItem } from "@/types";
 
 // Local wins on conflict — guest's latest intent takes priority over an old server item
@@ -19,20 +21,17 @@ function mergeCartItems(local: CartItem[], server: CartItem[]): CartItem[] {
   return result;
 }
 
-function toastCorrected(lines: { originalQuantity?: number }[]): void {
-  if (lines.length === 0) return;
-  const was = lines[0].originalQuantity;
-  toast(
-    lines.length === 1 && was !== undefined
-      ? `Quantity adjusted to full packs (was ${was.toLocaleString("en-IN")})`
-      : "Quantities adjusted to full packs"
-  );
+function toastCorrected(lines: CartItem[]): void {
+  const message = correctionMessage(lines);
+  if (message) toast(message);
 }
 
-// Server sync snapped these lines to whole packs; mirror that locally and tell
-// the customer once.
-function announceCorrections(corrected: CartItem[]): void {
-  toastCorrected(useCartStore.getState().applyQuantityCorrections(corrected));
+// Server sync clamped these lines into their allowed range; mirror that locally
+// and tell the customer once.
+function announceCorrections(serverLines: CartItem[]): void {
+  const store = useCartStore.getState();
+  toastCorrected(store.applyQuantityCorrections(serverLines.filter((l) => l.quantityCorrected)));
+  store.applyServerLines(serverLines);
 }
 
 export function CartSyncProvider({ children }: { children: React.ReactNode }) {
@@ -97,6 +96,17 @@ export function CartSyncProvider({ children }: { children: React.ReactNode }) {
       }
     })();
   }, [isAuthenticated, token, _isHydrated, setItems]);
+
+  // ── Lines without a rate card (older carts, restored from the server): learn it from the product ──
+  const attemptedRef = useRef(new Set<string>());
+  useEffect(() => {
+    if (!_isHydrated) return;
+    for (const line of items) {
+      if (line.config.rateTiers?.length || attemptedRef.current.has(line.cartItemId)) continue;
+      attemptedRef.current.add(line.cartItemId);
+      void loadLineRates(line.cartItemId);
+    }
+  }, [items, _isHydrated]);
 
   // ── Debounced sync after every cart mutation ──────────────────────────────
   const syncTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);

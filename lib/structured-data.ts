@@ -1,32 +1,24 @@
 import type { Product } from "@/types";
-import { normalizePack } from "@/lib/pack";
+import { formatQty } from "@/lib/quantity";
 
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://urgentprinters.com").replace(/\/$/, "");
 
-/** Product title as the shopping feed spells it: "Name - Pack of 50 pcs" for packs. */
-export function structuredProductName(
-  product: Pick<Product, "name" | "packSize" | "unitLabel" | "listingOffer">
-): string {
-  const { packSize, unitLabel } = normalizePack(product.packSize, product.unitLabel);
-  if (packSize <= 1) return product.name;
-  // The priced quantity (lowest tier) can be several packs, e.g. 100 pcs of a 50-pack.
-  const quantity = product.listingOffer?.quantity ?? packSize;
-  const packs = Math.floor(quantity / packSize);
-  return packs > 1
-    ? `${product.name} - ${quantity} ${unitLabel} (${packs} packs of ${packSize})`
-    : `${product.name} - Pack of ${packSize} ${unitLabel}`;
+/** Product title as the shopping feed spells it: "Name - 40 pcs" (ASCII hyphen), plain name without a listing offer. */
+export function structuredProductName(product: Pick<Product, "name" | "unitLabel" | "listingOffer">): string {
+  const quantity = product.listingOffer?.quantity;
+  return quantity ? `${product.name} - ${formatQty(quantity, product.unitLabel)}` : product.name;
 }
 
 type JsonLdProduct = Pick<
   Product,
-  | "name" | "description" | "images" | "slug" | "categorySlug" | "packSize" | "unitLabel"
+  | "name" | "description" | "images" | "slug" | "categorySlug" | "unitLabel"
   | "listingOffer" | "reviewCount" | "averageRating"
 >;
 
 /**
  * A single Offer built from the server's listing_offer, so the advertised price
  * equals the feed price and the PDP landing price. Omitted when the server sent
- * none (the old per-unit AggregateOffer misstated pack prices).
+ * none (a per-unit AggregateOffer would misstate the listing price).
  */
 export function buildOffer(product: JsonLdProduct, siteUrl: string, now: Date = new Date()): Record<string, unknown> | null {
   const offer = product.listingOffer;

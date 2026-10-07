@@ -1,5 +1,6 @@
 import type { Product } from "@/types";
 import { normalizeOptionKey } from "@/features/cart/cartItemId";
+import { clampQuantity, effectiveBounds, MAX_LINE_QUANTITY } from "@/lib/quantity";
 
 export interface ParamSource {
   get(name: string): string | null;
@@ -17,10 +18,11 @@ export interface Preselection {
 /**
  * Resolves the PDP landing configuration from the shopping-feed query params
  * (qty, size, paper, finish, sides, turnaround). Every value is validated
- * against the product; anything unknown is dropped so the default is kept.
+ * against the product (quantity is clamped into its allowed range); anything unknown is dropped so the default is kept.
  */
 export function resolvePreselection(
-  product: Pick<Product, "pricingTiers" | "printSpec" | "turnaroundOptions">,
+  product: Pick<Product, "pricingTiers" | "printSpec" | "turnaroundOptions"> &
+    Partial<Pick<Product, "minOrderQuantity" | "maxOrderQuantity" | "listingQuantity">>,
   params: ParamSource
 ): Preselection {
   const out: Preselection = {};
@@ -28,7 +30,10 @@ export function resolvePreselection(
   const qtyRaw = params.get("qty");
   if (qtyRaw && /^\d+$/.test(qtyRaw)) {
     const qty = Number(qtyRaw);
-    if (product.pricingTiers.some((t) => t.quantity === qty)) out.quantity = qty;
+    if (Number.isSafeInteger(qty) && qty >= 1) {
+      const { min, max } = effectiveBounds(product);
+      out.quantity = clampQuantity(Math.min(qty, MAX_LINE_QUANTITY), min, max);
+    }
   }
 
   // Backend ids are slugified labels with punctuation stripped, and the

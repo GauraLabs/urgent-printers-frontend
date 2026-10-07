@@ -37,7 +37,7 @@ export function formatValidationDetail(detail: unknown): string | undefined {
   return lines.length > 0 ? lines.join("; ") : undefined;
 }
 
-// invalid_coupon / invalid_quantity / invalid_pack_multiple are deliberately absent: the server's own
+// invalid_coupon / invalid_quantity / quantity_below_minimum / quantity_above_maximum are deliberately absent: the server's own
 // message there is specific ("Add ₹X more…", "usage limit reached") and wins.
 const CODED_MESSAGES: Record<string, string> = {
   invalid_option: "A selected print option is no longer available. Please reselect your options.",
@@ -48,8 +48,9 @@ const CODED_MESSAGES: Record<string, string> = {
 
 const CODED_FALLBACKS: Record<string, string> = {
   invalid_coupon: "This coupon can't be applied to your order.",
-  // The server's own message names the pack size and nearest quantity, so it wins.
-  invalid_pack_multiple: "This product is sold in whole packs. Please adjust the quantity in your cart.",
+  // The server's own message names the product and the limit, so it wins.
+  quantity_below_minimum: "This quantity is below the minimum order. Please adjust it in your cart.",
+  quantity_above_maximum: "This quantity is above the maximum order. Please adjust it in your cart.",
 };
 
 export function codedErrorMessage(code: string | undefined, serverMessage?: string): string | undefined {

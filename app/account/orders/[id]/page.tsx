@@ -15,7 +15,7 @@ import { ROUTES } from "@/lib/constants/routes";
 import { PriceDisplay } from "@/components/common/PriceDisplay";
 import { SavingsSummary, savingsFromPricing } from "@/components/common/SavingsSummary";
 import { formatPrice } from "@/lib/utils";
-import { formatQuantityLine } from "@/lib/pack";
+import { formatOrderQuantity } from "@/lib/quantity";
 import { orderLinePrice } from "@/features/cart/savings";
 import { ORDER_STATUS_LABELS, SHIPMENT_STATUS_LABELS } from "@/lib/constants/print-specs";
 import { SHIPMENT_STATUS_COLORS } from "@/lib/constants/order-status";
@@ -381,7 +381,7 @@ export default function OrderDetailPage() {
                       {item.sides
                         ? `${item.sides.toLowerCase().includes("double") ? "Double-sided" : "Single-sided"} · `
                         : ""}
-                      {formatQuantityLine(item.quantity, item.packSize, item.unitLabel)}
+                      {formatOrderQuantity(item.quantity, item.packSize, item.unitLabel)}
                     </p>
                     <p>{item.turnaroundLabel}</p>
                     {item.artworkStatus && item.artworkStatus !== "none" && (

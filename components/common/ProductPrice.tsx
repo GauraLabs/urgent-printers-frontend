@@ -1,30 +1,36 @@
 import { PriceDisplay, type PriceVariant } from "@/components/common/PriceDisplay";
-import { getFromPackPrice } from "@/lib/utils";
-import { formatPackSize, normalizePack } from "@/lib/pack";
+import { getFromPrice, getListingPrice } from "@/lib/utils";
+import { formatQty } from "@/lib/quantity";
 import type { Product } from "@/types";
 
-type PricedProduct = Pick<Product, "pricingTiers" | "priceFrom" | "mrpFrom" | "discountPercent" | "printSpec" | "packSize" | "unitLabel" | "priceFromPack" | "mrpFromPack">;
+type PricedProduct = Pick<
+  Product,
+  | "pricingTiers" | "priceFrom" | "mrpFrom" | "discountPercent" | "printSpec" | "unitLabel"
+  | "listingQuantity" | "listingPrice" | "listingMrp" | "listingDiscountPercent"
+>;
 
 interface ProductPriceProps extends Omit<React.ComponentProps<typeof PriceDisplay>, "price" | "mrp" | "percent" | "variant"> {
   product: PricedProduct;
   variant: PriceVariant;
 }
 
-// "From" price + its discount for a card/search/recent product, resolved the
-// same way everywhere so the MRP always belongs to the tier being priced.
+// Card/search/recent price. With the server's listing figures it reads
+// "40 pcs for ₹240.00"; on a backend that predates them it falls back to the
+// per-unit "From ₹X" the caller's prefix/unitLabel describe.
 export function ProductPrice({ product, ...rest }: ProductPriceProps) {
-  const { price, discount } = getFromPackPrice(product);
-  const { packSize, unitLabel } = normalizePack(product.packSize, product.unitLabel);
-  // Packs replace the per-unit caption ("per unit", "/unit") with the pack it prices.
-  const packText = formatPackSize(packSize, unitLabel);
-  const packCaption = rest.variant === "card" ? `per ${packText}` : ` / ${packText}`;
-  return (
-    <PriceDisplay
-      {...rest}
-      unitLabel={packSize > 1 ? packCaption : rest.unitLabel}
-      price={price}
-      mrp={discount?.mrp}
-      percent={discount?.percent}
-    />
-  );
+  const listing = getListingPrice(product);
+  if (listing) {
+    return (
+      <PriceDisplay
+        {...rest}
+        prefix={`${formatQty(listing.quantity, product.unitLabel)} for`}
+        unitLabel={undefined}
+        price={listing.price}
+        mrp={listing.discount?.mrp}
+        percent={listing.discount?.percent}
+      />
+    );
+  }
+  const { price, discount } = getFromPrice(product);
+  return <PriceDisplay {...rest} price={price} mrp={discount?.mrp} percent={discount?.percent} />;
 }

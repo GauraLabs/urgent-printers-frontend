@@ -14,7 +14,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { PriceDisplay } from "@/components/common/PriceDisplay";
 import { SavingsSummary, savingsFromPricing } from "@/components/common/SavingsSummary";
 import { formatPrice, cn } from "@/lib/utils";
-import { formatQuantityLine } from "@/lib/pack";
+import { formatOrderQuantity } from "@/lib/quantity";
 import { orderLinePrice } from "@/features/cart/savings";
 import { getOrderById, downloadReceipt } from "@/lib/api";
 import { useAuthStore } from "@/features/auth/store";
@@ -133,7 +133,7 @@ export default function OrderConfirmationPage() {
                         ) : null;
                       })()}
                       <p className="text-xs text-muted-foreground">
-                        {formatQuantityLine(item.quantity, item.packSize, item.unitLabel)} · {item.turnaroundLabel}
+                        {formatOrderQuantity(item.quantity, item.packSize, item.unitLabel)} · {item.turnaroundLabel}
                       </p>
                     </div>
                     <div className="text-right shrink-0">

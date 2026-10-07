@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { PaymentStep, type PaymentMethod } from "@/features/checkout/PaymentStep
 import { ReviewStep } from "@/features/checkout/ReviewStep";
 import { useCartStore } from "@/features/cart/store";
 import { useAuthStore } from "@/features/auth/store";
-import { createOrder, previewOrder, verifyPayment, isPriceChangedError, isInvalidPackMultipleError } from "@/lib/api";
+import { createOrder, previewOrder, verifyPayment, isPriceChangedError, isQuantityLimitError, getCart } from "@/lib/api";
 import { buildClientPricing } from "./clientPricing";
 import { applyPreviewPrices, pricesDiffer } from "./repricing";
 import type { SiteStatus } from "@/lib/api/siteStatus";
@@ -29,6 +29,7 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
   const router = useRouter();
 
   const items            = useCartStore((s) => s.items);
+  const hasUnavailable   = useCartStore((s) => s.items.some((i) => s.unavailableIds.includes(i.cartItemId)));
   const appliedCoupon    = useCartStore((s) => s.appliedCoupon);
   const clearCart        = useCartStore((s) => s.clearCart);
   const setAppliedCoupon = useCartStore((s) => s.setAppliedCoupon);
@@ -120,15 +121,26 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
       }
       return result;
     } catch (err) {
-      if (isInvalidPackMultipleError(err)) {
-        toast.error(`${err instanceof Error ? err.message : "Quantity must be in whole packs."} Update it in your cart.`);
-        router.push(ROUTES.cart);
+      if (isQuantityLimitError(err)) {
+        void sendBackToCart(err, token);
       }
       setPreviewError(err instanceof Error ? err.message : "Could not compute pricing.");
       return null;
     } finally {
       setPreviewLoading(false);
     }
+  }
+
+  // A stale cart line outside its allowed range: pull the server's clamped cart,
+  // then explain on the cart page rather than failing the checkout.
+  async function sendBackToCart(err: unknown, token: string) {
+    try {
+      setItems(await getCart(token));
+    } catch {
+      // The cart page still shows the local lines.
+    }
+    toast.error(err instanceof Error ? err.message : "Please adjust the quantity in your cart.");
+    router.push(ROUTES.cart);
   }
 
   function finishOrder(orderId: string) {
@@ -138,8 +150,15 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
     router.replace(ROUTES.checkoutConfirmation(orderId));
   }
 
+  // An unavailable line would be rejected at order creation; send the customer to remove it first.
+  useEffect(() => {
+    if (!hasUnavailable) return;
+    toast.error("An item in your cart is no longer available. Please remove it to continue.");
+    router.replace(ROUTES.cart);
+  }, [hasUnavailable, router]);
+
   async function handlePlaceOrder() {
-    if (!address) return;
+    if (!address || hasUnavailable) return;
     const token = useAuthStore.getState().token;
     if (!token) {
       toast.error("Session expired. Please sign in again.");
@@ -290,9 +309,8 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
           true
         );
         toast.error("Prices have changed. Please review the updated total and confirm again.");
-      } else if (isInvalidPackMultipleError(err)) {
-        toast.error(`${err instanceof Error ? err.message : "Quantity must be in whole packs."} Update it in your cart.`);
-        router.push(ROUTES.cart);
+      } else if (isQuantityLimitError(err)) {
+        void sendBackToCart(err, token);
       } else {
         toast.error(err instanceof Error ? err.message : "Failed to place order. Please try again.");
       }

@@ -14,7 +14,7 @@ export interface TierPricing {
 // discounted if mrp_unit > unit_price after rounding. The percent is derived
 // from the rounded figures. Prices on `tier` are already the charged-now
 // values, so no window logic lives here.
-export function priceTier(tier: PricingTier, optionMultiplier: number): TierPricing {
+export function priceTier(tier: Pick<PricingTier, "quantity" | "pricePerUnit" | "mrpPerUnit">, optionMultiplier: number): TierPricing {
   const pricePerUnit = round2(tier.pricePerUnit * optionMultiplier);
   const totalPrice = round2(pricePerUnit * tier.quantity);
   if (tier.mrpPerUnit === undefined) return { pricePerUnit, totalPrice };

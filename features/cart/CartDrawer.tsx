@@ -22,6 +22,8 @@ export function CartDrawer() {
   const closeCart = useCartStore((s) => s.closeCart);
   const items = useCartStore((s) => s.items);
   const subtotal = useCartStore((s) => s.subtotal());
+  const hasPending = useCartStore((s) => s.items.some((i) => i.pricePending && !s.unavailableIds.includes(i.cartItemId) && !s.rateErrorIds.includes(i.cartItemId)));
+  const hasUnavailable = useCartStore((s) => s.items.some((i) => s.unavailableIds.includes(i.cartItemId)));
   const itemCount = useCartStore((s) => s.itemCount());
   const couponDiscount = useCartStore((s) => s.appliedCoupon?.discountAmount ?? 0);
   const savings = cartTotalSavings(items, couponDiscount);
@@ -93,7 +95,7 @@ export function CartDrawer() {
 
               <div className="flex items-center justify-between font-semibold">
                 <span>Subtotal</span>
-                <span>{formatPrice(subtotal)}</span>
+                <span>{hasPending ? "Updating…" : formatPrice(subtotal)}</span>
               </div>
 
               {savings > 0 && (
@@ -109,7 +111,9 @@ export function CartDrawer() {
               <Link
                 href={ROUTES.checkout}
                 onClick={closeCart}
+                aria-disabled={hasPending || hasUnavailable}
                 className={cn(
+                  (hasPending || hasUnavailable) && "pointer-events-none opacity-60",
                   buttonVariants(),
                   "w-full bg-brand-orange hover:bg-brand-orange/90 text-brand-orange-foreground font-semibold justify-center"
                 )}

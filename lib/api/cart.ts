@@ -1,7 +1,6 @@
 import type { CartItem } from "@/types";
 import { apiFetch } from "./client";
 import { makeCartItemId } from "@/features/cart/cartItemId";
-import { normalizePack, isPack } from "@/lib/pack";
 
 const BASE = "/cart";
 
@@ -33,10 +32,11 @@ export interface BackendCartItem {
   discountPerUnit?: number | null;
   artworkFileKey: string | null;
   templateData: Record<string, string> | null;
-  // Absent on a backend that predates pack selling. The server derives pack data;
-  // these are never sent on sync.
-  packSize?: number | null;
+  // Absent on a backend that predates quantity pricing. The server derives
+  // these; they are never sent on sync. maxQuantity is null with no limit.
   unitLabel?: string | null;
+  minQuantity?: number | null;
+  maxQuantity?: number | null;
   quantityCorrected?: boolean | null;
   originalQuantity?: number | null;
 }
@@ -44,7 +44,6 @@ export interface BackendCartItem {
 // ─── Mappers ──────────────────────────────────────────────────────────────────
 
 export function mapCartItem(b: BackendCartItem): CartItem {
-  const pack = normalizePack(b.packSize, b.unitLabel);
   const cartItemId = makeCartItemId(
     b.productId, b.sizeId ?? "", b.paperId ?? "", b.finishId ?? "", b.sides ?? "", b.turnaroundId,
     b.artworkFileKey ?? undefined, b.templateData ?? undefined
@@ -77,7 +76,9 @@ export function mapCartItem(b: BackendCartItem): CartItem {
       turnaroundExtraCost: parseFloat((b.totalPrice - b.pricePerUnit * b.quantity).toFixed(2)),
       artworkFileKey: b.artworkFileKey ?? undefined,
       templateData: b.templateData ?? undefined,
-      ...(isPack(pack.packSize) && { packSize: pack.packSize, unitLabel: pack.unitLabel }),
+      ...(b.unitLabel && { unitLabel: b.unitLabel }),
+      ...(b.minQuantity != null && { minQuantity: b.minQuantity }),
+      ...(b.maxQuantity !== undefined && { maxQuantity: b.maxQuantity }),
     },
     pricePerUnit: b.pricePerUnit,
     totalPrice: b.totalPrice,
@@ -121,7 +122,7 @@ export async function getCart(token: string): Promise<CartItem[]> {
   return data.map(mapCartItem);
 }
 
-/** Resolves to the lines the server snapped to whole packs (empty when none). */
+/** Resolves to every line as the server priced it (flagged when it clamped the quantity). */
 export async function syncCart(items: CartItem[], token: string): Promise<CartItem[]> {
   // REAL API: POST /api/v1/cart/sync — atomically replaces server cart
   const data = await apiFetch<BackendCartItem[] | null>(`${BASE}/sync`, {
@@ -129,5 +130,5 @@ export async function syncCart(items: CartItem[], token: string): Promise<CartIt
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify({ items: items.map(toSyncItem) }),
   });
-  return Array.isArray(data) ? data.filter((b) => b.quantityCorrected).map(mapCartItem) : [];
+  return Array.isArray(data) ? data.map(mapCartItem) : [];
 }
