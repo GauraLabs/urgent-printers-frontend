@@ -10,6 +10,8 @@ import { useCartStore } from "@/features/cart/store";
 import { ProductConfigurator } from "@/features/products/configurator/ProductConfigurator";
 import { StickyAddToCart } from "@/features/products/StickyAddToCart";
 import { buildProductJsonLd } from "@/lib/structured-data";
+import { productHref } from "@/features/products/productHref";
+import { TierRateGuide } from "@/features/products/configurator/TierRateGuide";
 import { codedErrorMessage } from "@/lib/api/validationErrors";
 import {
   cardLegacy, detailOnSale, searchDocLegacy, cartItemLegacy, orderLegacy, previewRepriced,
@@ -68,25 +70,30 @@ describe("card / search price line", () => {
   const base = { pricingTiers: [], printSpec: { sizes: [], papers: [], finishes: [], sides: [], minDpi: 300, bleedMm: 3 } } as unknown as Pick<Product, "pricingTiers" | "printSpec">;
 
   it("renders '40 pcs for ₹240.00'", () => {
-    const html = renderToStaticMarkup(<ProductPrice variant="card" prefix="From" unitLabel="per unit" product={{ ...base, priceFrom: 6, unitLabel: "pcs", listingQuantity: 40, listingPrice: 240 }} />);
+    const html = renderToStaticMarkup(<ProductPrice variant="card" prefix="From" unitLabel="per unit" product={{ ...base, priceFrom: 6, unitLabel: "pcs", listingQuantity: 40, listingPrice: 240, listingQuery: "qty=40" }} />);
     expect(html).toContain("40 pcs for");
     expect(html).toContain("₹240.00");
     expect(html).not.toContain("From");
     expect(html).not.toContain("per unit");
   });
   it("renders '1 pc for ₹1,100.00' and the struck MRP with percent", () => {
-    const html = renderToStaticMarkup(<ProductPrice variant="card" product={{ ...base, listingQuantity: 1, listingPrice: 1100 }} />);
+    const html = renderToStaticMarkup(<ProductPrice variant="card" product={{ ...base, listingQuantity: 1, listingPrice: 1100, listingQuery: "qty=1" }} />);
     expect(html).toContain("1 pc for");
     expect(html).toContain("₹1,100.00");
-    const sale = renderToStaticMarkup(<ProductPrice variant="card" product={{ ...base, unitLabel: "pcs", listingQuantity: 40, listingPrice: 240, listingMrp: 300, listingDiscountPercent: 20 }} />);
+    const sale = renderToStaticMarkup(<ProductPrice variant="card" product={{ ...base, unitLabel: "pcs", listingQuantity: 40, listingPrice: 240, listingMrp: 300, listingDiscountPercent: 20, listingQuery: "qty=40" }} />);
     expect(sale).toContain("₹300.00");
     expect(sale).toContain("20% off");
   });
   it("compact variant (search/recent) uses the same line", () => {
-    const html = renderToStaticMarkup(<ProductPrice variant="compact" prefix="from" unitLabel="/unit" product={{ ...base, listingQuantity: 25, listingPrice: 400, unitLabel: "tags" }} />);
+    const html = renderToStaticMarkup(<ProductPrice variant="compact" prefix="from" unitLabel="/unit" product={{ ...base, listingQuantity: 25, listingPrice: 400, unitLabel: "tags", listingQuery: "qty=25" }} />);
     expect(html).toContain("25 tags for");
     expect(html).toContain("₹400.00");
     expect(html).not.toContain("/unit");
+  });
+  it("falls back to From when the server sent a price but no link params (landing could not match)", () => {
+    const html = renderToStaticMarkup(<ProductPrice variant="card" prefix="From" unitLabel="per unit" product={{ ...base, priceFrom: 6, listingQuantity: 40, listingPrice: 240 }} />);
+    expect(html).toContain("From");
+    expect(html).not.toContain("40 pcs for");
   });
   it("falls back to the per-unit From price when listing fields are absent", () => {
     const html = renderToStaticMarkup(<ProductPrice variant="card" prefix="From" unitLabel="per unit" product={{ ...base, priceFrom: 6 }} />);
@@ -201,7 +208,7 @@ describe("ProductConfigurator", () => {
 
   it("a tier chip jumps to that tier's start", () => {
     render(<ProductConfigurator product={product} />);
-    fireEvent.click(screen.getByRole("button", { name: /200\+/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Set quantity to 200 pcs/ }));
     expect(field().value).toBe("200");
   });
 
@@ -282,5 +289,33 @@ describe("Indian grouping and sticky gate", () => {
     render(<StickyAddToCart productName="X" price="₹1" disabled observeRef={{ current: document.createElement("button") }} onAddToCart={() => {}} />);
     expect((screen.getByRole("button", { name: "Enter a quantity" }) as HTMLButtonElement).disabled).toBe(true);
     vi.unstubAllGlobals();
+  });
+});
+
+describe("card links and tier chips", () => {
+  const p = { categorySlug: "stickers", slug: "matte", listingPrice: 270 };
+  it("the card opens the PDP on the priced configuration via query params only", () => {
+    expect(productHref({ ...p, listingQuery: "qty=50&size=2x2-in&paper=vinyl" })).toBe("/products/stickers/matte?qty=50&size=2x2-in&paper=vinyl");
+  });
+  it("is the bare URL without link params or without a listing price", () => {
+    expect(productHref({ ...p, listingQuery: undefined })).toBe("/products/stickers/matte");
+    expect(productHref({ ...p, listingQuery: "", })).toBe("/products/stickers/matte");
+    expect(productHref({ ...p, listingPrice: undefined as never, listingQuery: "qty=50" })).toBe("/products/stickers/matte");
+  });
+  it("mapper carries listing_query from card and search doc", () => {
+    expect(mapCard({ ...cardLegacy, listing_query: "qty=40&size=a" }).listingQuery).toBe("qty=40&size=a");
+    expect(mapSearchDoc({ ...searchDocLegacy, listing_query: "qty=25" }, new Map()).listingQuery).toBe("qty=25");
+  });
+  it("tier chips are labelled, clickable, and call back with the tier start", () => {
+    const onSelect = vi.fn();
+    render(<TierRateGuide unitLabel="pcs" onSelect={onSelect} entries={[
+      { quantity: 50, label: 50, pricePerUnit: 6, isBestValue: false, current: true },
+      { quantity: 100, label: 100, pricePerUnit: 4, isBestValue: false, current: false },
+    ]} />);
+    const chip = screen.getByRole("button", { name: /Set quantity to 100 pcs/ });
+    expect(chip.className).toContain("cursor-pointer");
+    expect(chip.className).toContain("hover:");
+    fireEvent.click(chip);
+    expect(onSelect).toHaveBeenCalledWith(100);
   });
 });

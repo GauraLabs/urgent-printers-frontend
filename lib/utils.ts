@@ -97,6 +97,7 @@ export interface FromPriceInput {
   listingPrice?: number;
   listingMrp?: number;
   listingDiscountPercent?: number;
+  listingQuery?: string;
 }
 
 export interface FromPrice {
@@ -138,7 +139,8 @@ export interface ListingPrice {
  * pricing, in which case callers fall back to the per-unit "From" price.
  */
 export function getListingPrice(product: FromPriceInput): ListingPrice | null {
-  if (product.listingPrice === undefined || !product.listingQuantity) return null;
+  // The card price is only honest if the link can open the PDP on the same configuration.
+  if (product.listingPrice === undefined || !product.listingQuantity || product.listingQuery == null) return null;
   return {
     quantity: product.listingQuantity,
     price: product.listingPrice,

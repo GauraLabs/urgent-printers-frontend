@@ -163,6 +163,8 @@ export interface Product {
   listingPrice?: number;
   listingMrp?: number;
   listingDiscountPercent?: number;
+  // PDP query string of the configuration listingPrice was computed for (qty + cheapest options).
+  listingQuery?: string;
   listingOffer?: ListingOffer | null;
   customizationMode: CustomizationMode;
   templateFields: TemplateField[];

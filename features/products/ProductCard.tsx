@@ -1,5 +1,6 @@
 "use client";
 
+import { productHref } from "@/features/products/productHref";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { motion } from "motion/react";
@@ -9,7 +10,6 @@ import { SafeImage } from "@/components/common/SafeImage";
 import { StarRating } from "@/components/common/StarRating";
 import { WishlistButton } from "./WishlistButton";
 import { getCornerBadge } from "./badge";
-import { ROUTES } from "@/lib/constants/routes";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { ProductPrice } from "@/components/common/ProductPrice";
 import { cn } from "@/lib/utils";
@@ -70,7 +70,7 @@ function computeSafeHoverScale(frame: HTMLElement, maxScale: number): number {
 }
 
 export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: ProductCardProps) {
-  const href = ROUTES.product(product.categorySlug, product.slug);
+  const href = productHref(product);
   const cornerBadge = getCornerBadge(product);
   const prefersReducedMotion = usePrefersReducedMotion();
   const frameRef = useRef<HTMLDivElement>(null);

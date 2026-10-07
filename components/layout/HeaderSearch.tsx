@@ -1,5 +1,6 @@
 "use client";
 
+import { productHref } from "@/features/products/productHref";
 import { useState, useRef, useEffect, useId } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -82,7 +83,7 @@ export function HeaderSearch() {
         const p = results[activeIndex];
         setIsOpen(false);
         setQuery("");
-        router.push(ROUTES.product(p.categorySlug, p.slug));
+        router.push(productHref(p));
       } else {
         submit();
       }
@@ -178,7 +179,7 @@ export function HeaderSearch() {
                     <Link
                       key={product.id}
                       id={optionId(i)}
-                      href={ROUTES.product(product.categorySlug, product.slug)}
+                      href={productHref(product)}
                       onClick={() => { setIsOpen(false); setQuery(""); }}
                       role="option"
                       aria-selected={activeIndex === i}

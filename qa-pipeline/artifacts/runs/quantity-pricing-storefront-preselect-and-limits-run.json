@@ -1,0 +1,125 @@
+{
+  "feature_name": "Quantity Pricing Storefront Preselect And Limits",
+  "plan_path": "qa-pipeline/artifacts/plans/quantity-pricing-storefront-plan.json",
+  "run_timestamp": "2026-10-07T17:13:38.546Z",
+  "trace_path": "qa-pipeline/artifacts/traces/quantity-pricing-storefront-preselect-and-limits-trace.zip",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "alt-01",
+      "action": "Open the PDP with the feed preselect ?qty=1000",
+      "selector": null,
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": null,
+      "timestamp_ms": 2175,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-preselect-and-limits/alt-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 8
+        }
+      ],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    {
+      "step_id": "alt-02",
+      "action": "Read the JSON-LD Product block",
+      "selector": null,
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": null,
+      "timestamp_ms": 2341,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-preselect-and-limits/alt-02.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-03",
+      "action": "Open the PDP with an out-of-range preselect ?qty=7",
+      "selector": null,
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": null,
+      "timestamp_ms": 3631,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-preselect-and-limits/alt-03.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 8
+        }
+      ],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    {
+      "step_id": "alt-04",
+      "action": "Step the quantity with the + and - buttons",
+      "selector": "getByRole('button', { name: 'Increase quantity' })",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 860,
+        "y": 338,
+        "width": 44,
+        "height": 44
+      },
+      "timestamp_ms": 4384,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-preselect-and-limits/alt-04.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-05",
+      "action": "Tap the 2,500+ tier chip",
+      "selector": "getByRole('button', { name: /^2,500\\+/ })",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 672,
+        "y": 342,
+        "width": 128,
+        "height": 36
+      },
+      "timestamp_ms": 4688,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-preselect-and-limits/alt-05.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    }
+  ],
+  "lighthouse": {
+    "initial_load": null,
+    "final_state": null
+  }
+}

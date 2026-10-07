@@ -1,12 +1,12 @@
 "use client";
 
+import { productHref } from "@/features/products/productHref";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { SafeImage } from "@/components/common/SafeImage";
 import { useMounted } from "@/hooks/useMounted";
 import { getProductBySlug } from "@/lib/api";
-import { ROUTES } from "@/lib/constants/routes";
 import { ProductPrice } from "@/components/common/ProductPrice";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/types";
@@ -87,7 +87,7 @@ export function RecentlyViewedCarousel({ currentProductId }: RecentlyViewedCarou
         {products.map((product) => (
           <MotionLink
             key={product.id}
-            href={ROUTES.product(product.categorySlug, product.slug)}
+            href={productHref(product)}
             whileHover={{ y: -4, boxShadow: "0 12px 32px -4px rgba(159,66,43,0.18)" }}
             transition={{ type: "spring", stiffness: 300, damping: 24 }}
             className={cn(

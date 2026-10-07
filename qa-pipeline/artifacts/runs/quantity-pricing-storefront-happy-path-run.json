@@ -1,0 +1,283 @@
+{
+  "feature_name": "Quantity Pricing Storefront Happy Path",
+  "plan_path": "qa-pipeline/artifacts/plans/quantity-pricing-storefront-plan.json",
+  "run_timestamp": "2026-10-07T17:14:01.442Z",
+  "trace_path": "qa-pipeline/artifacts/traces/quantity-pricing-storefront-happy-path-trace.zip",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "hp-01",
+      "action": "Open the Business Cards listing and read the quantity-priced card",
+      "selector": null,
+      "route": "/products/business-cards",
+      "bounding_box": null,
+      "timestamp_ms": 1461,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-happy-path/hp-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 2
+        }
+      ],
+      "console_errors": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <SegmentViewNode type=\"page\" pagePath=\"products/[...\">\n      <SegmentTrieNode>\n      <CategoryPage>\n        <script>\n        <section>\n          <div>\n          <ProductsPageShell products={[...]} total={3} categories={[...]} categoryName=\"Business C...\" ...>\n            <Suspense fallback={<div>}>\n              <ShellInner products={[...]} total={3} categories={[...]} categoryName=\"Business C...\" ...>\n                <div className=\"max-w-7xl ...\">\n                  <SearchField>\n                  <div>\n                  <div>\n                  <div className=\"flex gap-8\">\n                    <aside className=\"hidden lg:...\">\n                      <div className=\"sticky top-20\">\n                        <FilterControls categories={[...]} showCategoryFilter={undefined} disabled={false}>\n                          <div className=\"flex flex-...\">\n                            <div>\n                            <div>\n                              <p>\n                              <div className=\"flex flex-...\">\n                                <label className=\"flex items...\">\n                                  <input\n                                    type=\"radio\"\n                                    name=\"category\"\n                                    checked={false}\n                                    onChange={function onChange}\n                                    className=\"accent-primary w-3.5 h-3.5\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  ...\n                                <label className=\"flex items...\">\n                                  <input\n                                    type=\"radio\"\n                                    name=\"category\"\n                                    checked={false}\n                                    onChange={function onChange}\n                                    className=\"accent-primary w-3.5 h-3.5\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  ...\n                                <label className=\"flex items...\">\n                                  <input\n                                    type=\"radio\"\n                                    name=\"category\"\n                                    checked={true}\n                                    onChange={function onChange}\n                                    className=\"accent-primary w-3.5 h-3.5\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  ...\n                                <label className=\"flex items...\">\n                                  <input\n                                    type=\"radio\"\n                                    name=\"category\"\n                                    checked={false}\n                                    onChange={function onChange}\n                                    className=\"accent-primary w-3.5 h-3.5\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  ...\n                                <label className=\"flex items...\">\n                                  <input\n                                    type=\"radio\"\n                                    name=\"category\"\n                                    checked={false}\n                                    onChange={function onChange}\n                                    className=\"accent-primary w-3.5 h-3.5\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  ...\n                                <label className=\"flex items...\">\n                                  <input\n                                    type=\"radio\"\n                                    name=\"category\"\n                                    checked={false}\n                                    onChange={function onChange}\n                                    className=\"accent-primary w-3.5 h-3.5\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  ...\n                                <label className=\"flex items...\">\n                                  <input\n                                    type=\"radio\"\n                                    name=\"category\"\n                                    checked={false}\n                                    onChange={function onChange}\n                                    className=\"accent-primary w-3.5 h-3.5\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  ...\n                                ...\n                            ...\n                            <div>\n                              <p>\n                              <div className=\"flex items...\">\n                                <input\n                                  type=\"number\"\n                                  placeholder=\"Min\"\n                                  value=\"\"\n                                  onChange={function onChange}\n                                  onBlur={function applyPrice}\n                                  onKeyDown={function onKeyDown}\n                                  min={0}\n                                  className=\"w-full h-8 rounded-md border border-border bg-background px-3 text-sm foc...\"\n-                                 style={{caret-color:\"transparent\"}}\n                                >\n                                <span>\n                                <input\n                                  type=\"number\"\n                                  placeholder=\"Max\"\n                                  value=\"\"\n                                  onChange={function onChange}\n                                  onBlur={function applyPrice}\n                                  onKeyDown={function onKeyDown}\n                                  min={0}\n                                  className=\"w-full h-8 rounded-md border border-border bg-background px-3 text-sm foc...\"\n-                                 style={{caret-color:\"transparent\"}}\n                                >\n                            <Separator>\n                            <div>\n                              <p>\n                              <div className=\"flex flex-...\">\n                                <label className=\"flex items...\">\n                                  <input\n                                    type=\"checkbox\"\n                                    checked={false}\n                                    onChange={function onChange}\n                                    className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  ...\n                                <label className=\"flex items...\">\n                                  <input\n                                    type=\"checkbox\"\n                                    checked={false}\n                                    onChange={function onChange}\n                                    className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  ...\n                                <label className=\"flex items...\">\n                                  <input\n                                    type=\"checkbox\"\n                                    checked={false}\n                                    onChange={function onChange}\n                                    className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  ...\n                                <label className=\"flex items...\">\n                                  <input\n                                    type=\"checkbox\"\n                                    checked={false}\n                                    onChange={function onChange}\n                                    className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  ...\n                            <Separator>\n                            <div>\n                              <p>\n                              <div className=\"flex flex-...\">\n                                <label className=\"flex items...\">\n                                  <input\n                                    type=\"checkbox\"\n                                    checked={false}\n                                    onChange={function onChange}\n                                    className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  ...\n                                <label className=\"flex items...\">\n                                  <input\n                                    type=\"checkbox\"\n                                    checked={false}\n                                    onChange={function onChange}\n                                    className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  ...\n                                <label className=\"flex items...\">\n                                  <input\n                                    type=\"checkbox\"\n                                    checked={false}\n                                    onChange={function onChange}\n                                    className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  ...\n                                <label className=\"flex items...\">\n                                  <input\n                                    type=\"checkbox\"\n                                    checked={false}\n                                    onChange={function onChange}\n                                    className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  ...\n                    ...\n"
+      ]
+    },
+    {
+      "step_id": "hp-02",
+      "action": "Open the product detail page",
+      "selector": "getByRole('link', { name: 'Matte Finish Business Cards' }).first()",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 615,
+        "y": 360,
+        "width": 307,
+        "height": 599
+      },
+      "timestamp_ms": 2208,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-happy-path/hp-02.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 8
+        }
+      ],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    {
+      "step_id": "hp-03",
+      "action": "Read the min/max range hint under the quantity field",
+      "selector": "getByText(/^Min [\\d,]+ /)",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 672,
+        "y": 352,
+        "width": 576,
+        "height": 16
+      },
+      "timestamp_ms": 2434,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-happy-path/hp-03.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-04",
+      "action": "Read the live price summary at the advertised quantity",
+      "selector": "locator('div').filter({ has: getByText('GST and shipping calculated at checkout') }).last()",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 672,
+        "y": 392,
+        "width": 576,
+        "height": 213
+      },
+      "timestamp_ms": 2727,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-happy-path/hp-04.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-05",
+      "action": "Read the tier-rate guide and its highlighted chip",
+      "selector": "getByRole('button', { name: /^[\\d,]+\\+ ₹/ }).first()",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 672,
+        "y": 651,
+        "width": 117,
+        "height": 36
+      },
+      "timestamp_ms": 2942,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-happy-path/hp-05.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-06",
+      "action": "Type 499 and watch the price follow the tier live",
+      "selector": "getByLabel('Quantity', { exact: true })",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 724,
+        "y": 304,
+        "width": 128,
+        "height": 44
+      },
+      "timestamp_ms": 3493,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-happy-path/hp-06.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-07",
+      "action": "Read the price-jump nudge",
+      "selector": "locator('div[role=\"status\"]').filter({ hasText: /and pay ₹/ })",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 672,
+        "y": 327,
+        "width": 576,
+        "height": 66
+      },
+      "timestamp_ms": 3724,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-happy-path/hp-07.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-08",
+      "action": "Accept the nudge with its one-tap button",
+      "selector": "getByRole('button', { name: 'Add 1 more', exact: true })",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 1124,
+        "y": 340,
+        "width": 111,
+        "height": 40
+      },
+      "timestamp_ms": 4050,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-happy-path/hp-08.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-09",
+      "action": "Add the configured 500 pieces to the cart",
+      "selector": "locator('button.w-full.h-12').filter({ hasText: /Add to Cart|Update Cart|Enter a quantity/ })",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 672,
+        "y": 471,
+        "width": 576,
+        "height": 48
+      },
+      "timestamp_ms": 4590,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-happy-path/hp-09.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    {
+      "step_id": "hp-10",
+      "action": "Open the cart page and read the line",
+      "selector": null,
+      "route": "/cart",
+      "bounding_box": null,
+      "timestamp_ms": 6038,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-happy-path/hp-10.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-12",
+      "action": "Open the cart drawer from the header and edit the quantity there",
+      "selector": "getByRole('button', { name: /^Cart, \\d+ item/ })",
+      "route": "/products/business-cards",
+      "bounding_box": {
+        "x": 1123,
+        "y": 10,
+        "width": 36,
+        "height": 36
+      },
+      "timestamp_ms": 8405,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-happy-path/hp-12.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 5
+        }
+      ],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    {
+      "step_id": "hp-11",
+      "action": "Change the cart line from 500 to 250 and blur",
+      "selector": "getByLabel('Quantity', { exact: true }).first()",
+      "route": "/products/business-cards",
+      "bounding_box": {
+        "x": 1041,
+        "y": 187,
+        "width": 96,
+        "height": 36
+      },
+      "timestamp_ms": 8928,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-happy-path/hp-11.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    }
+  ],
+  "lighthouse": {
+    "initial_load": null,
+    "final_state": null
+  }
+}

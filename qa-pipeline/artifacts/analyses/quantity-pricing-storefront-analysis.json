@@ -1,0 +1,76 @@
+{
+  "feature_name": "Quantity Pricing (Storefront)",
+  "pass_count": 28,
+  "fail_count": 0,
+  "failures": [],
+  "accessibility_summary": {
+    "critical": [],
+    "serious": [
+      "color-contrast — 58 nodes across /products/business-cards, /products/business-cards/matte-finish-business-cards and /cart. This is a pre-existing, site-wide theme issue, not something this feature introduced: the same violation at comparable density was recorded on the product-catalog and pack-selling runs, and it appears on the category listing (which contains none of this feature's controls) as well as on the PDP. The quantity controls' own text (the amber helper line, the tier chips, the nudge banner) sits inside that total and should be re-measured specifically once the theme tokens are addressed — muted amber on a tinted background is exactly the combination axe flags.",
+      "No critical violations were found on any route this run exercised."
+    ],
+    "moderate": [],
+    "coverage_caveat": "automated scan only — manual/screen-reader review still needed"
+  },
+  "performance_summary": {
+    "initial_load": "Not measured — Lighthouse was deliberately off for this run (captureOptions.lighthouse: 'off' on all three specs), so there are no numbers to report rather than numbers to caveat.",
+    "final_state": "Not measured, same reason.",
+    "concerns": [
+      "The quantity field debounces repricing by 150 ms and every reprice is pure client-side arithmetic in integer cents (lib/quantity.ts priceForQuantity) with no network call, so typing cost is not a server-load concern. Repricing was observed to land well inside the 15 s assertion budget on every step.",
+      "Editing a cart line DOES round-trip to the server, and hp-11/hp-12 both settled promptly; no debounce or stale-write problem was observed.",
+      "Any future measurement should note these would be Next.js dev-server numbers, not a production build, and are only useful as a run-over-run baseline."
+    ]
+  },
+  "ux_gaps": [
+    {
+      "issue": "The card drops the word 'From' and prices a specific quantity at the CHEAPEST option combination, but the PDP opens on the product's DEFAULT options. Where the two differ the customer sees a price increase between click and landing. On Premium Foil Business Cards the card would read ₹5,040.00 (Spot UV, x2.0 — the cheapest finish) while the PDP opens at ₹6,300.00 (Gold Foil, x2.5 — the default); A2 Posters is the same shape (₹150 advertised, ₹250 on open). The run's primary products (Matte Finish Business Cards, Custom Die-Cut Stickers) have 1.0 as both the cheapest and the default multiplier, so card and PDP agree exactly there — which is why this is a latent trap rather than a visible break. The PDP does disclose 'Price shown is for the options selected', but the card makes an unqualified promise.",
+      "related_edge_case": null
+    },
+    {
+      "issue": "Tier-rate chips are interactive (tapping one sets the quantity) but carry no affordance saying so — they render as pills identical in styling to a passive legend, with no cursor, caret or 'tap to choose' hint. The nudge next to them has an explicit button, which makes the chips look passive by comparison. A customer who does not discover this loses the quickest route to a cheaper rate.",
+      "related_edge_case": null
+    },
+    {
+      "issue": "Tier rates that RISE with quantity are rendered faithfully and without comment. The dev data for Custom Die-Cut Stickers prices the 100 tier at ₹10.00/pc against ₹6.00/pc at the 50 tier, so the guide reads '50+ ₹6.00/pc · 100+ ₹10.00/pc · 250+ ₹6.00/pc'. The nudge correctly stays silent at qty 99 (alt-09) because the next tier is neither cheaper nor within 5%, so the pricing logic is right — but the customer is shown a rate card that appears to punish buying more, with nothing in either UI warning the admin who authored it.",
+      "related_edge_case": "Tier rates that are not monotonically decreasing (dev stickers: 50 @ ₹6, 100 @ ₹10, 250 @ ₹6)"
+    },
+    {
+      "issue": "Checkout, order placement, order confirmation and account-order rendering of '{qty} {unit}' were not exercised at all. Customer authentication is OTP-only and this run had no way to read the delivered code, so the entire post-cart leg is unverified end to end. The backend's reject-never-clamp behaviour for orders is covered by unit/API tests only.",
+      "related_edge_case": "Checkout and order placement with a free-entered quantity"
+    },
+    {
+      "issue": "The server-correction path (quantityCorrected / the 'Quantity updated to fit the allowed range' toast) needs a deliberately out-of-range persisted cart line, which the UI cannot produce because add and update both reject rather than clamp. It is unreachable through the browser and therefore untested here.",
+      "related_edge_case": "Server clamps a cart quantity on sync and returns quantityCorrected"
+    },
+    {
+      "issue": "A pre-existing hydration mismatch fires on the category listing route, inside FilterControls' label markup (confirmed from the React component stack in the console output: CategoryPage → ProductsPageShell → ShellInner → FilterControls → label). It is unrelated to quantity pricing — no quantity control is in that subtree — but it is a genuine app-code mismatch, not the caret-color tooling noise documented in pipeline/README.md finding #10, and it is reported here because this run is what surfaced it.",
+      "related_edge_case": null
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": "high",
+      "action": "Decide the card-vs-PDP price promise for products whose cheapest option is not their default option. Either open the PDP on the cheapest combination the card advertised, or restore a qualifier on the card ('from ₹5,040.00 for 100 pcs'). As shipped, a customer clicking a ₹5,040 card lands on ₹6,300 with no explanation beyond a small options note — the single most likely source of mistrust in this feature."
+    },
+    {
+      "priority": "medium",
+      "action": "Give the tier-rate chips a visible interactive affordance (cursor-pointer, a hover state that reads as a control, or a one-line 'Tap a rate to set the quantity'), so the cheapest-rate shortcut is discoverable rather than accidental."
+    },
+    {
+      "priority": "medium",
+      "action": "Exercise the post-cart leg. Either provision a test customer whose OTP is readable in the dev environment, or add API-level coverage asserting order preview/create reject quantity_below_minimum / quantity_above_maximum and that new order_items carry unit_label with pack_size defaulting to 1. Today the feature's money path is verified only as far as the cart."
+    },
+    {
+      "priority": "medium",
+      "action": "Re-measure color-contrast specifically on this feature's own controls (amber helper line, tier chips, nudge banner) once the site-wide theme contrast work happens — the 58-node total is dominated by pre-existing page chrome and currently hides whether the new controls pass on their own."
+    },
+    {
+      "priority": "low",
+      "action": "File the FilterControls hydration mismatch on the category listing as its own defect; it is unrelated to this feature but is a real server/client markup divergence that this run reproduced on every visit to /products/business-cards and /products/stickers-labels."
+    },
+    {
+      "priority": "low",
+      "action": "Turn Lighthouse on for one future pass of the PDP so there is a baseline for a page that now does continuous client-side repricing; no numbers exist for it today."
+    }
+  ]
+}

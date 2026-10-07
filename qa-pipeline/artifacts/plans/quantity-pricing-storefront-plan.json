@@ -1,0 +1,277 @@
+{
+  "feature_found": true,
+  "feature_name": "Quantity Pricing (Storefront) — listing quantity, typeable quantity, live tier price, price-jump nudge",
+  "source_files": [
+    "urgent-printers-frontend/lib/quantity.ts",
+    "urgent-printers-frontend/components/common/QuantityInput.tsx",
+    "urgent-printers-frontend/components/common/ProductPrice.tsx",
+    "urgent-printers-frontend/components/common/PriceDisplay.tsx",
+    "urgent-printers-frontend/features/products/configurator/ProductConfigurator.tsx",
+    "urgent-printers-frontend/features/products/configurator/TierRateGuide.tsx",
+    "urgent-printers-frontend/features/products/configurator/TierNudge.tsx",
+    "urgent-printers-frontend/features/products/configurator/pricing.ts",
+    "urgent-printers-frontend/features/products/configurator/preselect.ts",
+    "urgent-printers-frontend/features/cart/CartDrawerItem.tsx",
+    "urgent-printers-frontend/features/cart/store.ts",
+    "urgent-printers-frontend/app/cart/page.tsx",
+    "urgent-printers-frontend/lib/utils.ts",
+    "urgent-printers-frontend/lib/structured-data.ts",
+    "urgent-printers-frontend/lib/api/products.ts",
+    "urgent-printers-backend/app/services/pricing.py",
+    "urgent-printers-backend/app/services/order_limits.py",
+    "urgent-printers-backend/app/services/listing_offer.py",
+    "urgent-printers-backend/app/schemas/product.py",
+    "urgent-printers-backend/app/services/cart_service.py",
+    ".claude/plans/quantity-pricing-spec.md"
+  ],
+  "user_goal": "Order exactly the quantity I want of a printed product, see the price for that quantity update as I type, and be told when buying a few more pieces is actually cheaper.",
+  "business_goal": "Replace rigid pack/tier-row quantity selection with free quantity entry so no order is lost to an unavailable quantity, while the tier guide and price-jump nudge lift average order value toward the next cheaper rate.",
+  "user_journey": [
+    {
+      "step": "Sees a product card priced for a concrete quantity rather than a vague 'from' rate",
+      "route_or_state": "/products"
+    },
+    {
+      "step": "Opens the product page, pre-filled with the advertised listing quantity",
+      "route_or_state": "/products/[categorySlug]/[productSlug]"
+    },
+    {
+      "step": "Types or steps a quantity; the per-piece rate and total reprice live",
+      "route_or_state": "PDP configurator quantity block"
+    },
+    {
+      "step": "Reads the tier-rate guide and the price-jump nudge, optionally accepting the nudge",
+      "route_or_state": "PDP configurator below the price summary"
+    },
+    {
+      "step": "Adds to cart and edits the quantity again on the cart page",
+      "route_or_state": "/cart"
+    }
+  ],
+  "happy_path": [
+    {
+      "step_id": "hp-01",
+      "action": "Open the Business Cards category listing and read the quantity-priced card for Matte Finish Business Cards",
+      "selector": "article:has-text('Matte Finish Business Cards')",
+      "expected_result": "The card renders one line '250 pcs for ₹2,250.00' via ProductPrice's listing branch, with the listing MRP '₹2,500.00' struck through and '10% off'. The old per-unit 'From ₹x' wording is gone. 250 is the admin-set listing quantity, not the product's minimum."
+    },
+    {
+      "step_id": "hp-02",
+      "action": "Open the product detail page for Matte Finish Business Cards",
+      "selector": "a[href='/products/business-cards/matte-finish-business-cards']",
+      "expected_result": "The configurator's Quantity input is pre-filled with 250 — the product's effective listing quantity — and NOT the effective minimum of 100, proving the PDP opens on the quantity the card advertised rather than the cheapest orderable one."
+    },
+    {
+      "step_id": "hp-03",
+      "action": "Read the range hint under the quantity input",
+      "selector": "input[aria-label='Quantity']",
+      "expected_result": "'Min 100 pcs' only, with no '· Max ...' clause, because this product's max_order_quantity is null. The internal 1,000,000 ceiling is never displayed, per spec section 1."
+    },
+    {
+      "step_id": "hp-04",
+      "action": "Read the live price summary at the pre-filled listing quantity",
+      "selector": "div.rounded-2xl:has-text('Total')",
+      "expected_result": "'250 pcs', '₹9.00/pc' and Total ₹2,250.00, plus the per-piece MRP ₹10.00 struck with '10% off' and the line 'You save ₹250.00 on this quantity'. The total equals the card's listing price from hp-01 exactly — every option on this product has a 1.0 multiplier, so the advertised and landing prices coincide."
+    },
+    {
+      "step_id": "hp-05",
+      "action": "Read the tier-rate guide chips and confirm the chip covering the current quantity is highlighted",
+      "selector": "button[aria-current='true']",
+      "expected_result": "Five chips: '100+ ₹12.60/pc', '250+ ₹9.00/pc', '500+ ₹6.75/pc', '1,000+ ₹4.95/pc' (with the best-value star), '2,500+ ₹4.05/pc'. Exactly one carries aria-current='true' and it is '250+', because tierForQuantity(250) is the 250 tier."
+    },
+    {
+      "step_id": "hp-06",
+      "action": "Type 499 into the quantity input and wait out the 150 ms debounce",
+      "selector": "input[aria-label='Quantity']",
+      "expected_result": "Price reprices live with no error state: '₹9.00/pc' (the 250 tier still covers 499) and Total ₹4,491.00 = 9.00 x 499. The highlighted chip stays '250+'."
+    },
+    {
+      "step_id": "hp-07",
+      "action": "Read the price-jump nudge that appears below the tier guide",
+      "selector": "div[role='status']:has-text('and pay')",
+      "expected_result": "'Add 1 more pc and pay ₹6.75/pc: ₹3,375.00 total (you save ₹1,116.00)' — one extra piece crosses into the 500 tier, which is cheaper in absolute total, so nextTierNudge returns its saving branch. Singular 'pc' because addQty is 1 with the default 'pcs' label."
+    },
+    {
+      "step_id": "hp-08",
+      "action": "Click the nudge's accept button",
+      "selector": "button:text-is('Add 1 more')",
+      "expected_result": "Quantity becomes 500, the rate becomes '₹6.75/pc', Total animates to ₹3,375.00, the highlighted chip moves to '500+', and the nudge disappears because its tier has been reached."
+    },
+    {
+      "step_id": "hp-09",
+      "action": "Add the configured 500 pieces to the cart",
+      "selector": "button:has-text('Add to Cart')",
+      "expected_result": "The CTA carries the live total ('Add to Cart · ₹3,375.00'), the item is added, and the button relabels to 'Update Cart'."
+    },
+    {
+      "step_id": "hp-10",
+      "action": "Open the cart page and read the line quantity and total",
+      "selector": "a[href='/cart']",
+      "expected_result": "The line shows a compact QuantityInput holding 500 with the 'pcs' suffix inside the field, and the line total ₹3,375.00 carried from the PDP."
+    },
+    {
+      "step_id": "hp-12",
+      "action": "Open the cart drawer from the header and edit the quantity there",
+      "selector": "button[aria-label^='Cart, ']",
+      "expected_result": "The drawer's compact QuantityInput holds 500; typing 1,000 and blurring reprices the line to ₹4,950.00 (the ₹4.95 tier x 1,000) immediately, and typing 5 snaps back to the minimum of 100 rather than erroring — the drawer is an independent QuantityInput consumer and must honour the same bounds and tier lookup as the cart page."
+    },
+    {
+      "step_id": "hp-11",
+      "action": "Change the cart line quantity from 500 to 250 and blur",
+      "selector": "input[aria-label='Quantity']",
+      "expected_result": "The line reprices immediately to ₹2,250.00 (the 250-tier rate ₹9.00 x 250) with no reload and no error — the cart edit uses the same tier lookup as the PDP."
+    }
+  ],
+  "alternate_paths": [
+    {
+      "path_name": "Feed / shopping-ad preselect lands on an exact quantity and price",
+      "steps": [
+        {
+          "step_id": "alt-01",
+          "action": "Open the PDP with the feed's own preselect query string at a higher quantity (?qty=1000 plus the listing offer's option ids)",
+          "selector": "/products/business-cards/matte-finish-business-cards?qty=1000",
+          "expected_result": "The configurator initialises at 1,000 (preselection.quantity wins over listingQuantity), the summary reads '1,000 pcs', '₹4.95/pc', Total ₹4,950.00, and the '1,000+' chip is current — the advertised configuration is the one the customer lands on."
+        },
+        {
+          "step_id": "alt-02",
+          "action": "Read the JSON-LD Product block emitted in the page head",
+          "selector": "script[type='application/ld+json']",
+          "expected_result": "name is 'Matte Finish Business Cards - 250 pcs' (listing quantity and unit label, not the preselected quantity) and the single Offer's price is 2250.00 — equal to the card line in hp-01 and to listing_offer.sale_price from the API."
+        },
+        {
+          "step_id": "alt-03",
+          "action": "Open the PDP with an out-of-range preselect ?qty=7",
+          "selector": "/products/business-cards/matte-finish-business-cards?qty=7",
+          "expected_result": "The quantity is clamped up to the effective minimum (100) rather than honoured literally or rejected; the summary reads '₹12.60/pc' and Total ₹1,260.00."
+        },
+        {
+          "step_id": "alt-04",
+          "action": "Step the quantity with the + and - buttons instead of typing",
+          "selector": "button[aria-label='Increase quantity']",
+          "expected_result": "stepFor(min=100) is 10, so + moves to the next multiple of 10 and - to the previous, clamped at the minimum; '-' is disabled once the value reaches 100 and '+' is never disabled because there is no maximum."
+        },
+        {
+          "step_id": "alt-05",
+          "action": "Tap the '2,500+' tier chip in the rate guide",
+          "selector": "button:has-text('2,500+')",
+          "expected_result": "Quantity jumps to 2,500 and Total becomes ₹10,125.00 — the guide doubles as a one-tap quantity picker."
+        }
+      ]
+    },
+    {
+      "path_name": "A maximum-limited product with no MRP, whose limit the admin half of this run set",
+      "steps": [
+        {
+          "step_id": "alt-06",
+          "action": "Read the Custom Die-Cut Stickers card, whose tiers carry no MRP at all",
+          "selector": "article:has-text('Custom Die-Cut Stickers')",
+          "expected_result": "'50 pcs for ₹300.00' with NO strike-through and NO '% off' — listingMrp is null, so the discount block is correctly suppressed entirely rather than rendering ₹0.00 or 0% off."
+        },
+        {
+          "step_id": "alt-07",
+          "action": "Open the stickers PDP and read the range hint, now that the admin half set a maximum of 1,000",
+          "selector": "input[aria-label='Quantity']",
+          "expected_result": "Quantity pre-filled 50; hint reads 'Min 50 pcs · Max 1,000 pcs' — the max clause appears only because an admin set it, closing the admin-to-storefront loop for this feature."
+        },
+        {
+          "step_id": "alt-08",
+          "action": "Read the stickers tier guide, whose dev-data rates are non-monotonic (50 @ ₹6, 100 @ ₹10, 250 @ ₹6)",
+          "selector": "button[aria-current='true']",
+          "expected_result": "Chips render every tier in quantity order with its own rate, including the DEARER 100 tier ('100+ ₹10.00/pc' after '50+ ₹6.00/pc'). The current chip is '50+'. Documents faithfully how the guide behaves when an admin's rates do not decrease monotonically."
+        },
+        {
+          "step_id": "alt-09",
+          "action": "Type 99 into the stickers quantity input and confirm no nudge appears",
+          "selector": "div[role='status']",
+          "expected_result": "Total ₹594.00 at ₹6.00/pc and NO nudge banner — the next tier (100 @ ₹10 = ₹1,000) is neither cheaper nor within 5% of ₹594, so nextTierNudge correctly returns null. The negative case for the nudge rule."
+        }
+      ]
+    }
+  ],
+  "error_paths": [
+    {
+      "trigger": "Type 10 — below Matte Finish Business Cards' minimum of 100 — into the PDP quantity input",
+      "expected_ui_response": "A neutral helper line (role='status', class text-brand-orange, no icon, not destructive red) appears under the field reading 'Minimum order is 100 pcs'. The price still updates using clamp(10) = 100 and Add to Cart stays enabled — typing is guided, never a hard error.",
+      "selector": "p[role='status']",
+      "step_id": "err-01"
+    },
+    {
+      "trigger": "Blur the field while it still holds 10",
+      "expected_ui_response": "The input snaps to 100 and the helper becomes 'Adjusted to 100 pcs' for about 3 seconds, then clears.",
+      "selector": "input[aria-label='Quantity']",
+      "step_id": "err-02"
+    },
+    {
+      "trigger": "Type 9999 into the Custom Die-Cut Stickers quantity input, above its maximum of 1,000",
+      "expected_ui_response": "Helper reads 'Maximum order is 1,000 pcs'; on blur the value snaps to 1,000 and the helper becomes 'Adjusted to 1,000 pcs'.",
+      "selector": "p[role='status']",
+      "step_id": "err-03"
+    },
+    {
+      "trigger": "Clear the quantity field entirely",
+      "expected_ui_response": "The field shows empty (never 0, never an error), and the Add to Cart button relabels to 'Enter a quantity' and is disabled — the only state that blocks the CTA.",
+      "selector": "button:has-text('Enter a quantity')",
+      "step_id": "err-04"
+    },
+    {
+      "trigger": "Blur the field while it is empty",
+      "expected_ui_response": "The last valid quantity is restored and the CTA re-enables with its price label — an empty blur is never destructive.",
+      "selector": "input[aria-label='Quantity']",
+      "step_id": "err-05"
+    },
+    {
+      "trigger": "Type letters and then a 9-digit number into the quantity field",
+      "expected_ui_response": "Non-digits are stripped as typed and input is capped at MAX_DIGITS = 7 characters, so '123456789' becomes '1234567'; the value is then clamped on blur.",
+      "selector": "input[aria-label='Quantity']",
+      "step_id": "err-06"
+    },
+    {
+      "trigger": "Press Enter while an out-of-range quantity is in the field",
+      "expected_ui_response": "Enter commits exactly like a blur — the value snaps to the clamped number and the 'Adjusted to ...' helper appears; no form submit and no navigation.",
+      "selector": "input[aria-label='Quantity']",
+      "step_id": "err-07"
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "Quantity typed below the lowest pricing tier but at or above min_order_quantity",
+      "existing_validation": "lib/quantity.ts tierForQuantity() falls back to the lowest tier, mirroring the backend's find_pricing_tier",
+      "risk_note": "Legitimate by design (spec section 1): an admin may set min below the lowest tier and those orders pay the lowest tier's rate. The storefront must not render ₹0 or a blank price."
+    },
+    {
+      "case": "Zustand cart store has not hydrated when a cart line renders",
+      "existing_validation": "useMounted gate per the frontend CLAUDE.md hydration section",
+      "risk_note": "A capture step that screenshots before hydration records the SSR default (0 items); any axe/Lighthouse numbers attached to that frame measure the wrong page."
+    },
+    {
+      "case": "Server clamps a cart quantity on sync and returns quantityCorrected",
+      "existing_validation": "features/cart/store.ts applies the server's clamped quantity and shows one toast per sync",
+      "risk_note": "Only reachable with a deliberately out-of-range persisted line or a stale client, so it is covered by unit tests rather than this capture."
+    },
+    {
+      "case": "Tier rates that are not monotonically decreasing (dev stickers: 50 @ ₹6, 100 @ ₹10, 250 @ ₹6)",
+      "existing_validation": "Admin-side only — getTierPriceTypoWarnings warns the staff member in the product form; the storefront renders whatever is stored",
+      "risk_note": "The customer sees a rate chip that goes UP with quantity, and correctly gets no nudge at 99 (100 x ₹10 is far more than 5% above 99 x ₹6). An admin data problem the storefront surfaces faithfully, not a storefront defect."
+    },
+    {
+      "case": "Product whose max_order_quantity is null (no limit)",
+      "existing_validation": "effectiveBounds returns max: null; QuantityInput falls back to MAX_LINE_QUANTITY internally",
+      "risk_note": "The range hint must omit the '· Max ...' clause entirely rather than printing 1,000,000, which the spec says is never displayed."
+    },
+    {
+      "case": "Quantity of exactly 1 with a custom unit label",
+      "existing_validation": "unitNoun() returns 'pc' for qty 1 with the default 'pcs' label only",
+      "risk_note": "Custom labels are deliberately left unpluralised (spec D9), so a label like 'boards' reads '1 boards'. Known, accepted copy limitation worth stating in the docs."
+    },
+    {
+      "case": "Checkout and order placement with a free-entered quantity",
+      "existing_validation": "Backend order preview/create reject out-of-range via quantity_below_minimum / quantity_above_maximum (never clamp)",
+      "risk_note": "Customer auth is OTP-only and the code is delivered out of band, so this capture cannot sign a customer in — coverage for this leg is unit/API only. A gap in this run, not in the feature."
+    }
+  ],
+  "gaps": [
+    "Checkout, order confirmation and account-order rendering of '{qty} {unit}' cannot be captured end to end: customer login is OTP-only and this run has no way to read the delivered code. Covered by the backend and vitest suites instead.",
+    "The server-correction toast ('Quantity updated to fit the allowed range for N item(s)') needs a deliberately out-of-range persisted cart line and is not reachable through the UI; left to unit coverage.",
+    "Dev-database tier rates for Custom Die-Cut Stickers (50 @ ₹6, 100 @ ₹10, 250 @ ₹6, 500 @ ₹4, 1000 @ ₹2.5) are NOT the spec's production figures (50 @ ₹6, 100 @ ₹4, 150 @ ₹3.4, 200 @ ₹3). The 100 tier being dearer per piece than the 50 tier looks like stale dev data; the spec's '100 pcs = ₹400' illustration is therefore not reproducible here and every expectation in this plan uses the real dev values."
+  ]
+}

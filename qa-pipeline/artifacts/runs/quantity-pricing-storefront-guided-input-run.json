@@ -1,0 +1,165 @@
+{
+  "feature_name": "Quantity Pricing Storefront Guided Input",
+  "plan_path": "qa-pipeline/artifacts/plans/quantity-pricing-storefront-plan.json",
+  "run_timestamp": "2026-10-07T17:13:52.735Z",
+  "trace_path": "qa-pipeline/artifacts/traces/quantity-pricing-storefront-guided-input-trace.zip",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "err-01",
+      "action": "Type 10 on a product whose minimum is 100",
+      "selector": null,
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": null,
+      "timestamp_ms": 1732,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-guided-input/err-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 9
+        }
+      ],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    {
+      "step_id": "err-02",
+      "action": "Blur while the field still holds 10",
+      "selector": "getByLabel('Quantity', { exact: true })",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 724,
+        "y": 338,
+        "width": 128,
+        "height": 44
+      },
+      "timestamp_ms": 1968,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-guided-input/err-02.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-04",
+      "action": "Clear the quantity field entirely",
+      "selector": "getByLabel('Quantity', { exact: true })",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 724,
+        "y": 338,
+        "width": 128,
+        "height": 44
+      },
+      "timestamp_ms": 2304,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-guided-input/err-04.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-05",
+      "action": "Blur while the field is empty",
+      "selector": "getByLabel('Quantity', { exact: true })",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 724,
+        "y": 338,
+        "width": 128,
+        "height": 44
+      },
+      "timestamp_ms": 2565,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-guided-input/err-05.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-06",
+      "action": "Type letters, then a 9-digit number",
+      "selector": "getByLabel('Quantity', { exact: true })",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 724,
+        "y": 338,
+        "width": 128,
+        "height": 44
+      },
+      "timestamp_ms": 2970,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-guided-input/err-06.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-07",
+      "action": "Press Enter with an out-of-range quantity in the field",
+      "selector": "getByLabel('Quantity', { exact: true })",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 724,
+        "y": 338,
+        "width": 128,
+        "height": 44
+      },
+      "timestamp_ms": 3305,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-guided-input/err-07.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-03",
+      "action": "Type 9999 on a product whose maximum is 1,000",
+      "selector": null,
+      "route": "/products/stickers-labels/custom-diecut-stickers",
+      "bounding_box": null,
+      "timestamp_ms": 5070,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/quantity-pricing-storefront-guided-input/err-03.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 7
+        }
+      ],
+      "console_errors": []
+    }
+  ],
+  "lighthouse": {
+    "initial_load": null,
+    "final_state": null
+  }
+}

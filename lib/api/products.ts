@@ -47,6 +47,7 @@ export interface BackendProductCard {
   listing_price?: number | null;
   listing_mrp?: number | null;
   listing_discount_percent?: number | null;
+  listing_query?: string | null;
   rating: number;
   review_count: number;
 }
@@ -125,6 +126,7 @@ export interface BackendSearchDoc {
   listing_price?: number | null;
   listing_mrp?: number | null;
   listing_discount_percent?: number | null;
+  listing_query?: string | null;
   // Not indexed by Typesense yet — treated as optional/absent, same posture as
   // category_slug/category_name below, until search results carry it too.
   medium_url?: string | null;
@@ -181,11 +183,12 @@ interface QuantityFieldSource {
   listing_price?: number | null;
   listing_mrp?: number | null;
   listing_discount_percent?: number | null;
+  listing_query?: string | null;
 }
 
 type QuantityProductFields = Pick<
   Product,
-  "unitLabel" | "listingQuantity" | "minOrderQuantity" | "maxOrderQuantity" | "listingPrice" | "listingMrp" | "listingDiscountPercent"
+  "unitLabel" | "listingQuantity" | "minOrderQuantity" | "maxOrderQuantity" | "listingPrice" | "listingMrp" | "listingDiscountPercent" | "listingQuery"
 >;
 
 // Only fields the server actually sent are set, so an old backend yields a
@@ -199,6 +202,7 @@ function quantityFields(src: QuantityFieldSource): QuantityProductFields {
   if (src.listing_price != null) out.listingPrice = src.listing_price;
   if (src.listing_mrp != null) out.listingMrp = src.listing_mrp;
   if (src.listing_discount_percent != null) out.listingDiscountPercent = src.listing_discount_percent;
+  if (src.listing_query != null) out.listingQuery = src.listing_query;
   return out;
 }
 

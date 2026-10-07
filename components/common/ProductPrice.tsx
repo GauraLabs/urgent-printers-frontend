@@ -6,7 +6,7 @@ import type { Product } from "@/types";
 type PricedProduct = Pick<
   Product,
   | "pricingTiers" | "priceFrom" | "mrpFrom" | "discountPercent" | "printSpec" | "unitLabel"
-  | "listingQuantity" | "listingPrice" | "listingMrp" | "listingDiscountPercent"
+  | "listingQuantity" | "listingQuery" | "listingPrice" | "listingMrp" | "listingDiscountPercent"
 >;
 
 interface ProductPriceProps extends Omit<React.ComponentProps<typeof PriceDisplay>, "price" | "mrp" | "percent" | "variant"> {
