@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { ChevronDown, Menu, Moon, Sun, X } from "lucide-react";
 import {
   Sheet,
   SheetClose,
@@ -16,6 +16,7 @@ import { CategoryTile } from "@/features/navigation/CategoryTile";
 import { useMobileMenuStore } from "@/features/navigation/mobileMenuStore";
 import { useNavCategories } from "@/features/navigation/NavCategoriesContext";
 import type { NavCategory } from "@/features/navigation/buildCategoryTree";
+import { useThemeStore } from "@/features/theme/store";
 import { useAuthStore } from "@/features/auth/store";
 import { useMounted } from "@/hooks/useMounted";
 import { ROUTES } from "@/lib/constants/routes";
@@ -96,6 +97,9 @@ export function MobileNavDrawer({ navLinks }: MobileNavDrawerProps) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
   const signedIn = mounted && isAuthenticated && !!user;
+  const colorMode = useThemeStore((s) => s.colorMode);
+  const toggleColorMode = useThemeStore((s) => s.toggleColorMode);
+  const dark = mounted && colorMode === "dark";
 
   useEffect(() => {
     setOpen(false);
@@ -167,6 +171,14 @@ export function MobileNavDrawer({ navLinks }: MobileNavDrawerProps) {
               )}
             </ul>
           </nav>
+
+          <div className="md:hidden">
+            <SectionTitle id="mobile-appearance-heading">Appearance</SectionTitle>
+            <button type="button" onClick={toggleColorMode} className={cn(ROW, "w-full gap-3")}>
+              {dark ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
+              {dark ? "Switch to light mode" : "Switch to dark mode"}
+            </button>
+          </div>
 
           <nav aria-labelledby="mobile-help-heading">
             <SectionTitle id="mobile-help-heading">Help</SectionTitle>

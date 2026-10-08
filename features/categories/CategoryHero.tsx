@@ -22,7 +22,7 @@ export function CategoryHero({ category }: CategoryHeroProps) {
   if (!posterSrc) return null;
 
   return (
-    <div className="relative w-full h-[180px] sm:h-[240px] lg:h-[320px] overflow-hidden bg-muted">
+    <div className="relative w-full h-[120px] sm:h-[240px] lg:h-[320px] overflow-hidden bg-muted">
       <SafeImage
         src={posterSrc}
         alt=""

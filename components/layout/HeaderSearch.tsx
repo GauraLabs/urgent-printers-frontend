@@ -22,9 +22,11 @@ function hasPrice(product: Product): boolean {
 
 interface HeaderSearchProps {
   popularSearches: string[];
+  /** "mobile" is the full-width bar under the header (< md); "desktop" the inline one. */
+  variant?: "desktop" | "mobile";
 }
 
-export function HeaderSearch({ popularSearches }: HeaderSearchProps) {
+export function HeaderSearch({ popularSearches, variant = "desktop" }: HeaderSearchProps) {
   const router = useRouter();
   const mounted = useMounted();
   const recentTerms = useRecentSearchesStore((s) => s.terms);
@@ -106,7 +108,13 @@ export function HeaderSearch({ popularSearches }: HeaderSearchProps) {
     hasOptions && activeIndex >= 0 && activeIndex < results.length ? optionId(activeIndex) : undefined;
 
   return (
-    <div ref={containerRef} className="relative hidden md:flex items-center w-full max-w-sm lg:max-w-md">
+    <div
+      ref={containerRef}
+      className={cn(
+        "relative items-center w-full",
+        variant === "desktop" ? "hidden md:flex max-w-sm lg:max-w-md" : "flex md:hidden"
+      )}
+    >
       {/* Input */}
       <form
         onSubmit={(e) => { e.preventDefault(); submit(); }}
@@ -129,7 +137,8 @@ export function HeaderSearch({ popularSearches }: HeaderSearchProps) {
           aria-controls={panelId}
           aria-activedescendant={activeOptionId}
           className={cn(
-            "w-full h-9 rounded-full border border-border bg-muted/50 pl-9 pr-8 text-sm",
+            "w-full rounded-full border border-border bg-muted/50 pl-9 pr-8 text-sm",
+            variant === "desktop" ? "h-9" : "h-10",
             "placeholder:text-muted-foreground",
             "focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary",
             "transition-colors"

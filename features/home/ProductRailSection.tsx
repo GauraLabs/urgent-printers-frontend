@@ -29,7 +29,7 @@ export function ProductRailSection({
   const headingId = `${id}-heading`;
 
   return (
-    <section aria-labelledby={headingId} className={cn("py-8 lg:py-10", tinted && "bg-secondary/60")}>
+    <section aria-labelledby={headingId} className={cn("py-5 md:py-8 lg:py-10", tinted && "bg-secondary/60")}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <RailShell
           heading={
@@ -50,10 +50,10 @@ export function ProductRailSection({
           }
         >
           {products.map((p) => (
-            <div key={p.id} className="w-[62%] sm:w-[38%] md:w-[28%] lg:w-[21%] shrink-0 snap-start">
+            <div key={p.id} className="w-[43%] sm:w-[38%] md:w-[28%] lg:w-[21%] shrink-0 snap-start">
               <ProductCard
                 product={toCardProduct(p)}
-                sizes="(max-width: 639px) 62vw, (max-width: 767px) 38vw, (max-width: 1023px) 28vw, 21vw"
+                sizes="(max-width: 639px) 43vw, (max-width: 767px) 38vw, (max-width: 1023px) 28vw, 21vw"
               />
             </div>
           ))}

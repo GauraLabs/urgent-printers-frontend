@@ -69,19 +69,20 @@ describe("mappers: quantity fields", () => {
 describe("card / search price line", () => {
   const base = { pricingTiers: [], printSpec: { sizes: [], papers: [], finishes: [], sides: [], minDpi: 300, bleedMm: 3 } } as unknown as Pick<Product, "pricingTiers" | "printSpec">;
 
-  it("renders '40 pcs for ₹240.00'", () => {
+  it("renders '40 pcs for ₹240' (card prices drop .00)'", () => {
     const html = renderToStaticMarkup(<ProductPrice variant="card" prefix="From" unitLabel="per unit" product={{ ...base, priceFrom: 6, unitLabel: "pcs", listingQuantity: 40, listingPrice: 240, listingQuery: "qty=40" }} />);
     expect(html).toContain("40 pcs for");
-    expect(html).toContain("₹240.00");
+    expect(html).toContain("₹240");
+    expect(html).not.toContain("₹240.00");
     expect(html).not.toContain("From");
     expect(html).not.toContain("per unit");
   });
-  it("renders '1 pc for ₹1,100.00' and the struck MRP with percent", () => {
+  it("renders '1 pc for ₹1,100' and the struck MRP with percent", () => {
     const html = renderToStaticMarkup(<ProductPrice variant="card" product={{ ...base, listingQuantity: 1, listingPrice: 1100, listingQuery: "qty=1" }} />);
     expect(html).toContain("1 pc for");
-    expect(html).toContain("₹1,100.00");
+    expect(html).toContain("₹1,100");
     const sale = renderToStaticMarkup(<ProductPrice variant="card" product={{ ...base, unitLabel: "pcs", listingQuantity: 40, listingPrice: 240, listingMrp: 300, listingDiscountPercent: 20, listingQuery: "qty=40" }} />);
-    expect(sale).toContain("₹300.00");
+    expect(sale).toContain("₹300");
     expect(sale).toContain("20% off");
   });
   it("compact variant (search/recent) uses the same line", () => {
@@ -98,7 +99,7 @@ describe("card / search price line", () => {
   it("falls back to the per-unit From price when listing fields are absent", () => {
     const html = renderToStaticMarkup(<ProductPrice variant="card" prefix="From" unitLabel="per unit" product={{ ...base, priceFrom: 6 }} />);
     expect(html).toContain("From");
-    expect(html).toContain("₹6.00");
+    expect(html).toContain("₹6");
     expect(html).toContain("per unit");
   });
 });

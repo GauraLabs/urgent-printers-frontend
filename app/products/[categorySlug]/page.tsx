@@ -93,16 +93,16 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
       <section>
         <CategoryHero category={category} />
         <div className="border-b border-border bg-secondary/30">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-6">
             <Breadcrumb
               items={[
                 { label: "All Products", href: ROUTES.products },
                 { label: category.name },
               ]}
-              className="mb-3"
+              className="mb-1 md:mb-3"
             />
-            <h1 className="font-heading font-bold text-2xl lg:text-3xl">{category.name}</h1>
-            <p className="text-muted-foreground text-sm mt-1">{category.description}</p>
+            <h1 className="font-heading font-bold text-xl md:text-2xl lg:text-3xl">{category.name}</h1>
+            <p className="text-muted-foreground text-sm mt-1 max-md:hidden">{category.description}</p>
           </div>
         </div>
 

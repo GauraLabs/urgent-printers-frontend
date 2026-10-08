@@ -19,7 +19,7 @@ export function RailShell({ heading, seeAll, children }: RailShellProps) {
 
   return (
     <>
-      <div className="flex items-end justify-between gap-4 mb-4 lg:mb-6">
+      <div className="flex items-end justify-between gap-4 mb-3 md:mb-4 lg:mb-6">
         {heading}
         <div className="flex items-center gap-4 shrink-0">
           {seeAll}

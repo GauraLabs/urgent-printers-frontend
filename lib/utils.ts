@@ -165,6 +165,21 @@ export function formatPrice(amount: number, currency = "INR"): string {
   }).format(amount);
 }
 
+/**
+ * Display-only price for product cards and rails: whole rupees drop the ".00"
+ * ("₹800"), fractional amounts keep two decimals ("₹6.50"). Cart, checkout and
+ * invoices keep using formatPrice, where paise always show.
+ */
+export function formatCardPrice(amount: number, currency = "INR"): string {
+  const whole = Number.isInteger(amount);
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: whole ? 0 : 2,
+    maximumFractionDigits: whole ? 0 : 2,
+  }).format(amount);
+}
+
 export function formatPricePerUnit(amount: number, currency = "INR"): string {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",

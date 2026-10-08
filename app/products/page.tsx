@@ -73,12 +73,12 @@ export default async function ProductsPage({ searchParams }: PageProps) {
       {activeCategory && <CategoryHero category={activeCategory} />}
       {/* Page header */}
       <div className="border-b border-border bg-secondary/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <Breadcrumb items={[{ label: isSearching ? `Results for "${query}"` : "All Products" }]} className="mb-3" />
-          <h1 className="font-heading font-bold text-2xl lg:text-3xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-6">
+          <Breadcrumb items={[{ label: isSearching ? `Results for "${query}"` : "All Products" }]} className="mb-1 md:mb-3" />
+          <h1 className="font-heading font-bold text-xl md:text-2xl lg:text-3xl">
             {isSearching ? `Results for "${query}"` : "All Products"}
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="text-muted-foreground text-sm mt-1 max-md:hidden">
             {isSearching
               ? `${total} product${total !== 1 ? "s" : ""} found`
               : "Wedding cards, envelopes and celebration essentials — delivered across India"}

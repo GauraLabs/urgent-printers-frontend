@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { cn, formatPricePerUnit, formatSaleEnd, toDisplayDiscount } from "@/lib/utils";
+import { cn, formatCardPrice, formatPricePerUnit, formatSaleEnd, toDisplayDiscount } from "@/lib/utils";
 
 export type PriceVariant = "card" | "pdp" | "line" | "compact";
 
@@ -44,11 +44,11 @@ export function DiscountBadge({ percent, className }: { percent: number; classNa
   );
 }
 
-export function StruckMrp({ mrp, className }: { mrp: number; className?: string }) {
+export function StruckMrp({ mrp, className, compact = false }: { mrp: number; className?: string; compact?: boolean }) {
   return (
     <span className={cn("text-muted-foreground line-through decoration-1", className)}>
       <span className="sr-only">Original price </span>
-      {formatPricePerUnit(mrp)}
+      {compact ? formatCardPrice(mrp) : formatPricePerUnit(mrp)}
     </span>
   );
 }
@@ -67,21 +67,21 @@ export function PriceDisplay({
   priceClassName,
 }: PriceDisplayProps) {
   const discount = toDisplayDiscount(price, mrp, percent);
-  const formatted = priceSlot ?? formatPricePerUnit(price);
+  const formatted = priceSlot ?? (variant === "card" ? formatCardPrice(price) : formatPricePerUnit(price));
   const saleEnd = discount && variant === "pdp" && endsAt ? formatSaleEnd(endsAt) : null;
 
   if (variant === "card") {
     return (
-      <div className={cn(discount && "flex flex-col items-center", className) || undefined}>
+      <div className={cn(discount && "flex flex-col items-start md:items-center", className) || undefined}>
         {discount && (
-          <div className="mb-1 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 text-xs">
-            <StruckMrp mrp={discount.mrp} />
+          <div className="mb-0.5 md:mb-1 flex flex-nowrap md:flex-wrap items-center justify-start md:justify-center gap-x-1.5 gap-y-0.5 text-[11px] md:text-xs whitespace-nowrap">
+            <StruckMrp mrp={discount.mrp} compact />
             <DiscountBadge percent={discount.percent} />
           </div>
         )}
-        <p className="font-sans text-sm leading-snug text-foreground">
+        <p className="font-sans text-xs md:text-sm leading-snug text-foreground">
           {prefix ? `${prefix} ` : null}
-          <span className={cn("font-bold text-xl leading-none", priceClassName)}>{formatted}</span>
+          <span className={cn("font-bold text-base md:text-xl leading-none", priceClassName)}>{formatted}</span>
         </p>
         {unitLabel && <p className="text-[10px] text-muted-foreground mt-0.5">{unitLabel}</p>}
       </div>

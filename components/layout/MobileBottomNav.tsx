@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, LayoutGrid, Search, ShoppingBag, User } from "lucide-react";
+import { isBottomNavHidden } from "@/features/navigation/bottomNav";
 import { useMobileMenuStore } from "@/features/navigation/mobileMenuStore";
 import { useCartStore } from "@/features/cart/store";
 import { useMounted } from "@/hooks/useMounted";
@@ -27,6 +28,8 @@ export function MobileBottomNav() {
 
   // Suppress persisted value until after hydration
   const displayCount = mounted ? itemCount : 0;
+
+  if (isBottomNavHidden(pathname)) return null;
 
   return (
     <nav

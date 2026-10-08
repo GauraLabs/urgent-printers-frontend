@@ -130,7 +130,7 @@ export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: Produ
           peeking edge card never gets cut further on hover. */}
       <div
         ref={frameRef}
-        className="origin-top relative aspect-[19/20] overflow-hidden rounded-2xl mb-3 bg-muted transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform motion-reduce:transition-none">
+        className="origin-top relative aspect-[19/20] overflow-hidden rounded-2xl mb-2 md:mb-3 bg-muted transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform motion-reduce:transition-none">
         <SafeImage
           src={product.mediumUrl ?? product.images[0]}
           alt={product.name}
@@ -178,11 +178,11 @@ export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: Produ
 
       {/* Content — the image frame above now carries its own mb-3 gap, so no extra
           pt-* here to avoid doubling the visual space before the category eyebrow. */}
-      <div className="p-4 sm:p-5 flex flex-col items-center gap-1.5 md:gap-2 flex-1 text-center">
-        <p className="text-[10px] text-primary/70 uppercase tracking-[0.08em] font-semibold">
+      <div className="p-4 sm:p-5 max-md:p-1 max-md:pt-0 flex flex-col items-center max-md:items-start gap-1.5 max-md:gap-0.5 md:gap-2 flex-1 text-center max-md:text-left">
+        <p className="max-md:hidden text-[10px] text-primary/70 uppercase tracking-[0.08em] font-semibold">
           {product.categoryName}
         </p>
-        <h2 className="font-sans font-bold text-[15px] sm:text-base leading-snug tracking-[-0.01em] text-foreground group-hover:text-primary transition-colors line-clamp-2 px-1">
+        <h2 className="font-sans font-bold text-[15px] sm:text-base leading-snug tracking-[-0.01em] text-foreground group-hover:text-primary transition-colors line-clamp-2 px-1 max-md:px-0">
           {product.name}
         </h2>
         <p className="hidden md:block text-xs text-muted-foreground/90 line-clamp-2 leading-relaxed px-2">
@@ -194,13 +194,14 @@ export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: Produ
           reviewCount={product.reviewCount}
           size="sm"
           showCount
-          className="justify-center mt-0.5"
+          className={cn("justify-center mt-0.5 max-md:justify-start", product.reviewCount === 0 && "max-md:hidden")}
         />
 
-        <div className="mt-auto pt-2.5 flex flex-col items-center gap-2.5">
+        <div className="mt-auto pt-2.5 max-md:pt-1 flex flex-col items-center max-md:items-start gap-2.5">
           <ProductPrice variant="card" prefix="From" unitLabel="per unit" product={product} />
 
-          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+          {/* Whole card is already one link; the explicit actions only earn their space on desktop. */}
+          <div className="hidden md:flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
             <Link
               href={href}
               className={cn(

@@ -11,6 +11,7 @@ import { SiteStatusBanner } from "@/components/layout/SiteStatusBanner";
 import { DegradedStatusBanner } from "@/components/layout/DegradedStatusBanner";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { MainContent } from "@/components/layout/MainContent";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
 import { ConsentedScripts } from "@/components/analytics/ConsentedScripts";
@@ -74,7 +75,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <DegradedStatusBanner />
             <AnnouncementBar />
             <Header />
-            <main className="flex-1 pb-16 lg:pb-0">{children}</main>
+            <MainContent>{children}</MainContent>
             <Footer />
             <MobileBottomNav />
             <CookieConsentBanner />

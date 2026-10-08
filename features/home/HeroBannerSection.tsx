@@ -162,8 +162,12 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
                       initial={{ opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4, delay: 0.4 }}
-                      className="flex items-center gap-3"
+                      className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3"
                     >
+                      {/* Stacks above the CTA on mobile; sits beside it from sm up. */}
+                      <p className="order-first sm:order-last text-white/85 text-xs sm:text-sm leading-snug line-clamp-2 sm:line-clamp-1">
+                        {banner.subheading}
+                      </p>
                       <Link
                         href={banner.ctaHref}
                         className={cn(
@@ -173,9 +177,6 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
                       >
                         {banner.ctaText}
                       </Link>
-                      <p className="text-white/85 text-xs sm:text-sm leading-snug line-clamp-1">
-                        {banner.subheading}
-                      </p>
                     </motion.div>
                   </div>
                 </div>

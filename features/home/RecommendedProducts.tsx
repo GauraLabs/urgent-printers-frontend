@@ -22,9 +22,9 @@ export function RecommendedProducts({ products }: RecommendedProductsProps) {
   if (products.length === 0) return null;
 
   return (
-    <section aria-labelledby="recommended-heading" className="py-12 lg:py-16">
+    <section aria-labelledby="recommended-heading" className="py-6 md:py-12 lg:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-end justify-between mb-8">
+        <div className="flex items-end justify-between mb-3 md:mb-8">
           <motion.div
             initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -35,11 +35,11 @@ export function RecommendedProducts({ products }: RecommendedProductsProps) {
               id="recommended-heading"
               eyebrow="Just for You"
               title="Recommended for You"
-              description="Picked based on what businesses like yours order most"
+              description="Picked for you, based on what our wedding and celebration customers order most"
               align="left"
             />
           </motion.div>
-          <div className="hidden sm:flex items-center gap-4">
+          <div className="flex items-center gap-4">
             <Link
               href={ROUTES.products}
               className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
@@ -65,11 +65,11 @@ export function RecommendedProducts({ products }: RecommendedProductsProps) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.4, delay: Math.min(i * 0.05, 0.3) }}
-              className="w-[62%] sm:w-[38%] md:w-[28%] lg:w-[21%] shrink-0 snap-start"
+              className="w-[43%] sm:w-[38%] md:w-[28%] lg:w-[21%] shrink-0 snap-start"
             >
               <ProductCard
                 product={p}
-                sizes="(max-width: 639px) 62vw, (max-width: 767px) 38vw, (max-width: 1023px) 28vw, 21vw"
+                sizes="(max-width: 639px) 43vw, (max-width: 767px) 38vw, (max-width: 1023px) 28vw, 21vw"
               />
             </motion.div>
           ))}

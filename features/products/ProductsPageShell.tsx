@@ -138,8 +138,8 @@ function ShellInner({
   const sentinelRef = useIntersectionObserver<HTMLDivElement>(loadMore, { rootMargin: "600px" });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Search */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+      {/* Search (on mobile the header search bar covers this) */}
       <SearchField
         value={searchInput}
         onChange={setSearchInput}
@@ -150,7 +150,7 @@ function ShellInner({
         loading={isPending}
         placeholder="Search this catalog…"
         ariaLabel="Search this catalog"
-        className="mb-5 max-w-md"
+        className="mb-5 max-w-md max-md:hidden"
         iconSize={16}
         iconClassName="left-3.5"
         endClassName="right-3.5"
@@ -162,7 +162,8 @@ function ShellInner({
       />
 
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-3 mb-4">
+      {/* Sticks under the mobile header (56px bar + 48px search row + border). */}
+      <div className="flex items-center justify-between gap-3 mb-4 max-md:sticky max-md:top-[105px] max-md:z-30 max-md:-mx-4 max-md:px-4 max-md:py-2 max-md:mb-2 max-md:bg-background/95 max-md:backdrop-blur max-md:border-b max-md:border-border">
         <p className="text-sm text-muted-foreground shrink-0">
           <span className="font-semibold text-foreground">{total}</span> product{total !== 1 ? "s" : ""}
           {isSearching && <> for &ldquo;{current.search}&rdquo;</>}
@@ -175,7 +176,7 @@ function ShellInner({
       </div>
 
       {/* Active filter badges */}
-      <div className="mb-5">
+      <div className="mb-3 md:mb-5">
         <ActiveFilters categoryName={categoryName} />
       </div>
 

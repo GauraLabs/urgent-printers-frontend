@@ -17,20 +17,20 @@ const STEPS = [
 // product rails.
 export function HowItWorks() {
   return (
-    <section aria-labelledby="how-heading" className="py-8 lg:py-10 border-t border-border bg-secondary/40">
+    <section aria-labelledby="how-heading" className="py-5 md:py-8 lg:py-10 border-t border-border bg-secondary/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.5 }}
-          className="mb-6"
+          className="mb-4 md:mb-6"
         >
           <SectionHeading
             id="how-heading"
             eyebrow="The Process"
             title="How It Works"
-            description="From upload to doorstep in as little as one business day"
+            description="From artwork upload to your doorstep, tracked every step"
             align="center"
           />
         </motion.div>

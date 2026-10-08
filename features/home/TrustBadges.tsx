@@ -1,10 +1,10 @@
-import { Zap, ShieldCheck, Headphones, Leaf, Award, Truck, Package, ChevronRight } from "lucide-react";
+import { Gift, ShieldCheck, Headphones, Leaf, Award, Truck, Package, ChevronRight } from "lucide-react";
 
 const BADGES = [
-  { icon: Zap, title: "Next-Day Delivery" },
+  { icon: Truck, title: "Pan-India Delivery" },
   { icon: ShieldCheck, title: "Quality Guarantee" },
   { icon: Award, title: "Premium Materials" },
-  { icon: Truck, title: "Free Delivery Over ₹999" },
+  { icon: Gift, title: "Free Delivery Over ₹999" },
   { icon: Headphones, title: "Expert Support" },
   { icon: Leaf, title: "Eco-Friendly Options" },
 ];

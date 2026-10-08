@@ -45,7 +45,7 @@ export function StickyAddToCart({ productName, price, mrpTotal, savings, isInCar
           exit={{ y: 80, opacity: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
           className={cn(
-            "fixed bottom-16 lg:bottom-0 inset-x-0 z-30 lg:z-40",
+            "fixed bottom-0 inset-x-0 z-30 lg:z-40 pb-[env(safe-area-inset-bottom)]",
             "border-t border-border bg-background/95 backdrop-blur shadow-lg"
           )}
         >

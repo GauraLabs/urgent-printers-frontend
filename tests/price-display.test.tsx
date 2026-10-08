@@ -15,9 +15,11 @@ describe("PriceDisplay", () => {
       const out = html({ variant, mrp: 12, percent: 25 });
       const mrp = out.indexOf("line-through");
       const badge = out.indexOf("25% off");
-      const price = out.indexOf("₹9.00");
+      // Card prices drop ".00" for whole rupees; every other variant keeps paise.
+      const whole = variant === "card";
+      const price = out.indexOf(whole ? "₹9<" : "₹9.00");
       assert.ok(mrp > -1 && badge > mrp && price > badge, out);
-      assert.ok(out.includes("₹12.00"));
+      assert.ok(out.includes(whole ? "₹12<" : "₹12.00"));
     });
 
     it(`${variant}: percent 0 or absent renders exactly like no discount`, () => {
@@ -32,7 +34,7 @@ describe("PriceDisplay", () => {
   it("card without discount keeps today's markup", () => {
     assert.equal(
       renderToStaticMarkup(<PriceDisplay variant="card" prefix="From" unitLabel="per unit" price={9} />),
-      '<div><p class="font-sans text-sm leading-snug text-foreground">From <span class="font-bold text-xl leading-none">₹9.00</span></p><p class="text-[10px] text-muted-foreground mt-0.5">per unit</p></div>'
+      '<div><p class="font-sans text-xs md:text-sm leading-snug text-foreground">From <span class="font-bold text-base md:text-xl leading-none">₹9</span></p><p class="text-[10px] text-muted-foreground mt-0.5">per unit</p></div>'
     );
   });
 

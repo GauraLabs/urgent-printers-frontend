@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/common/Logo";
 import { HeaderSearch } from "./HeaderSearch";
+import { MobileSearchBar } from "./MobileSearchBar";
 import { HeaderActions } from "./HeaderActions";
 import { ThemeSelector } from "./ThemeSelector";
 import { MobileNavDrawer } from "./MobileNavDrawer";
@@ -63,9 +64,13 @@ export async function Header() {
           <HeaderSearch popularSearches={popularSearches} />
 
           {/* Theme + Cart + Auth */}
-          <ThemeSelector />
+          {/* On mobile the theme toggle lives in the menu drawer to free header space. */}
+          <div className="hidden md:block">
+            <ThemeSelector />
+          </div>
           <HeaderActions />
         </div>
+        <MobileSearchBar popularSearches={popularSearches} />
       </NavCategoriesProvider>
       </div>
     </header>

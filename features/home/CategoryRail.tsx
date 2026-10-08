@@ -9,6 +9,8 @@ import { SectionHeading } from "@/components/common/SectionHeading";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { ROUTES } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils";
+import { CategoryTile } from "@/features/navigation/CategoryTile";
+import { getRealCategoryImage } from "@/features/navigation/categoryImage";
 import { useScrollRail } from "./useScrollRail";
 import { ScrollRailButtons } from "./ScrollRailButtons";
 import type { Category } from "@/types";
@@ -32,7 +34,7 @@ export function CategoryRail({ categories }: CategoryRailProps) {
 
   if (categories.length === 0) {
     return (
-      <section aria-labelledby="category-rail-heading" className="py-12 lg:py-16 border-t border-border">
+      <section aria-labelledby="category-rail-heading" className="py-6 md:py-12 lg:py-16 border-t border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionHeading
             id="category-rail-heading"
@@ -53,9 +55,9 @@ export function CategoryRail({ categories }: CategoryRailProps) {
   }
 
   return (
-    <section aria-labelledby="category-rail-heading" className="py-12 lg:py-16">
+    <section aria-labelledby="category-rail-heading" className="py-5 md:py-12 lg:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-end justify-between mb-8">
+        <div className="flex items-end justify-between mb-3 md:mb-8">
           <motion.div
             initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -78,9 +80,26 @@ export function CategoryRail({ categories }: CategoryRailProps) {
         </div>
       </div>
 
+      {/* Mobile: compact round icons, ~4.5 visible, swipeable. */}
+      <ul className="md:hidden flex overflow-x-auto snap-x scrollbar-hide gap-3 px-4 pb-1" aria-label="Categories">
+        {categories.map((cat) => (
+          <li key={cat.id} className="shrink-0 snap-start w-[72px]">
+            <Link href={ROUTES.category(cat.slug)} className="flex flex-col items-center gap-1.5 min-h-11">
+              <CategoryTile
+                name={cat.name}
+                imageUrl={getRealCategoryImage(cat)}
+                className="h-16 w-16 rounded-full border border-border text-xl"
+                sizes="64px"
+              />
+              <span className="text-[11px] font-medium leading-tight text-center line-clamp-2">{cat.name}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+
       <div
         ref={trackRef}
-        className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-4 py-8 pl-4 sm:pl-6 lg:pl-[max(1rem,calc((100vw-1280px)/2+2rem))] pr-4 scroll-pl-4 sm:scroll-pl-6 lg:scroll-pl-[max(1rem,calc((100vw-1280px)/2+2rem))] scroll-pr-4"
+        className="hidden md:flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-4 py-8 pl-4 sm:pl-6 lg:pl-[max(1rem,calc((100vw-1280px)/2+2rem))] pr-4 scroll-pl-4 sm:scroll-pl-6 lg:scroll-pl-[max(1rem,calc((100vw-1280px)/2+2rem))] scroll-pr-4"
       >
         {categories.map((cat, index) => {
           const inverted = index % 2 === 1;

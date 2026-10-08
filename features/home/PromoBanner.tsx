@@ -7,10 +7,10 @@ import { cn } from "@/lib/utils";
 
 export function PromoBanner() {
   return (
-    <section aria-label="Promotion" className="py-12 lg:py-16">
+    <section aria-label="Promotion" className="py-6 md:py-12 lg:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div
-          className="relative overflow-hidden rounded-3xl bg-primary px-6 sm:px-8 py-12 lg:py-16 text-center"
+          className="relative overflow-hidden rounded-3xl bg-primary px-6 sm:px-8 py-6 md:py-12 lg:py-16 text-center"
           style={{
             backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.15) 1px, transparent 1px)",
             backgroundSize: "22px 22px",

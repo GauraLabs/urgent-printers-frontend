@@ -14,7 +14,7 @@ interface CampaignBannerProps {
 export function CampaignBanner({ imageUrl, headline, subheading, ctaText, ctaHref }: CampaignBannerProps) {
   return (
     <section aria-label="Featured campaign" className="relative w-full overflow-hidden">
-      <div className="relative w-full h-[380px] sm:h-[440px] lg:h-[520px]">
+      <div className="relative w-full h-[300px] sm:h-[440px] lg:h-[520px]">
         <SafeImage
           src={imageUrl}
           alt={headline}

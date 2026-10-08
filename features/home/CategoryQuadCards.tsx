@@ -126,7 +126,7 @@ export function CategoryQuadCards({ cards }: CategoryQuadCardsProps) {
   if (cards.length === 0) return null;
 
   return (
-    <section aria-label="More to explore" className="py-8 lg:py-10">
+    <section aria-label="More to explore" className="py-5 md:py-8 lg:py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Fixed card widths (full / half / quarter) centred in the row, so one or two
             cards stay card-sized instead of stretching into huge squares. */}

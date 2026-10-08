@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Cookie } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useConsent } from "@/hooks/useConsent";
+import { useBottomInset } from "@/features/navigation/bottomNav";
+import { cn } from "@/lib/utils";
 
 // Non-blocking bar, not a modal: no backdrop, no scroll-lock, page stays
 // fully interactive underneath. React-mounted while status === "undecided"
@@ -18,6 +20,7 @@ import { useConsent } from "@/hooks/useConsent";
 // never overlap; MobileBottomNav is lg:hidden so bottom-0 is safe at lg+.
 export function CookieConsentBanner() {
   const { status, accept, reject } = useConsent();
+  const inset = useBottomInset();
 
   if (status !== "undecided") return null;
 
@@ -26,7 +29,7 @@ export function CookieConsentBanner() {
       data-cookie-consent-banner
       role="region"
       aria-label="Cookie consent"
-      className="fixed inset-x-0 bottom-[65px] lg:bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-[0_-2px_12px_rgba(0,0,0,0.08)]"
+      className={cn("fixed inset-x-0 lg:bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-[0_-2px_12px_rgba(0,0,0,0.08)]", inset === "nav" ? "bottom-[65px]" : "bottom-0")}
     >
       <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="flex items-start gap-2.5 flex-1 min-w-0">
