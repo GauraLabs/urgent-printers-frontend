@@ -26,6 +26,7 @@ export function ArtworkUpload({ onChange }: ArtworkUploadProps) {
   const [file, setFile] = useState<UploadedFile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [showSpecs, setShowSpecs] = useState(false);
 
   // Tracks the currently-active blob: URL so it can be revoked on unmount
   // even if a stale closure holds an outdated `file` value.
@@ -114,7 +115,17 @@ export function ArtworkUpload({ onChange }: ArtworkUploadProps) {
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
           Upload Artwork
         </p>
-        <span className="text-[10px] text-muted-foreground">Optional — upload now or later</span>
+        <span className="max-md:hidden text-[10px] text-muted-foreground">Optional — upload now or later</span>
+        <button
+          type="button"
+          onClick={() => setShowSpecs((v) => !v)}
+          aria-expanded={showSpecs}
+          aria-controls="artwork-specs"
+          aria-label="Artwork requirements"
+          className="md:hidden flex h-11 w-11 -my-3 items-center justify-center rounded-full text-primary hover:bg-muted"
+        >
+          <Info size={16} aria-hidden="true" />
+        </button>
       </div>
 
       {/* Dropzone / uploading / success states */}
@@ -123,7 +134,8 @@ export function ArtworkUpload({ onChange }: ArtworkUploadProps) {
           {...getRootProps()}
           className={cn(
             "flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-8 cursor-pointer shadow-sm",
-            "transition-all text-center",
+            "max-md:flex-row max-md:justify-start max-md:gap-3 max-md:rounded-xl max-md:border max-md:p-3 max-md:min-h-14 max-md:shadow-none",
+            "transition-all text-center max-md:text-left",
             uploading && "pointer-events-none opacity-70",
             isDragActive
               ? "border-primary bg-primary/5 scale-[1.01]"
@@ -132,7 +144,7 @@ export function ArtworkUpload({ onChange }: ArtworkUploadProps) {
         >
           <input {...getInputProps({ "aria-label": "Upload artwork file" })} />
           <div className={cn(
-            "w-12 h-12 rounded-xl flex items-center justify-center",
+            "w-12 h-12 max-md:w-9 max-md:h-9 shrink-0 rounded-xl flex items-center justify-center",
             isDragActive ? "bg-primary/10" : "bg-muted"
           )}>
             {uploading
@@ -140,7 +152,10 @@ export function ArtworkUpload({ onChange }: ArtworkUploadProps) {
               : <UploadCloud size={22} className={cn(isDragActive ? "text-primary" : "text-muted-foreground")} />
             }
           </div>
-          <div>
+          <p className="md:hidden text-sm font-medium">
+            {uploading ? "Uploading…" : "Tap to upload artwork (optional)"}
+          </p>
+          <div className="max-md:hidden">
             <p className="text-sm font-medium">
               {uploading ? "Uploading…" : isDragActive ? "Drop it here!" : "Drag & drop your artwork"}
             </p>
@@ -149,7 +164,7 @@ export function ArtworkUpload({ onChange }: ArtworkUploadProps) {
             </p>
           </div>
           {!uploading && (
-            <span className="text-xs text-primary font-medium underline underline-offset-2">
+            <span className="max-md:hidden text-xs text-primary font-medium underline underline-offset-2">
               or click to browse files
             </span>
           )}
@@ -189,7 +204,7 @@ export function ArtworkUpload({ onChange }: ArtworkUploadProps) {
       )}
 
       {/* Spec requirements */}
-      <div className="flex items-start gap-2 text-xs text-muted-foreground p-3 rounded-xl bg-muted/50 border border-border shadow-sm">
+      <div id="artwork-specs" className={cn("flex items-start gap-2 text-xs text-muted-foreground p-3 rounded-xl bg-muted/50 border border-border shadow-sm", !showSpecs && "max-md:hidden")}>
         <Info size={13} className="shrink-0 mt-0.5 text-primary" />
         <div className="space-y-0.5">
           <p>
@@ -203,10 +218,10 @@ export function ArtworkUpload({ onChange }: ArtworkUploadProps) {
       </div>
 
       {/* Canva CTA */}
-      <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-card shadow-sm">
+      <div className="flex items-center justify-between p-3 max-md:py-2 rounded-xl border border-border bg-card shadow-sm">
         <div>
           <p className="text-xs font-semibold">No design ready?</p>
-          <p className="text-[11px] text-muted-foreground">Create one free on Canva</p>
+          <p className="max-md:hidden text-[11px] text-muted-foreground">Create one free on Canva</p>
         </div>
         <a
           href={PRINT_SPECS.canvaUrl}

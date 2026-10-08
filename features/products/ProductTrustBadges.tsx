@@ -13,9 +13,22 @@ const PRODUCT_TRUST_BADGES = [
 
 export function ProductTrustBadges() {
   return (
+    <>
+    {/* Mobile: one compact scrollable strip (icon + title); the grid below is md+ only. */}
+    <ul
+      aria-label="Why buy from Urgent Printers"
+      className="md:hidden flex gap-4 overflow-x-auto scrollbar-hide py-2.5 border-y border-border"
+    >
+      {PRODUCT_TRUST_BADGES.map((badge) => (
+        <li key={badge.title} className="flex shrink-0 items-center gap-1.5 text-[11px] font-medium">
+          <badge.icon size={14} className="text-primary" aria-hidden="true" />
+          {badge.title}
+        </li>
+      ))}
+    </ul>
     <div
       aria-label="Why buy from Urgent Printers"
-      className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-2 py-4 border-y border-border"
+      className="max-md:hidden grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-2 py-4 border-y border-border"
     >
       {PRODUCT_TRUST_BADGES.map((badge) => (
         <TrustBadgeItem
@@ -27,5 +40,6 @@ export function ProductTrustBadges() {
         />
       ))}
     </div>
+    </>
   );
 }

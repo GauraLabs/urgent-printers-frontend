@@ -11,7 +11,7 @@ export async function RelatedProducts({ productId, categorySlug }: RelatedProduc
   if (products.length === 0) return null;
 
   return (
-    <section aria-labelledby="related-heading" className="mt-16 pt-10 border-t border-border">
+    <section aria-labelledby="related-heading" className="mt-16 pt-10 max-md:mt-8 max-md:pt-6 border-t border-border">
       <h2 id="related-heading" className="font-heading font-bold text-xl mb-6">
         You Might Also Like
       </h2>

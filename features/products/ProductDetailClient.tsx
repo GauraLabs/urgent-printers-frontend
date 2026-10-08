@@ -9,15 +9,8 @@ import { SavedArtworks } from "./artwork/SavedArtworks";
 import { TemplateForm } from "./template/TemplateForm";
 import { useRecentlyViewedStore } from "./recentlyViewed/store";
 import { formatPrice, round2 } from "@/lib/utils";
+import { summarisePdpPrice, usePdpState } from "./PdpStateContext";
 import type { Product } from "@/types";
-
-interface ConfiguratorState {
-  isInCart: boolean;
-  totalPrice: number;
-  savings: number;
-  quantityLabel?: string;
-  quantityEmpty?: boolean;
-}
 
 interface ProductDetailClientProps {
   product: Product;
@@ -35,11 +28,8 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const [artworkFileName,    setArtworkFileName]    = useState<string>("");
   const [templateData,       setTemplateData]       = useState<Record<string, string>>({});
   const [showTemplateErrors, setShowTemplateErrors] = useState(false);
-  const [configuratorState,  setConfiguratorState]  = useState<ConfiguratorState>({
-    isInCart:   false,
-    totalPrice: product.pricingTiers[0]?.totalPrice ?? product.priceFrom ?? 0,
-    savings:    0,
-  });
+  // Shared with the mobile price line under the title (see PdpStateProvider in the page).
+  const { state: configuratorState, setState: setConfiguratorState } = usePdpState();
 
   // Feed links land on a configuration via ?qty=&size=... Read client-side (the
   // server snapshot is "" so hydration matches) to keep the page's ISR; the
@@ -93,7 +83,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
       />
 
       {showTemplate && product.templateFields.length > 0 && (
-        <div ref={templateSectionRef} className="mt-8 pt-6 border-t border-border">
+        <div ref={templateSectionRef} className="mt-8 pt-6 max-md:mt-5 max-md:pt-4 border-t border-border">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
             Personalise Your Print
           </p>
@@ -106,7 +96,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
       )}
 
       {showArtwork && (
-        <div className="mt-8 pt-6 border-t border-border">
+        <div className="mt-8 pt-6 max-md:mt-5 max-md:pt-4 border-t border-border">
           <ArtworkUpload onChange={handleArtworkChange} />
           <SavedArtworks onSelect={handleArtworkChange} />
         </div>
@@ -120,6 +110,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         isInCart={configuratorState.isInCart}
         quantityLabel={configuratorState.quantityLabel}
         disabled={configuratorState.quantityEmpty}
+        summary={summarisePdpPrice(configuratorState)}
         observeRef={addItemRef}
         onAddToCart={handleStickyAdd}
       />

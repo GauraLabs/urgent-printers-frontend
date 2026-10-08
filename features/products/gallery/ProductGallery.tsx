@@ -126,7 +126,7 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
   return (
     <div className="flex flex-col gap-3">
       {/* Main image */}
-      <div className="relative rounded-2xl overflow-hidden bg-muted aspect-square">
+      <div className="relative rounded-2xl overflow-hidden bg-muted aspect-square max-md:aspect-[4/3]">
         {/* Mobile: Swiper with touch */}
         <div className="block md:hidden h-full">
           <Swiper

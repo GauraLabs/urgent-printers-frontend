@@ -8,6 +8,10 @@ import { ReviewSkeleton } from "@/components/common/ProductCardSkeleton";
 import { ScrollReveal } from "@/components/common/ScrollReveal";
 import { ProductGallery } from "@/features/products/gallery/ProductGallery";
 import { ProductDetailClient } from "@/features/products/ProductDetailClient";
+import { ProductSpecs, buildSpecRows } from "@/features/products/ProductSpecs";
+import { PdpStateProvider, MobilePriceLine } from "@/features/products/PdpStateContext";
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { ProductDetailTabs } from "@/features/products/ProductDetailTabs";
 import { ReviewsSection } from "@/features/products/ReviewsSection";
 import { RelatedProducts } from "@/features/products/RelatedProducts";
@@ -85,7 +89,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 max-md:py-3">
+        {/* Mobile: a single-line back link; the full breadcrumb stays for md+ (structured data is separate). */}
+        <Link
+          href={ROUTES.category(categorySlug)}
+          className="md:hidden mb-2 -ml-1 inline-flex min-h-11 items-center gap-0.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+        >
+          <ChevronLeft size={18} aria-hidden="true" />
+          {category.name}
+        </Link>
+
         {/* Breadcrumb */}
         <Breadcrumb
           items={[
@@ -93,11 +106,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
             { label: category.name, href: ROUTES.category(categorySlug) },
             { label: product.name },
           ]}
-          className="mb-6"
+          className="mb-6 max-md:hidden"
         />
 
         {/* Main product grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 xl:gap-16">
+        <PdpStateProvider initialTotal={product.pricingTiers[0]?.totalPrice ?? product.priceFrom ?? 0}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 max-md:gap-4 xl:gap-16">
           {/* Left — Gallery */}
           <div className="lg:sticky lg:top-20 lg:self-start">
             <ProductGallery
@@ -112,14 +126,15 @@ export default async function ProductDetailPage({ params }: PageProps) {
           {/* Right — Info + Configurator */}
           <div>
             {/* Product header */}
-            <div className="mb-6">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+            <div className="mb-6 max-md:mb-3">
+              <p className="max-md:hidden text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                 {product.categoryName}
               </p>
-              <h1 className="font-heading font-bold text-2xl lg:text-3xl leading-tight mb-3">
+              <h1 className="font-heading font-bold text-2xl lg:text-3xl leading-tight mb-3 max-md:mb-1.5 max-md:text-xl">
                 {product.name}
               </h1>
-              <div className="flex items-center gap-3 mb-4">
+              <MobilePriceLine />
+              <div className={`flex items-center gap-3 mb-4 max-md:mb-2${product.reviewCount === 0 ? " max-md:hidden" : ""}`}>
                 {product.reviewCount > 0 ? (
                   <StarRating
                     rating={product.averageRating}
@@ -128,11 +143,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     size="sm"
                   />
                 ) : (
-                  <span className="text-xs font-medium text-muted-foreground">
+                  <span className="text-xs font-medium text-muted-foreground max-md:hidden">
                     No reviews yet — be the first to try this product
                   </span>
                 )}
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground max-md:hidden">
                   {listing ? (
                     <>{formatQty(listing.quantity, product.unitLabel)} for <span className="font-semibold text-foreground">{formatPrice(listing.price)}</span> · Options may change the price</>
                   ) : (
@@ -140,7 +155,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   )}
                 </span>
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <p className="text-sm text-muted-foreground leading-relaxed max-md:line-clamp-2">
                 {product.shortDescription}
               </p>
             </div>
@@ -149,6 +164,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             <ProductDetailClient product={product} />
           </div>
         </div>
+        </PdpStateProvider>
 
         {/* Description + Reviews — combined into one tabbed unit (Phase 3).
             Both panels render with `keepMounted`, so Reviews' Suspense
@@ -163,9 +179,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
             an IntersectionObserver entry fires. */}
         <ProductDetailTabs
           reviewCount={product.reviewCount}
+          specs={buildSpecRows(product).length > 0 ? <ProductSpecs rows={buildSpecRows(product)} /> : null}
           description={
             <section aria-labelledby="description-heading">
-              <h2 id="description-heading" className="font-heading font-bold text-xl mb-4">
+              <h2 id="description-heading" className="font-heading font-bold text-xl mb-4 max-md:hidden">
                 Product Details
               </h2>
               <div

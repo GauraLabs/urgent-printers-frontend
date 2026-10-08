@@ -13,6 +13,7 @@ import { DeliveryCheck } from "../DeliveryCheck";
 import { SizeSpecGuide } from "./SizeSpecGuide";
 import { ProductTrustBadges } from "../ProductTrustBadges";
 import { SelectableCard } from "@/components/ui/selectable-card";
+import { isRedundantDescription, isSingleChoice, prettySize } from "./optionText";
 import { useCartStore } from "@/features/cart/store";
 import { makeCartItemId } from "@/features/cart/cartItemId";
 import { formatPrice, formatPricePerUnit, cn } from "@/lib/utils";
@@ -33,7 +34,7 @@ interface ProductConfiguratorProps {
   onBlockedByTemplate?: () => void;
   /** Landing configuration from feed-link query params (already validated). */
   preselection?: Preselection;
-  onStateChange?: (state: { isInCart: boolean; totalPrice: number; savings: number; quantityLabel?: string; quantityEmpty?: boolean }) => void;
+  onStateChange?: (state: { isInCart: boolean; totalPrice: number; savings: number; discountPercent?: number; quantityLabel?: string; quantityEmpty?: boolean }) => void;
 }
 
 function OptionButton({
@@ -44,6 +45,7 @@ function OptionButton({
   delta,
   isDefault,
   showPriceDelta = true,
+  perUnitSuffix,
 }: {
   label: string;
   description?: string;
@@ -52,37 +54,41 @@ function OptionButton({
   delta?: number;
   isDefault?: boolean;
   showPriceDelta?: boolean;
+  /** "/pc" or " each": option deltas are per unit, so mobile spells that out. */
+  perUnitSuffix?: string;
 }) {
+  const showDescription = !isRedundantDescription(label, description);
   const showDelta = showPriceDelta && delta !== undefined && Math.abs(delta) >= 0.01;
   return (
     <SelectableCard
       selected={selected}
       onClick={onClick}
-      className="flex flex-col items-start px-3 py-2.5 rounded-xl"
+      className="relative flex flex-col items-start px-3 py-2.5 rounded-xl"
     >
-      <div className="flex items-center justify-between w-full gap-1.5">
+      <div className="flex w-full gap-1.5 max-md:flex-col md:items-center md:justify-between">
         <div className="flex items-center gap-1.5 min-w-0">
-          <span className={cn("text-sm font-medium leading-snug truncate transition-colors duration-200", selected && "text-primary")}>
+          <span className={cn("text-sm font-medium leading-snug md:truncate transition-colors duration-200", selected && "text-primary")}>
             {label}
           </span>
           {isDefault && (
-            <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary uppercase tracking-wide">
+            <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary uppercase tracking-wide max-md:absolute max-md:top-0 max-md:right-0 max-md:rounded-none max-md:rounded-bl-lg max-md:rounded-tr-xl max-md:text-[8px] max-md:py-0.5">
               Popular
             </span>
           )}
         </div>
         {showDelta && (
           <span className={cn(
-            "shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full",
+            "shrink-0 self-start text-[10px] font-bold px-1.5 py-0.5 rounded-full",
             delta! > 0
               ? "bg-brand-orange/10 text-brand-orange"
               : "bg-success/10 text-success"
           )}>
             {delta! > 0 ? "+" : "−"}{formatPrice(Math.abs(delta!))}
+            {perUnitSuffix && <span className="md:hidden">{perUnitSuffix}</span>}
           </span>
         )}
       </div>
-      {description && (
+      {showDescription && (
         <span className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{description}</span>
       )}
     </SelectableCard>
@@ -248,8 +254,8 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     const shownSavings = pricing?.discountPercent !== undefined ? lineSavings : 0;
     const quantityLabel = formatQty(selectedQuantity, unitLabel);
     useEffect(() => {
-      onStateChange?.({ isInCart, totalPrice, savings: shownSavings, quantityLabel, quantityEmpty });
-    }, [isInCart, totalPrice, shownSavings, quantityLabel, quantityEmpty, onStateChange]);
+      onStateChange?.({ isInCart, totalPrice, savings: shownSavings, discountPercent: pricing?.discountPercent, quantityLabel, quantityEmpty });
+    }, [isInCart, totalPrice, shownSavings, pricing?.discountPercent, quantityLabel, quantityEmpty, onStateChange]);
 
     // Delta helpers — show cost impact vs cheapest option in each category
     // (Math.min(...[]) is -Infinity, but these are only read while mapping a
@@ -358,12 +364,22 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     }
 
     return (
-      <div className="flex flex-col gap-6">
-        <DeliveryCheck turnaroundDays={selectedTurnaround?.businessDays} />
+      <div className="flex flex-col gap-6 max-md:gap-4">
+        {/* Mobile reads: options > quantity + rate chips > total > Add to Cart > trust strip > delivery check.
+            DOM order stays the desktop order; max-md:order-* rearranges it only below md. */}
+        <div className="max-md:order-[12]">
+          <DeliveryCheck turnaroundDays={selectedTurnaround?.businessDays} />
+        </div>
 
         {/* Size — category omitted entirely when not applicable to this product */}
+        {printSpec.sizes.length > 0 && isSingleChoice(printSpec.sizes) && (
+          <p className="md:hidden max-md:order-1 text-sm">
+            <span className="text-muted-foreground">Size: </span>
+            <span className="font-medium">{prettySize(printSpec.sizes[0].label)}</span>
+          </p>
+        )}
         {printSpec.sizes.length > 0 && (
-          <div>
+          <div className={cn("max-md:order-1", isSingleChoice(printSpec.sizes) && "max-md:hidden")}>
             <SectionLabel
               action={<SizeSpecGuide sizes={printSpec.sizes} papers={printSpec.papers} />}
             >
@@ -378,6 +394,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
                   onClick={() => setSelectedSize(size)}
                   delta={sizeDelta(size.priceMultiplier)}
                   isDefault={size.isDefault}
+                  perUnitSuffix={perPieceSuffix(unitLabel)}
                   showPriceDelta={false}
                 />
               ))}
@@ -389,12 +406,28 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
             section above; when a product has no sizes (empty printSpec.sizes,
             same legacy/seed-data case noted on turnaround below) it's
             anchored here instead so the guide never silently disappears. */}
+        {printSpec.papers.length > 0 && isSingleChoice(printSpec.papers) && (
+          <p className="md:hidden max-md:order-2 text-sm">
+            <span className="text-muted-foreground">Paper: </span>
+            <span className="font-medium">{printSpec.papers[0].label}</span>
+          </p>
+        )}
+        {/* When Size collapses to a read-only line on mobile, the comparison guide moves here. */}
+        {printSpec.sizes.length === 1 && printSpec.papers.length <= 1 && (
+          <div className="md:hidden max-md:order-2">
+            <SizeSpecGuide sizes={printSpec.sizes} papers={printSpec.papers} />
+          </div>
+        )}
         {printSpec.papers.length > 0 && (
-          <div>
+          <div className={cn("max-md:order-2", isSingleChoice(printSpec.papers) && "max-md:hidden")}>
             <SectionLabel
               action={
                 printSpec.sizes.length === 0 ? (
                   <SizeSpecGuide sizes={printSpec.sizes} papers={printSpec.papers} />
+                ) : printSpec.sizes.length === 1 && printSpec.papers.length > 1 ? (
+                  <span className="md:hidden">
+                    <SizeSpecGuide sizes={printSpec.sizes} papers={printSpec.papers} />
+                  </span>
                 ) : undefined
               }
             >
@@ -410,6 +443,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
                   onClick={() => setSelectedPaper(paper)}
                   delta={paperDelta(paper.priceMultiplier)}
                   isDefault={paper.isDefault}
+                  perUnitSuffix={perPieceSuffix(unitLabel)}
                 />
               ))}
             </div>
@@ -417,8 +451,14 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
         )}
 
         {/* Finish */}
+        {printSpec.finishes.length > 0 && isSingleChoice(printSpec.finishes) && (
+          <p className="md:hidden max-md:order-3 text-sm">
+            <span className="text-muted-foreground">Finish: </span>
+            <span className="font-medium">{printSpec.finishes[0].label}</span>
+          </p>
+        )}
         {printSpec.finishes.length > 0 && (
-          <div>
+          <div className={cn("max-md:order-3", isSingleChoice(printSpec.finishes) && "max-md:hidden")}>
             <SectionLabel>Finish</SectionLabel>
             <div className="grid grid-cols-2 gap-2">
               {printSpec.finishes.map((finish) => (
@@ -430,6 +470,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
                   onClick={() => setSelectedFinish(finish)}
                   delta={finishDelta(finish.priceMultiplier)}
                   isDefault={finish.isDefault}
+                  perUnitSuffix={perPieceSuffix(unitLabel)}
                 />
               ))}
             </div>
@@ -438,7 +479,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
 
         {/* Sides — only worth showing a picker when there's more than one option */}
         {printSpec.sides.length > 1 && (
-          <div>
+          <div className="max-md:order-4">
             <SectionLabel>Printing Sides</SectionLabel>
             <div className="grid grid-cols-2 gap-2">
               {printSpec.sides.map((side) => (
@@ -449,6 +490,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
                   onClick={() => setSelectedSides(side)}
                   delta={sidesDelta(side.priceMultiplier)}
                   isDefault={side.isDefault}
+                  perUnitSuffix={perPieceSuffix(unitLabel)}
                 />
               ))}
             </div>
@@ -459,7 +501,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
             weren't set up on the backend; it isn't orderable until they are,
             so we surface that instead of rendering an empty/broken picker. */}
         {turnaroundOptions.length > 0 ? (
-          <div>
+          <div className="max-md:order-5">
             <SectionLabel>Turnaround Time</SectionLabel>
             <div className="flex flex-col gap-2">
               {turnaroundOptions.map((opt) => {
@@ -493,7 +535,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
             </div>
           </div>
         ) : (
-          <div>
+          <div className="max-md:order-5">
             <SectionLabel>Turnaround Time</SectionLabel>
             <div className="rounded-xl border border-dashed border-border p-3 flex items-center gap-2 text-xs text-muted-foreground">
               <Info size={14} className="shrink-0" />
@@ -503,7 +545,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
         )}
 
         {/* Quantity — free entry within the product's allowed range */}
-        <div>
+        <div className="max-md:order-6">
           <SectionLabel>Quantity</SectionLabel>
           <QuantityInput
             value={selectedQuantity}
@@ -520,8 +562,9 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
         </div>
 
         {/* Live price display */}
-        <div className="rounded-2xl border border-border bg-secondary/30 p-4 shadow-sm">
-          <div className="flex items-end justify-between">
+        <div className="rounded-2xl border border-border bg-secondary/30 p-4 shadow-sm max-md:order-9">
+          {/* Mobile: the order total leads, per-unit rate and MRP are secondary. */}
+          <div className="flex items-end justify-between max-md:flex-col-reverse max-md:items-start max-md:gap-3">
             <div>
               <p className="text-xs text-muted-foreground mb-1">{formatQty(selectedQuantity, unitLabel)}</p>
               <PriceDisplay
@@ -534,18 +577,18 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
                   <PriceValue
                     value={pricePerUnit}
                     formatted={`${formatPricePerUnit(pricePerUnit)}${perPieceSuffix(unitLabel)}`}
-                    className="font-heading font-bold text-3xl tabular-nums"
+                    className="font-heading font-bold text-base md:text-3xl tabular-nums"
                     prefersReducedMotion={prefersReducedMotion}
                   />
                 }
               />
             </div>
-            <div className="text-right">
+            <div className="text-right max-md:text-left">
               <p className="text-xs text-muted-foreground mb-1">Total</p>
               <PriceValue
                 value={totalPrice}
                 formatted={formatPrice(totalPrice)}
-                className="font-heading font-bold text-xl text-primary tabular-nums"
+                className="font-heading font-bold text-3xl md:text-xl text-primary tabular-nums"
                 prefersReducedMotion={prefersReducedMotion}
               />
             </div>
@@ -569,14 +612,22 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
           </p>
         </div>
 
-        <TierRateGuide entries={guideEntries} unitLabel={unitLabel} onSelect={(q) => setSelectedQuantity(clampQuantity(q, bounds.min, bounds.max))} />
+        <div className="max-md:order-7 empty:hidden">
+          <TierRateGuide entries={guideEntries} unitLabel={unitLabel} onSelect={(q) => setSelectedQuantity(clampQuantity(q, bounds.min, bounds.max))} />
+        </div>
 
-        {nudge && <TierNudge nudge={nudge} unitLabel={unitLabel} onAccept={setSelectedQuantity} />}
+        {nudge && (
+          <div className="max-md:order-8">
+            <TierNudge nudge={nudge} unitLabel={unitLabel} onAccept={setSelectedQuantity} />
+          </div>
+        )}
 
-        <ProductTrustBadges />
+        <div className="max-md:order-[11]">
+          <ProductTrustBadges />
+        </div>
 
         {/* Add to Cart / Update Cart button */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 max-md:order-10">
           <button
             ref={ref}
             onClick={handleAddToCart}

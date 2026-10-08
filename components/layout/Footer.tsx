@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { Logo } from "@/components/common/Logo";
 import { InstagramIcon, FacebookIcon, XIcon } from "@/components/common/SocialIcons";
+import { FooterLinkGroup } from "./FooterLinkGroup";
 import { Separator } from "@/components/ui/separator";
 import { getNavLinks } from "@/lib/api";
 import { ROUTES } from "@/lib/constants/routes";
@@ -39,10 +40,10 @@ export async function Footer() {
     <footer className="relative mt-auto overflow-hidden border-t border-border bg-secondary/30">
       <div className="h-1 bg-gradient-to-r from-primary via-brand-orange to-primary" />
       <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-primary/10 blur-3xl -z-10" aria-hidden="true" />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 max-md:py-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-md:gap-0 lg:gap-12">
           {/* Brand */}
-          <div className="col-span-2 md:col-span-1">
+          <div className="col-span-2 md:col-span-1 max-md:mb-6">
             <Link href={ROUTES.home} className="inline-flex items-center mb-4">
               <Logo style={{ height: 26 }} />
             </Link>
@@ -91,59 +92,12 @@ export async function Footer() {
             </div>
           </div>
 
-          {/* Products */}
-          <div>
-            <h3 className="font-heading font-semibold text-sm mb-4">Products</h3>
-            <ul className="space-y-2.5">
-              {productLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Account */}
-          <div>
-            <h3 className="font-heading font-semibold text-sm mb-4">Account</h3>
-            <ul className="space-y-2.5">
-              {ACCOUNT_LINKS.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Support */}
-          <div>
-            <h3 className="font-heading font-semibold text-sm mb-4">Support</h3>
-            <ul className="space-y-2.5">
-              {SUPPORT_LINKS.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <FooterLinkGroup title="Products" links={productLinks} />
+          <FooterLinkGroup title="Account" links={ACCOUNT_LINKS} />
+          <FooterLinkGroup title="Support" links={SUPPORT_LINKS} />
         </div>
 
-        <Separator className="my-8" />
+        <Separator className="my-8 max-md:my-4" />
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <p>© {new Date().getFullYear()} Urgent Printers Pvt. Ltd. All rights reserved.</p>
