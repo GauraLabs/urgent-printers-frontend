@@ -1,7 +1,7 @@
 {
   "feature_name": "Checkout Coupon Error Paths",
   "plan_path": "qa-pipeline/artifacts/plans/checkout-pricing-coupons-plan.json",
-  "run_timestamp": "2026-10-07T19:19:33.571Z",
+  "run_timestamp": "2026-10-08T10:07:55.854Z",
   "trace_path": null,
   "viewport": {
     "width": 1280,
@@ -19,7 +19,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 10888,
+      "timestamp_ms": 10519,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-01.png",
       "status": "pass",
       "error": null,
@@ -39,7 +39,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 11150,
+      "timestamp_ms": 10759,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-02.png",
       "status": "pass",
       "error": null,
@@ -59,7 +59,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 11386,
+      "timestamp_ms": 11001,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-03.png",
       "status": "pass",
       "error": null,
@@ -79,7 +79,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 11639,
+      "timestamp_ms": 11243,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-04.png",
       "status": "pass",
       "error": null,
@@ -99,7 +99,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 11870,
+      "timestamp_ms": 11462,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-05.png",
       "status": "pass",
       "error": null,
@@ -119,7 +119,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 12135,
+      "timestamp_ms": 11718,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-06.png",
       "status": "pass",
       "error": null,
@@ -139,7 +139,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 16977,
+      "timestamp_ms": 15983,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-07.png",
       "status": "pass",
       "error": null,
@@ -154,7 +154,7 @@
       "selector": "getByPlaceholder('Coupon code')",
       "route": "/cart",
       "bounding_box": null,
-      "timestamp_ms": 22844,
+      "timestamp_ms": 21888,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-08.png",
       "status": "pass",
       "error": null,
@@ -174,7 +174,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 25217,
+      "timestamp_ms": 24270,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-09.png",
       "status": "pass",
       "error": null,
@@ -194,7 +194,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 25495,
+      "timestamp_ms": 24568,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-10.png",
       "status": "pass",
       "error": null,
@@ -214,7 +214,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 25843,
+      "timestamp_ms": 24901,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-11.png",
       "status": "pass",
       "error": null,
@@ -234,7 +234,7 @@
         "width": 27,
         "height": 27
       },
-      "timestamp_ms": 30371,
+      "timestamp_ms": 58871,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-12.png",
       "status": "pass",
       "error": null,
@@ -242,7 +242,9 @@
       "typed_masked": false,
       "axe_violations": [],
       "console_errors": [
-        "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)"
+        "Failed to load resource: the server responded with a status of 429 (Too Many Requests)",
+        "Failed to load resource: the server responded with a status of 429 (Too Many Requests)",
+        "Failed to load resource: the server responded with a status of 429 (Too Many Requests)"
       ]
     }
   ],

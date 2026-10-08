@@ -89,7 +89,7 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
     setPriceNotice(null);
     void (async () => {
       // Re-check the coupon first so the preview and the review match what the server will accept.
-      if (await revalidateAppliedCoupon(token)) await new Promise((r) => setTimeout(r, 0));
+      if ((await revalidateAppliedCoupon(token, { force: true })) === "removed") await new Promise((r) => setTimeout(r, 0));
       void runPreviewRef.current(address, token, "Totals below use the latest prices. Review them before placing your order.", false, true);
     })();
   }

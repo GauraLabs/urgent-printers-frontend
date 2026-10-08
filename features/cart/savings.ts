@@ -1,4 +1,4 @@
-import type { CartItem } from "@/types";
+import type { AppliedCoupon, CartItem } from "@/types";
 import { perPieceSuffix } from "@/lib/quantity";
 import { getUnitDiscount, round2, type DisplayDiscount } from "@/lib/utils";
 
@@ -26,6 +26,19 @@ export function cartTotalSavings(items: CartItem[], couponDiscount: number): num
 // show a realistic figure (the authoritative one still comes from preview).
 export function eligibleSubtotal(items: CartItem[]): number {
   return round2(items.reduce((sum, i) => (isDiscounted(i) ? sum : sum + i.totalPrice), 0));
+}
+
+export type CouponScopeData = Pick<AppliedCoupon, "eligibleItemIds" | "eligibleLineIndexes">;
+
+/**
+ * Per-line eligibility. Line indexes (into the items the server was sent) win because one
+ * product can be eligible on one line and not another; product ids are the fallback, and
+ * without any scope data (old backend, not yet validated) every line counts.
+ */
+export function isLineEligible(index: number, productId: string, scope?: CouponScopeData | null): boolean {
+  if (scope?.eligibleLineIndexes) return scope.eligibleLineIndexes.includes(index);
+  if (scope?.eligibleItemIds) return scope.eligibleItemIds.includes(productId);
+  return true;
 }
 
 // Percent is derived on the rounded per-unit figures, as on the server; a 0%

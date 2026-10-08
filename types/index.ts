@@ -266,6 +266,18 @@ export interface AppliedCoupon {
   description: string | null;
   message: string;          // user-friendly message shown directly in UI
   appliesToDiscountedItems?: boolean;
+  minOrderAmount?: number;
+  // Absent on a backend that predates coupon scoping (then every line is eligible).
+  eligibleItemIds?: string[];
+  // Indexes into the items the server was sent (cart order); decides per-line eligibility.
+  eligibleLineIndexes?: number[];
+  scope?: CouponScope;
+}
+
+export interface CouponScope {
+  productNames: string[];
+  categoryNames: string[];
+  allItems: boolean;
 }
 
 // ─── Order creation ───────────────────────────────────────────────────────────
@@ -352,6 +364,9 @@ export interface OrderPreviewItem {
 export interface OrderPreview {
   pricing: OrderPricing;
   items: OrderPreviewItem[];
+  eligibleItemIds?: string[];
+  eligibleLineIndexes?: number[];
+  couponScope?: CouponScope;
   estimatedDelivery?: string;
 }
 

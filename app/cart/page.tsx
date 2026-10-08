@@ -17,6 +17,7 @@ import { SavingsSummary } from "@/components/common/SavingsSummary";
 import { cartLinePrice, cartMrpSavings, cartTotalSavings, eligibleSubtotal } from "@/features/cart/savings";
 import { formatPrice, slugify, cn } from "@/lib/utils";
 import type { CartItem } from "@/types";
+import { CouponMinNote, CouponScopeNote } from "@/features/cart/CouponScopeNote";
 import { LineRateStatus } from "@/features/cart/LineRateStatus";
 import { QuantityInput } from "@/components/common/QuantityInput";
 import { effectiveBounds } from "@/lib/quantity";
@@ -112,7 +113,7 @@ export default function CartPage() {
     setPromoError("");
     setValidating(true);
     try {
-      const coupon = await trackConnectivity(validateCoupon(code, subtotal, token, eligibleSubtotal(items)));
+      const coupon = await trackConnectivity(validateCoupon(code, subtotal, token, eligibleSubtotal(items), items));
       setAppliedCoupon(coupon);
       setPromoInput("");
     } catch (err) {
@@ -320,6 +321,8 @@ export default function CartPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-success">{appliedCoupon.code} applied</p>
                     <p className="text-[11px] text-muted-foreground truncate">{appliedCoupon.description}</p>
+                    <CouponScopeNote items={items} eligibleItemIds={appliedCoupon.eligibleItemIds} eligibleLineIndexes={appliedCoupon.eligibleLineIndexes} scope={appliedCoupon.scope} />
+                    <CouponMinNote coupon={appliedCoupon} />
                   </div>
                   <button onClick={handleRemovePromo} aria-label={`Remove coupon ${appliedCoupon.code}`} className="p-1 text-muted-foreground hover:text-destructive transition-colors shrink-0">
                     <XCircle size={14} aria-hidden="true" />

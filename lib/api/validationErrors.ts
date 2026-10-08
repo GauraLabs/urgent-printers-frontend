@@ -49,6 +49,7 @@ const CODED_MESSAGES: Record<string, string> = {
 const CODED_FALLBACKS: Record<string, string> = {
   invalid_coupon: "This coupon can't be applied to your order.",
   // The server's own message names the product and the limit, so it wins.
+  coupon_not_applicable: "This coupon doesn't apply to the items in your cart.",
   quantity_below_minimum: "This quantity is below the minimum order. Please adjust it in your cart.",
   quantity_above_maximum: "This quantity is above the maximum order. Please adjust it in your cart.",
 };

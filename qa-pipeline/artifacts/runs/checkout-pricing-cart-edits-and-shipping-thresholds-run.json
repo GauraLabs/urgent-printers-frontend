@@ -1,7 +1,7 @@
 {
   "feature_name": "Checkout Pricing Cart Edits and Shipping Thresholds",
   "plan_path": "qa-pipeline/artifacts/plans/checkout-pricing-coupons-plan.json",
-  "run_timestamp": "2026-10-08T03:52:40.822Z",
+  "run_timestamp": "2026-10-08T10:01:43.737Z",
   "trace_path": null,
   "viewport": {
     "width": 1280,
@@ -19,7 +19,7 @@
         "width": 36,
         "height": 36
       },
-      "timestamp_ms": 13093,
+      "timestamp_ms": 13664,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-01.png",
       "status": "pass",
       "error": null,
@@ -46,7 +46,7 @@
         "width": 96,
         "height": 36
       },
-      "timestamp_ms": 13348,
+      "timestamp_ms": 13931,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-02.png",
       "status": "pass",
       "error": null,
@@ -73,7 +73,7 @@
         "width": 96,
         "height": 36
       },
-      "timestamp_ms": 13568,
+      "timestamp_ms": 14187,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-03.png",
       "status": "pass",
       "error": null,
@@ -100,7 +100,7 @@
         "width": 36,
         "height": 36
       },
-      "timestamp_ms": 15645,
+      "timestamp_ms": 16800,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-04.png",
       "status": "pass",
       "error": null,
@@ -129,7 +129,7 @@
         "width": 27,
         "height": 27
       },
-      "timestamp_ms": 16714,
+      "timestamp_ms": 17809,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-05.png",
       "status": "pass",
       "error": null,
@@ -156,7 +156,7 @@
         "width": 27,
         "height": 27
       },
-      "timestamp_ms": 17003,
+      "timestamp_ms": 18107,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-06.png",
       "status": "pass",
       "error": null,
@@ -183,7 +183,7 @@
         "width": 96,
         "height": 36
       },
-      "timestamp_ms": 17256,
+      "timestamp_ms": 18322,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-07.png",
       "status": "pass",
       "error": null,
@@ -210,7 +210,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 17503,
+      "timestamp_ms": 18585,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-08.png",
       "status": "pass",
       "error": null,
@@ -232,7 +232,7 @@
       "selector": "getByPlaceholder('Coupon code')",
       "route": "/cart",
       "bounding_box": null,
-      "timestamp_ms": 21794,
+      "timestamp_ms": 22926,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-09.png",
       "status": "pass",
       "error": null,
@@ -254,7 +254,7 @@
       "selector": null,
       "route": "/checkout",
       "bounding_box": null,
-      "timestamp_ms": 22902,
+      "timestamp_ms": 24081,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-10.png",
       "status": "pass",
       "error": null,
@@ -281,7 +281,7 @@
         "width": 505,
         "height": 48
       },
-      "timestamp_ms": 23545,
+      "timestamp_ms": 24576,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-11.png",
       "status": "pass",
       "error": null,

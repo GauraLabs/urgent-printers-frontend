@@ -1,7 +1,7 @@
 {
   "feature_name": "Checkout Pricing and Coupons (Cart to Order)",
   "plan_path": "qa-pipeline/artifacts/plans/checkout-pricing-coupons-plan.json",
-  "run_timestamp": "2026-10-08T03:53:31.873Z",
+  "run_timestamp": "2026-10-08T10:13:32.546Z",
   "trace_path": null,
   "viewport": {
     "width": 1280,
@@ -9,12 +9,284 @@
   },
   "steps": [
     {
+      "step_id": "auth-01",
+      "action": "Open the admin login page",
+      "selector": null,
+      "route": "/login",
+      "bounding_box": null,
+      "timestamp_ms": 539,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/coupon-scope-admin-setup/auth-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "button-name",
+          "impact": "critical",
+          "description": "Ensure buttons have discernible text",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-one-main",
+          "impact": "moderate",
+          "description": "Ensure the document has a main landmark",
+          "nodes": 1
+        },
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "description": "Ensure that the page, or at least one of its frames contains a level-one heading",
+          "nodes": 1
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "description": "Ensure all page content is contained by landmarks",
+          "nodes": 5
+        }
+      ],
+      "console_errors": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>\n      <LoadingBoundary name=\"login/\" loading={null}>\n        <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>\n          <RedirectBoundary>\n            <RedirectErrorBoundary router={{...}}>\n              <InnerLayoutRouter url=\"/login\" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>\n                <SegmentViewNode type=\"page\" pagePath=\"(auth)/log...\">\n                  <SegmentTrieNode>\n                  <ClientPageRoot Component={function LoginPage} serverProvidedParams={{...}}>\n                    <LoginPage params={Promise} searchParams={Promise}>\n                      <div className=\"w-full max...\">\n                        <div>\n                        <div className=\"bg-[var(--...\">\n                          <h2>\n                          <form onSubmit={function} noValidate={true} className=\"space-y-4\">\n                            <div>\n                              <label>\n                              <input\n                                id=\"email\"\n                                type=\"email\"\n                                autoComplete=\"email\"\n                                autoFocus={true}\n                                name=\"email\"\n                                onChange={function onChange}\n                                onBlur={function onChange}\n                                ref={function ref}\n                                className=\"w-full px-3 py-2 text-sm bg-[var(--surface)] border rounded-lg text-[var(--...\"\n                                placeholder=\"admin@urgentprinters.com\"\n-                               style={{caret-color:\"transparent\"}}\n                              >\n                            <div>\n                              <label>\n                              <div className=\"relative\">\n                                <input\n                                  id=\"password\"\n                                  type=\"password\"\n                                  autoComplete=\"current-password\"\n                                  name=\"password\"\n                                  onChange={function onChange}\n                                  onBlur={function onChange}\n                                  ref={function ref}\n                                  className=\"w-full pl-3 pr-10 py-2 text-sm bg-[var(--surface)] border rounded-lg text...\"\n                                  placeholder=\"Enter your password\"\n-                                 style={{caret-color:\"transparent\"}}\n                                >\n                                ...\n                            ...\n                ...\n              ...\n"
+      ]
+    },
+    {
+      "step_id": "auth-02",
+      "action": "Enter the admin email",
+      "selector": "locator('#email')",
+      "route": "/login",
+      "bounding_box": {
+        "x": 481,
+        "y": 358,
+        "width": 318,
+        "height": 38
+      },
+      "timestamp_ms": 683,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/coupon-scope-admin-setup/auth-02.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "admin@urgentprinters.com",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "auth-03",
+      "action": "Enter the admin password",
+      "selector": "locator('#password')",
+      "route": "/login",
+      "bounding_box": {
+        "x": 481,
+        "y": 438,
+        "width": 318,
+        "height": 38
+      },
+      "timestamp_ms": 782,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/coupon-scope-admin-setup/auth-03.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "SuperAdmin@123",
+      "typed_masked": true,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "auth-04",
+      "action": "Submit the login form",
+      "selector": "getByRole('button', { name: 'Sign in' })",
+      "route": "/dashboard",
+      "bounding_box": {
+        "x": 481,
+        "y": 500,
+        "width": 318,
+        "height": 36
+      },
+      "timestamp_ms": 1986,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/coupon-scope-admin-setup/auth-04.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 11
+        },
+        {
+          "id": "heading-order",
+          "impact": "moderate",
+          "description": "Ensure the order of headings is semantically correct",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-unique",
+          "impact": "moderate",
+          "description": "Ensure landmarks are unique",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "adm-01",
+      "action": "Read the new \"Applies to\" picker in its default state",
+      "selector": "getByTestId('scope-summary')",
+      "route": "/coupons/new",
+      "bounding_box": {
+        "x": 281,
+        "y": 352,
+        "width": 638,
+        "height": 16
+      },
+      "timestamp_ms": 3072,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/coupon-scope-admin-setup/adm-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 6
+        },
+        {
+          "id": "landmark-unique",
+          "impact": "moderate",
+          "description": "Ensure landmarks are unique",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "adm-02",
+      "action": "Create a 10% coupon scoped to one product (Custom Die-Cut Stickers)",
+      "selector": "getByRole('radio', { name: 'Specific products or categories' })",
+      "route": "/coupons",
+      "bounding_box": {
+        "x": 281,
+        "y": 323,
+        "width": 13,
+        "height": 13
+      },
+      "timestamp_ms": 3829,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/coupon-scope-admin-setup/adm-02.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 7
+        },
+        {
+          "id": "empty-table-header",
+          "impact": "minor",
+          "description": "Ensure table headers have discernible text",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-unique",
+          "impact": "moderate",
+          "description": "Ensure landmarks are unique",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "adm-03",
+      "action": "Create a 10% coupon scoped to one category (Business Cards)",
+      "selector": null,
+      "route": "/coupons",
+      "bounding_box": null,
+      "timestamp_ms": 5356,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/coupon-scope-admin-setup/adm-03.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "adm-04",
+      "action": "Create a 10% coupon scoped to a product AND a category",
+      "selector": null,
+      "route": "/coupons",
+      "bounding_box": null,
+      "timestamp_ms": 6960,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/coupon-scope-admin-setup/adm-04.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "adm-05",
+      "action": "Create a 20% coupon scoped to Business Cards that also excludes items already on discount",
+      "selector": null,
+      "route": "/coupons",
+      "bounding_box": null,
+      "timestamp_ms": 8564,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/coupon-scope-admin-setup/adm-05.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "adm-06",
+      "action": "Read the four new coupons back from the coupons list",
+      "selector": null,
+      "route": "/coupons",
+      "bounding_box": null,
+      "timestamp_ms": 9283,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/coupon-scope-admin-setup/adm-06.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 6
+        },
+        {
+          "id": "empty-table-header",
+          "impact": "minor",
+          "description": "Ensure table headers have discernible text",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-unique",
+          "impact": "moderate",
+          "description": "Ensure landmarks are unique",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
       "step_id": "hp-01",
       "action": "Sign in with the test customer email and password",
       "selector": "locator('#email-address')",
       "route": "/account",
       "bounding_box": null,
-      "timestamp_ms": 5664,
+      "timestamp_ms": 16328,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-01.png",
       "status": "pass",
       "error": null,
@@ -25,7 +297,7 @@
           "id": "color-contrast",
           "impact": "serious",
           "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
-          "nodes": 1
+          "nodes": 2
         },
         {
           "id": "landmark-main-is-top-level",
@@ -59,7 +331,7 @@
         "width": 576,
         "height": 213
       },
-      "timestamp_ms": 13505,
+      "timestamp_ms": 24542,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-02.png",
       "status": "pass",
       "error": null,
@@ -73,7 +345,10 @@
           "nodes": 8
         }
       ],
-      "console_errors": []
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
     },
     {
       "step_id": "hp-03",
@@ -86,7 +361,7 @@
         "width": 284,
         "height": 41
       },
-      "timestamp_ms": 13800,
+      "timestamp_ms": 24903,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-03.png",
       "status": "pass",
       "error": null,
@@ -106,7 +381,7 @@
         "width": 284,
         "height": 58
       },
-      "timestamp_ms": 14400,
+      "timestamp_ms": 25493,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-04.png",
       "status": "pass",
       "error": null,
@@ -126,7 +401,7 @@
         "width": 576,
         "height": 63
       },
-      "timestamp_ms": 15326,
+      "timestamp_ms": 26394,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-05.png",
       "status": "pass",
       "error": null,
@@ -146,7 +421,7 @@
         "width": 128,
         "height": 44
       },
-      "timestamp_ms": 16056,
+      "timestamp_ms": 27111,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-06.png",
       "status": "pass",
       "error": null,
@@ -166,16 +441,14 @@
         "width": 576,
         "height": 48
       },
-      "timestamp_ms": 16673,
+      "timestamp_ms": 27719,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-07.png",
       "status": "pass",
       "error": null,
       "typed_text": null,
       "typed_masked": false,
       "axe_violations": [],
-      "console_errors": [
-        "Failed to load resource: the server responded with a status of 404 (Not Found)"
-      ]
+      "console_errors": []
     },
     {
       "step_id": "hp-08",
@@ -183,7 +456,7 @@
       "selector": null,
       "route": "/products/flyers-leaflets/a5-flyers",
       "bounding_box": null,
-      "timestamp_ms": 21246,
+      "timestamp_ms": 31884,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-08.png",
       "status": "pass",
       "error": null,
@@ -199,6 +472,7 @@
       ],
       "console_errors": [
         "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ]
     },
@@ -213,7 +487,7 @@
         "width": 320,
         "height": 683
       },
-      "timestamp_ms": 22276,
+      "timestamp_ms": 32812,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-09.png",
       "status": "pass",
       "error": null,
@@ -240,7 +514,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 22577,
+      "timestamp_ms": 33111,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-10.png",
       "status": "pass",
       "error": null,
@@ -260,7 +534,7 @@
         "width": 278,
         "height": 44
       },
-      "timestamp_ms": 23043,
+      "timestamp_ms": 33562,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-11.png",
       "status": "pass",
       "error": null,
@@ -287,7 +561,7 @@
         "width": 608,
         "height": 70
       },
-      "timestamp_ms": 23309,
+      "timestamp_ms": 33888,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-12.png",
       "status": "pass",
       "error": null,
@@ -307,7 +581,7 @@
         "width": 608,
         "height": 626
       },
-      "timestamp_ms": 23539,
+      "timestamp_ms": 34116,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-13.png",
       "status": "pass",
       "error": null,
@@ -320,14 +594,14 @@
       "step_id": "hp-14",
       "action": "Place the Cash-on-Delivery order",
       "selector": "getByRole('button', { name: /^(Place Order|Pay \u20b9)/ })",
-      "route": "/checkout/confirmation/20936",
+      "route": "/checkout/confirmation/24740",
       "bounding_box": {
         "x": 439,
         "y": 336,
         "width": 505,
         "height": 48
       },
-      "timestamp_ms": 24130,
+      "timestamp_ms": 34547,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-14.png",
       "status": "pass",
       "error": null,
@@ -353,14 +627,14 @@
       "step_id": "hp-15",
       "action": "Read the order confirmation totals",
       "selector": "locator('main').first()",
-      "route": "/checkout/confirmation/20936",
+      "route": "/checkout/confirmation/24740",
       "bounding_box": {
         "x": 0,
         "y": 57,
         "width": 1280,
         "height": 1348
       },
-      "timestamp_ms": 24336,
+      "timestamp_ms": 34721,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-15.png",
       "status": "pass",
       "error": null,
@@ -373,9 +647,9 @@
       "step_id": "hp-16",
       "action": "Open the same order from account order history",
       "selector": null,
-      "route": "/account/orders/20936",
+      "route": "/account/orders/24740",
       "bounding_box": null,
-      "timestamp_ms": 26257,
+      "timestamp_ms": 36354,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-16.png",
       "status": "pass",
       "error": null,
@@ -426,7 +700,7 @@
         "width": 36,
         "height": 36
       },
-      "timestamp_ms": 40550,
+      "timestamp_ms": 51218,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-01.png",
       "status": "pass",
       "error": null,
@@ -453,7 +727,7 @@
         "width": 96,
         "height": 36
       },
-      "timestamp_ms": 40805,
+      "timestamp_ms": 51485,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-02.png",
       "status": "pass",
       "error": null,
@@ -480,7 +754,7 @@
         "width": 96,
         "height": 36
       },
-      "timestamp_ms": 41025,
+      "timestamp_ms": 51741,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-03.png",
       "status": "pass",
       "error": null,
@@ -507,7 +781,7 @@
         "width": 36,
         "height": 36
       },
-      "timestamp_ms": 43102,
+      "timestamp_ms": 54354,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-04.png",
       "status": "pass",
       "error": null,
@@ -536,7 +810,7 @@
         "width": 27,
         "height": 27
       },
-      "timestamp_ms": 44171,
+      "timestamp_ms": 55363,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-05.png",
       "status": "pass",
       "error": null,
@@ -563,7 +837,7 @@
         "width": 27,
         "height": 27
       },
-      "timestamp_ms": 44460,
+      "timestamp_ms": 55661,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-06.png",
       "status": "pass",
       "error": null,
@@ -590,7 +864,7 @@
         "width": 96,
         "height": 36
       },
-      "timestamp_ms": 44713,
+      "timestamp_ms": 55876,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-07.png",
       "status": "pass",
       "error": null,
@@ -617,7 +891,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 44960,
+      "timestamp_ms": 56139,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-08.png",
       "status": "pass",
       "error": null,
@@ -639,7 +913,7 @@
       "selector": "getByPlaceholder('Coupon code')",
       "route": "/cart",
       "bounding_box": null,
-      "timestamp_ms": 49251,
+      "timestamp_ms": 60480,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-09.png",
       "status": "pass",
       "error": null,
@@ -661,7 +935,7 @@
       "selector": null,
       "route": "/checkout",
       "bounding_box": null,
-      "timestamp_ms": 50359,
+      "timestamp_ms": 61635,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-10.png",
       "status": "pass",
       "error": null,
@@ -688,7 +962,7 @@
         "width": 505,
         "height": 48
       },
-      "timestamp_ms": 51002,
+      "timestamp_ms": 62130,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-11.png",
       "status": "pass",
       "error": null,
@@ -715,7 +989,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 63090,
+      "timestamp_ms": 73849,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-01.png",
       "status": "pass",
       "error": null,
@@ -735,7 +1009,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 63352,
+      "timestamp_ms": 74089,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-02.png",
       "status": "pass",
       "error": null,
@@ -755,7 +1029,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 63588,
+      "timestamp_ms": 74331,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-03.png",
       "status": "pass",
       "error": null,
@@ -775,7 +1049,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 63841,
+      "timestamp_ms": 74573,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-04.png",
       "status": "pass",
       "error": null,
@@ -795,7 +1069,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 64072,
+      "timestamp_ms": 74792,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-05.png",
       "status": "pass",
       "error": null,
@@ -815,7 +1089,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 64337,
+      "timestamp_ms": 75048,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-06.png",
       "status": "pass",
       "error": null,
@@ -835,7 +1109,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 69179,
+      "timestamp_ms": 79313,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-07.png",
       "status": "pass",
       "error": null,
@@ -850,7 +1124,7 @@
       "selector": "getByPlaceholder('Coupon code')",
       "route": "/cart",
       "bounding_box": null,
-      "timestamp_ms": 75046,
+      "timestamp_ms": 85218,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-08.png",
       "status": "pass",
       "error": null,
@@ -870,7 +1144,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 77419,
+      "timestamp_ms": 87600,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-09.png",
       "status": "pass",
       "error": null,
@@ -890,7 +1164,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 77697,
+      "timestamp_ms": 87898,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-10.png",
       "status": "pass",
       "error": null,
@@ -910,7 +1184,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 78045,
+      "timestamp_ms": 88231,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-11.png",
       "status": "pass",
       "error": null,
@@ -930,7 +1204,7 @@
         "width": 27,
         "height": 27
       },
-      "timestamp_ms": 82573,
+      "timestamp_ms": 122201,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-12.png",
       "status": "pass",
       "error": null,
@@ -938,8 +1212,318 @@
       "typed_masked": false,
       "axe_violations": [],
       "console_errors": [
-        "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)"
+        "Failed to load resource: the server responded with a status of 429 (Too Many Requests)",
+        "Failed to load resource: the server responded with a status of 429 (Too Many Requests)",
+        "Failed to load resource: the server responded with a status of 429 (Too Many Requests)"
       ]
+    },
+    {
+      "step_id": "sc-01",
+      "action": "Apply a coupon scoped to one product and read the per-line coverage",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 463,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 137540,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-SCOPE-PROD",
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 7
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "sc-02",
+      "action": "Swap in a coupon scoped to one category instead",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": null,
+      "timestamp_ms": 141975,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-02.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-SCOPE-CAT",
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 7
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "sc-03",
+      "action": "Swap in a coupon scoped to a product AND a category (a union, not an intersection)",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": null,
+      "timestamp_ms": 146391,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-03.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-SCOPE-UNION",
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 7
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "sc-04",
+      "action": "Carry the scoped coupon to the review step and read the per-line marks",
+      "selector": null,
+      "route": "/checkout",
+      "bounding_box": null,
+      "timestamp_ms": 147584,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-04.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 10
+        }
+      ],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    {
+      "step_id": "sc-05",
+      "action": "Place the order and read the confirmation",
+      "selector": "getByRole('button', { name: /^(Place Order|Pay \u20b9)/ })",
+      "route": "/checkout/confirmation/24756",
+      "bounding_box": {
+        "x": 439,
+        "y": 336,
+        "width": 505,
+        "height": 48
+      },
+      "timestamp_ms": 148236,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-05.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 5
+        },
+        {
+          "id": "heading-order",
+          "impact": "moderate",
+          "description": "Ensure the order of headings is semantically correct",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "sc-06",
+      "action": "Re-read the same order from account history",
+      "selector": null,
+      "route": "/account/orders/24756",
+      "bounding_box": null,
+      "timestamp_ms": 149487,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-06.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 6
+        },
+        {
+          "id": "heading-order",
+          "impact": "moderate",
+          "description": "Ensure the order of headings is semantically correct",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "description": "Ensure the main landmark is at top level",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-no-duplicate-main",
+          "impact": "moderate",
+          "description": "Ensure the document has at most one main landmark",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-unique",
+          "impact": "moderate",
+          "description": "Ensure landmarks are unique",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "sc-07",
+      "action": "Apply a product-scoped coupon to a cart holding none of that product",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 463,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 157444,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-07.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-SCOPE-PROD",
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "sc-08",
+      "action": "Apply the product-scoped coupon, then remove the line it covers",
+      "selector": "getByRole('button', { name: 'Remove Custom Die-Cut Stickers' })",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 848,
+        "y": 430,
+        "width": 27,
+        "height": 27
+      },
+      "timestamp_ms": 177295,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-08.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 429 (Too Many Requests)"
+      ]
+    },
+    {
+      "step_id": "sc-09",
+      "action": "Apply a category-scoped coupon that also excludes items already on sale, to two lines of one product",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 463,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 188246,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-09.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-SCOPE-NODISC",
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 7
+        }
+      ],
+      "console_errors": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <link>\n    <script>\n    <script>\n    <script>\n    <script>\n    <script>\n    <script>\n    <script>\n    <script>\n    <script>\n    <script>\n    <RootLayout>\n      <html lang=\"en-IN\" className=\"dm_sans_ef...\" suppressHydrationWarning={true}>\n        <body className=\"min-h-full...\">\n          <script>\n          <script>\n          <Script>\n          <Script>\n          <ConsentedScripts>\n          <QueryProvider>\n            <QueryClientProvider client={{}}>\n              <TokenRefreshProvider>\n                <CartSyncProvider>\n                  <WishlistSyncProvider>\n                    <DegradedStatusBanner>\n                    <Header>\n                      <header className=\"sticky top...\">\n                        <div className=\"max-w-7xl ...\">\n                          <div className=\"flex h-14 ...\">\n                            <MobileNavDrawer>\n                            <LinkComponent>\n                            <nav>\n                            <div>\n                            <HeaderSearch>\n                              <div ref={{current:null}} className=\"relative h...\">\n                                <form onSubmit={function onSubmit} className=\"relative w...\">\n                                  <Search>\n                                  <input\n                                    ref={{current:null}}\n                                    type=\"search\"\n                                    value=\"\"\n                                    onChange={function onChange}\n                                    onFocus={function onFocus}\n                                    onKeyDown={function handleKeyDown}\n                                    placeholder=\"Search products\u2026\"\n                                    autoComplete=\"off\"\n                                    role=\"combobox\"\n                                    aria-autocomplete=\"list\"\n                                    aria-label=\"Search products\"\n                                    aria-expanded={false}\n                                    aria-controls=\"_R_l6lb_-search-panel\"\n                                    aria-activedescendant={undefined}\n                                    className=\"w-full h-9 rounded-full border border-border bg-muted/50 pl-9 pr-8 text...\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                            ...\n                    ...\n"
+      ]
+    },
+    {
+      "step_id": "sc-10",
+      "action": "Apply an unscoped coupon and confirm no scope note appears at all",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": null,
+      "timestamp_ms": 192666,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-10.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-PCT10",
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 7
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "sc-11",
+      "action": "Break the coupon-validate call, change the cart, and check the charged total is still coherent",
+      "selector": "getByLabel('Quantity', { exact: true }).first()",
+      "route": "/checkout",
+      "bounding_box": {
+        "x": 193,
+        "y": 311,
+        "width": 96,
+        "height": 36
+      },
+      "timestamp_ms": 193967,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-11.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 9
+        }
+      ],
+      "console_errors": []
     },
     {
       "step_id": "edge-01",
@@ -947,7 +1531,7 @@
       "selector": null,
       "route": "/checkout",
       "bounding_box": null,
-      "timestamp_ms": 123687,
+      "timestamp_ms": 205201,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-price-change-mid-checkout/edge-01.png",
       "status": "pass",
       "error": null,
@@ -969,7 +1553,7 @@
       "selector": null,
       "route": "/checkout",
       "bounding_box": null,
-      "timestamp_ms": 124053,
+      "timestamp_ms": 205691,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-price-change-mid-checkout/edge-02.png",
       "status": "pass",
       "error": null,
@@ -989,7 +1573,7 @@
         "width": 505,
         "height": 48
       },
-      "timestamp_ms": 124396,
+      "timestamp_ms": 205995,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-price-change-mid-checkout/edge-03.png",
       "status": "pass",
       "error": null,
@@ -1004,14 +1588,14 @@
       "step_id": "edge-04",
       "action": "Read the re-previewed total and confirm the order at the new price",
       "selector": "getByRole('button', { name: /^(Place Order|Pay \u20b9)/ })",
-      "route": "/checkout/confirmation/20106",
+      "route": "/checkout/confirmation/24739",
       "bounding_box": {
         "x": 439,
         "y": 583,
         "width": 505,
         "height": 48
       },
-      "timestamp_ms": 124975,
+      "timestamp_ms": 206548,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-price-change-mid-checkout/edge-04.png",
       "status": "pass",
       "error": null,
@@ -1041,40 +1625,40 @@
       "url_mismatch": true,
       "session_seeded": true,
       "warm_cache": true,
-      "fetched_at": "2026-10-08T03:53:53.759Z",
+      "fetched_at": "2026-10-08T10:03:56.498Z",
       "scores": {
         "performance": 0.28,
         "accessibility": 0.95,
         "best_practices": 0.73
       },
       "metrics": {
-        "first_contentful_paint_ms": 907.5561,
-        "largest_contentful_paint_ms": 5070.812149999999,
-        "total_blocking_time_ms": 864.9999999999998,
+        "first_contentful_paint_ms": 907.6596,
+        "largest_contentful_paint_ms": 5395.9778,
+        "total_blocking_time_ms": 737.9999999999998,
         "cumulative_layout_shift": 0.3431166666666666,
-        "speed_index_ms": 1915.084023167518,
-        "time_to_interactive_ms": 8571.538532499997
+        "speed_index_ms": 2092.428934154446,
+        "time_to_interactive_ms": 8763.994695
       }
     },
     "final_state": {
-      "url": "http://localhost:3000/auth/login?redirect=%2Faccount%2Forders%2F20936",
-      "requested_url": "http://localhost:3000/account/orders/20936",
+      "url": "http://localhost:3000/auth/login?redirect=%2Faccount%2Forders%2F24740",
+      "requested_url": "http://localhost:3000/account/orders/24740",
       "url_mismatch": true,
       "session_seeded": true,
       "warm_cache": true,
-      "fetched_at": "2026-10-08T03:54:32.931Z",
+      "fetched_at": "2026-10-08T10:04:35.159Z",
       "scores": {
-        "performance": 0.52,
+        "performance": 0.49,
         "accessibility": 0.95,
         "best_practices": 0.73
       },
       "metrics": {
-        "first_contentful_paint_ms": 947.7264,
-        "largest_contentful_paint_ms": 2490.7157908996583,
-        "total_blocking_time_ms": 648.0000000000005,
+        "first_contentful_paint_ms": 949.0448999999999,
+        "largest_contentful_paint_ms": 3270.702724005127,
+        "total_blocking_time_ms": 575.5000000000009,
         "cumulative_layout_shift": 0.169575,
-        "speed_index_ms": 1362.7575254100552,
-        "time_to_interactive_ms": 2560.1479019348153
+        "speed_index_ms": 1311.0524322419137,
+        "time_to_interactive_ms": 3348.7717458023076
       }
     }
   }

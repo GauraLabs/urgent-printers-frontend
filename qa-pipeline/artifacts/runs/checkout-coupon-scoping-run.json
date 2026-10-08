@@ -1,0 +1,324 @@
+{
+  "feature_name": "Checkout Coupon Scoping",
+  "plan_path": "qa-pipeline/artifacts/plans/checkout-pricing-coupons-plan.json",
+  "run_timestamp": "2026-10-08T10:30:15.985Z",
+  "trace_path": null,
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "sc-01",
+      "action": "Apply a coupon scoped to one product and read the per-line coverage",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 463,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 14139,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-SCOPE-PROD",
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 7
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "sc-02",
+      "action": "Swap in a coupon scoped to one category instead",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": null,
+      "timestamp_ms": 18574,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-02.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-SCOPE-CAT",
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 7
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "sc-03",
+      "action": "Swap in a coupon scoped to a product AND a category (a union, not an intersection)",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": null,
+      "timestamp_ms": 22990,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-03.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-SCOPE-UNION",
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 7
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "sc-04",
+      "action": "Carry the scoped coupon to the review step and read the per-line marks",
+      "selector": null,
+      "route": "/checkout",
+      "bounding_box": null,
+      "timestamp_ms": 24183,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-04.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 10
+        }
+      ],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    {
+      "step_id": "sc-05",
+      "action": "Place the order and read the confirmation",
+      "selector": "getByRole('button', { name: /^(Place Order|Pay ₹)/ })",
+      "route": "/checkout/confirmation/24756",
+      "bounding_box": {
+        "x": 439,
+        "y": 336,
+        "width": 505,
+        "height": 48
+      },
+      "timestamp_ms": 24835,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-05.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 5
+        },
+        {
+          "id": "heading-order",
+          "impact": "moderate",
+          "description": "Ensure the order of headings is semantically correct",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "sc-06",
+      "action": "Re-read the same order from account history",
+      "selector": null,
+      "route": "/account/orders/24756",
+      "bounding_box": null,
+      "timestamp_ms": 26086,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-06.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 6
+        },
+        {
+          "id": "heading-order",
+          "impact": "moderate",
+          "description": "Ensure the order of headings is semantically correct",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "description": "Ensure the main landmark is at top level",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-no-duplicate-main",
+          "impact": "moderate",
+          "description": "Ensure the document has at most one main landmark",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-unique",
+          "impact": "moderate",
+          "description": "Ensure landmarks are unique",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "sc-07",
+      "action": "Apply a product-scoped coupon to a cart holding none of that product",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 463,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 34043,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-07.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-SCOPE-PROD",
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "sc-08",
+      "action": "Apply the product-scoped coupon, then remove the line it covers",
+      "selector": "getByRole('button', { name: 'Remove Custom Die-Cut Stickers' })",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 848,
+        "y": 430,
+        "width": 27,
+        "height": 27
+      },
+      "timestamp_ms": 53894,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-08.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 429 (Too Many Requests)"
+      ]
+    },
+    {
+      "step_id": "sc-09",
+      "action": "Apply a category-scoped coupon that also excludes items already on sale, to two lines of one product",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 463,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 64845,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-09.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-SCOPE-NODISC",
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 7
+        }
+      ],
+      "console_errors": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <link>\n    <script>\n    <script>\n    <script>\n    <script>\n    <script>\n    <script>\n    <script>\n    <script>\n    <script>\n    <script>\n    <RootLayout>\n      <html lang=\"en-IN\" className=\"dm_sans_ef...\" suppressHydrationWarning={true}>\n        <body className=\"min-h-full...\">\n          <script>\n          <script>\n          <Script>\n          <Script>\n          <ConsentedScripts>\n          <QueryProvider>\n            <QueryClientProvider client={{}}>\n              <TokenRefreshProvider>\n                <CartSyncProvider>\n                  <WishlistSyncProvider>\n                    <DegradedStatusBanner>\n                    <Header>\n                      <header className=\"sticky top...\">\n                        <div className=\"max-w-7xl ...\">\n                          <div className=\"flex h-14 ...\">\n                            <MobileNavDrawer>\n                            <LinkComponent>\n                            <nav>\n                            <div>\n                            <HeaderSearch>\n                              <div ref={{current:null}} className=\"relative h...\">\n                                <form onSubmit={function onSubmit} className=\"relative w...\">\n                                  <Search>\n                                  <input\n                                    ref={{current:null}}\n                                    type=\"search\"\n                                    value=\"\"\n                                    onChange={function onChange}\n                                    onFocus={function onFocus}\n                                    onKeyDown={function handleKeyDown}\n                                    placeholder=\"Search products…\"\n                                    autoComplete=\"off\"\n                                    role=\"combobox\"\n                                    aria-autocomplete=\"list\"\n                                    aria-label=\"Search products\"\n                                    aria-expanded={false}\n                                    aria-controls=\"_R_l6lb_-search-panel\"\n                                    aria-activedescendant={undefined}\n                                    className=\"w-full h-9 rounded-full border border-border bg-muted/50 pl-9 pr-8 text...\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                            ...\n                    ...\n"
+      ]
+    },
+    {
+      "step_id": "sc-10",
+      "action": "Apply an unscoped coupon and confirm no scope note appears at all",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": null,
+      "timestamp_ms": 69265,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-10.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-PCT10",
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 7
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "sc-11",
+      "action": "Break the coupon-validate call, change the cart, and check the charged total is still coherent",
+      "selector": "getByLabel('Quantity', { exact: true }).first()",
+      "route": "/checkout",
+      "bounding_box": {
+        "x": 193,
+        "y": 311,
+        "width": 96,
+        "height": 36
+      },
+      "timestamp_ms": 70566,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-scoping/sc-11.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 9
+        }
+      ],
+      "console_errors": []
+    }
+  ],
+  "lighthouse": {
+    "initial_load": null,
+    "final_state": null
+  }
+}

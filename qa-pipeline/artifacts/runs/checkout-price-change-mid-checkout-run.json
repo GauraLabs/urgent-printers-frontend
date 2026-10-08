@@ -1,7 +1,7 @@
 {
   "feature_name": "Checkout Price Change Mid Checkout",
   "plan_path": "qa-pipeline/artifacts/plans/checkout-pricing-coupons-plan.json",
-  "run_timestamp": "2026-10-07T19:15:44.518Z",
+  "run_timestamp": "2026-10-08T10:02:19.478Z",
   "trace_path": null,
   "viewport": {
     "width": 1280,
@@ -14,7 +14,7 @@
       "selector": null,
       "route": "/checkout",
       "bounding_box": null,
-      "timestamp_ms": 39914,
+      "timestamp_ms": 10034,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-price-change-mid-checkout/edge-01.png",
       "status": "pass",
       "error": null,
@@ -36,7 +36,7 @@
       "selector": null,
       "route": "/checkout",
       "bounding_box": null,
-      "timestamp_ms": 40280,
+      "timestamp_ms": 10524,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-price-change-mid-checkout/edge-02.png",
       "status": "pass",
       "error": null,
@@ -56,7 +56,7 @@
         "width": 505,
         "height": 48
       },
-      "timestamp_ms": 40623,
+      "timestamp_ms": 10828,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-price-change-mid-checkout/edge-03.png",
       "status": "pass",
       "error": null,
@@ -71,14 +71,14 @@
       "step_id": "edge-04",
       "action": "Read the re-previewed total and confirm the order at the new price",
       "selector": "getByRole('button', { name: /^(Place Order|Pay ₹)/ })",
-      "route": "/checkout/confirmation/20106",
+      "route": "/checkout/confirmation/24739",
       "bounding_box": {
         "x": 439,
         "y": 583,
         "width": 505,
         "height": 48
       },
-      "timestamp_ms": 41202,
+      "timestamp_ms": 11381,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-price-change-mid-checkout/edge-04.png",
       "status": "pass",
       "error": null,

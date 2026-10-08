@@ -42,15 +42,42 @@
   "user_goal": "Configure products, see an honest price at every step, apply a coupon, and pay exactly the total the review page promised.",
   "business_goal": "Every rupee a customer is charged must match the server's own calculation, or the business either loses margin or loses trust at the last step before payment.",
   "user_journey": [
-    { "step": "Price a configuration on the product page", "route_or_state": "/products/business-cards/matte-finish-business-cards" },
-    { "step": "Collect several products and adjust quantities", "route_or_state": "/cart" },
-    { "step": "Apply or remove a coupon", "route_or_state": "/cart (coupon input)" },
-    { "step": "Pick an address", "route_or_state": "/checkout step 1" },
-    { "step": "Pick a payment method", "route_or_state": "/checkout step 2" },
-    { "step": "Review the server-confirmed breakdown", "route_or_state": "/checkout step 3" },
-    { "step": "Place the order", "route_or_state": "POST /api/v1/orders" },
-    { "step": "See the confirmation", "route_or_state": "/checkout/confirmation/[orderId]" },
-    { "step": "Re-read the same figures in order history", "route_or_state": "/account/orders/[id]" }
+    {
+      "step": "Price a configuration on the product page",
+      "route_or_state": "/products/business-cards/matte-finish-business-cards"
+    },
+    {
+      "step": "Collect several products and adjust quantities",
+      "route_or_state": "/cart"
+    },
+    {
+      "step": "Apply or remove a coupon",
+      "route_or_state": "/cart (coupon input)"
+    },
+    {
+      "step": "Pick an address",
+      "route_or_state": "/checkout step 1"
+    },
+    {
+      "step": "Pick a payment method",
+      "route_or_state": "/checkout step 2"
+    },
+    {
+      "step": "Review the server-confirmed breakdown",
+      "route_or_state": "/checkout step 3"
+    },
+    {
+      "step": "Place the order",
+      "route_or_state": "POST /api/v1/orders"
+    },
+    {
+      "step": "See the confirmation",
+      "route_or_state": "/checkout/confirmation/[orderId]"
+    },
+    {
+      "step": "Re-read the same figures in order history",
+      "route_or_state": "/account/orders/[id]"
+    }
   ],
   "happy_path": [
     {
@@ -231,6 +258,118 @@
           "expected_result": "The order is created, the response carries payment.amount equal to the server's total_amount and a razorpay_order_id; the Razorpay modal's amount in paise is Math.round(total x 100)."
         }
       ]
+    },
+    {
+      "path_name": "Coupon scope created in the admin panel's new Applies-to picker",
+      "steps": [
+        {
+          "step_id": "adm-01",
+          "action": "Open a blank coupon form and read the Applies-to picker's default state",
+          "selector": "radio 'All products'; [data-testid=scope-summary]",
+          "expected_result": "'All products' is checked, the summary reads 'Applies to all products', and no product/category search inputs are rendered until 'Specific' is chosen."
+        },
+        {
+          "step_id": "adm-02",
+          "action": "Create a 10% coupon scoped to one product (Custom Die-Cut Stickers)",
+          "selector": "radio 'Specific products or categories'; #scope-product-search",
+          "expected_result": "The product search returns the product, picking it adds a removable chip, the summary reads 'Applies to 1 product', and the coupon saves and appears in the list."
+        },
+        {
+          "step_id": "adm-03",
+          "action": "Create a 10% coupon scoped to one category (Business Cards)",
+          "selector": "#scope-category-search",
+          "expected_result": "Summary reads 'Applies to 1 category'; saved."
+        },
+        {
+          "step_id": "adm-04",
+          "action": "Create a 10% coupon scoped to a product AND a category",
+          "selector": "#scope-product-search and #scope-category-search",
+          "expected_result": "Summary reads 'Applies to 1 product and 1 category' — the two are unioned, not intersected; saved."
+        },
+        {
+          "step_id": "adm-05",
+          "action": "Create a 20% category-scoped coupon that also excludes items already on discount",
+          "selector": "switch 'Applies to items already on discount'",
+          "expected_result": "Turning the switch off shows 'Items sold below their MRP are excluded; the minimum order and the discount are calculated on the remaining items only'; saved."
+        },
+        {
+          "step_id": "adm-06",
+          "action": "Read all four new coupons back from the coupons list",
+          "selector": "/coupons?search=QA-CHECKOUT-SCOPE",
+          "expected_result": "All four rows are listed with an 'Applies to' column describing each scope."
+        }
+      ]
+    },
+    {
+      "path_name": "Scoped coupons on the storefront (per-line coverage, union, and the exclude-discounted intersection)",
+      "steps": [
+        {
+          "step_id": "sc-01",
+          "action": "Apply a product-scoped coupon to a 3-line cart",
+          "selector": "input[placeholder='Coupon code']",
+          "expected_result": "−₹100.00 (10% of the ₹1,000.00 stickers line only), after-coupon ₹4,350.00, GST ₹663.56, 'Applied to 1 of 3 items', and 'Which items?' lists Custom Die-Cut Stickers plus 'This coupon applies to: Custom Die-Cut Stickers.'"
+        },
+        {
+          "step_id": "sc-02",
+          "action": "Swap in a category-scoped coupon",
+          "selector": "input[placeholder='Coupon code']",
+          "expected_result": "−₹225.00 (10% of the ₹2,250.00 business-cards line), after-coupon ₹4,225.00, GST ₹644.49, 'Applied to 1 of 3 items', scope line 'Business Cards'."
+        },
+        {
+          "step_id": "sc-03",
+          "action": "Swap in a coupon scoped to a product AND a category",
+          "selector": "input[placeholder='Coupon code']",
+          "expected_result": "−₹220.00 (the union: stickers ₹1,000.00 + flyers ₹1,200.00), after-coupon ₹4,230.00, 'Applied to 2 of 3 items'."
+        },
+        {
+          "step_id": "sc-04",
+          "action": "Carry the scoped coupon to the checkout review",
+          "selector": "'Price Breakdown'",
+          "expected_result": "Subtotal ₹4,450.00, discount −₹220.00, GST ₹645.25, total ₹4,230.00 — equal to the server preview — and exactly one line carries 'Not included in the coupon' (the business cards)."
+        },
+        {
+          "step_id": "sc-05",
+          "action": "Place the order",
+          "selector": "button 'Place Order · ₹4,230.00'",
+          "expected_result": "Confirmation shows subtotal ₹4,450.00, −₹220.00, GST ₹645.25, the coupon code and 'Pay ₹4,230.00 in cash'."
+        },
+        {
+          "step_id": "sc-06",
+          "action": "Re-read the same order from account history",
+          "selector": "/account/orders/[id]",
+          "expected_result": "Identical figures; the admin order detail returns the same subtotal/discount/GST/total and line prices."
+        },
+        {
+          "step_id": "sc-07",
+          "action": "Apply a product-scoped coupon to a cart holding none of that product",
+          "selector": "p.text-destructive",
+          "expected_result": "'QA-CHECKOUT-SCOPE-PROD applies only to Custom Die-Cut Stickers'; no discount row and no coverage note."
+        },
+        {
+          "step_id": "sc-08",
+          "action": "Apply the product-scoped coupon, then remove the only line it covers",
+          "selector": "button 'Remove Custom Die-Cut Stickers'",
+          "expected_result": "The coupon is dropped with a reason and the cart returns to its uncoupled totals (₹2,250.00)."
+        },
+        {
+          "step_id": "sc-09",
+          "action": "Apply a category-scoped, exclude-discounted coupon to two lines of the SAME product (one on sale, one not)",
+          "selector": "input[placeholder='Coupon code']",
+          "expected_result": "−₹435.00 — 20% of the ₹2,175.00 full-price line only, not of the ₹2,895.00 cart — after-coupon ₹2,460.00, GST ₹375.25, 'Applied to 1 of 2 items', and the on-sale line marked at review."
+        },
+        {
+          "step_id": "sc-10",
+          "action": "Apply an unscoped coupon",
+          "selector": "input[placeholder='Coupon code']",
+          "expected_result": "−₹289.50 on the whole ₹2,895.00 cart, with no 'Applied to N of M items' note and no 'Which items?' disclosure."
+        },
+        {
+          "step_id": "sc-11",
+          "action": "Break the coupon-validate endpoint, edit the cart, and reach the review step",
+          "selector": "input[aria-label='Quantity']",
+          "expected_result": "The cart stays editable (₹3,039.00) and the server-confirmed breakdown stays internally consistent: discount never exceeds what the coupon could give, the CTA equals subtotal − discount + shipping, and GST is the embedded 18%."
+        }
+      ]
     }
   ],
   "error_paths": [
@@ -330,12 +469,22 @@
       "case": "Rush turnaround advertised in print_specs but inactive",
       "existing_validation": "resolve_option / the turnaround lookup rejects an inactive option with invalid_turnaround",
       "risk_note": "If the PDP renders an inactive turnaround the customer can configure a line the server will refuse."
+    },
+    {
+      "case": "Coupon restricted to specific products or categories (applicable_product_ids / applicable_category_ids)",
+      "existing_validation": "app/services/coupon_scope.py — scope_ids/in_scope_flags/eligible_flags/eligible_total, called by the customer validate endpoint, order preview and order create; a cart matching nothing in scope is refused with 422 coupon_not_applicable naming the scope",
+      "risk_note": "Enforced as of this pass (it was stored-but-ignored in the first pass). The remaining risk is the basis: the minimum-order test runs on the whole cart while the discount runs on the eligible lines only, so the two figures deliberately differ and the copy has to say so."
+    },
+    {
+      "case": "An applied coupon stops qualifying because the cart changed",
+      "existing_validation": "features/cart/couponRevalidation.ts, triggered by a 600 ms timer in CartSyncProvider on every items change; drops the coupon and toasts the server's reason",
+      "risk_note": "The drop is not reliably immediate — every items identity change re-arms the single timer, and an HTTP error (e.g. the global 100/minute limit) makes it keep the coupon while a transport failure makes it drop one. A fresh page load always revalidates once against a settled cart."
     }
   ],
   "gaps": [
     "Customer phone login uses Firebase phone auth (signInWithPhoneNumber + invisible reCAPTCHA) and cannot be driven in this environment; the backend's own OTP endpoints (used by /auth/register) are the only OTP path reachable in dev. This plan signs in with email + password instead.",
     "Coupon apply/remove lives only on /cart — the checkout review renders the applied coupon read-only, so coupon error copy can only be asserted on the cart page.",
-    "applicable_product_ids / applicable_category_ids are backend data with no enforcement anywhere; deciding what they should mean (scope the basis, or reject the cart) is a product decision, not a frontend fix.",
-    "The invoice PDF is generated by WeasyPrint on the backend (GET /orders/{id}/receipt); it has no storefront UI entry point on the confirmation page, so it can only be verified outside the browser."
+    "The invoice PDF is generated by WeasyPrint on the backend (GET /orders/{id}/receipt); it has no storefront UI entry point on the confirmation page, so it can only be verified outside the browser.",
+    "Coupon scope is computed at validate/preview/create time but not persisted on the order: the order detail returns eligibleItemIds/couponScope as null, so neither account order history nor the admin order detail can show which lines a scoped coupon covered."
   ]
 }

@@ -83,7 +83,7 @@ export const optionButton = (page: Page, label: string): Locator =>
  * accessible name of the size button '3.5 x 2 in (Standard)' also contains "Standard", so
  * `name: /Standard/` is genuinely ambiguous on this PDP (found while probing).
  */
-export const turnaroundCard = (page: Page, label: 'Standard' | 'Express'): Locator =>
+export const turnaroundCard = (page: Page, label: 'Standard' | 'Express' | 'Rush'): Locator =>
   page.getByRole('button', { name: new RegExp(`^${label} \\d+ business days`) });
 
 export async function waitForConfigurator(page: Page, expectedQuantity: string): Promise<void> {
@@ -277,12 +277,12 @@ export async function emptyCart(page: Page): Promise<void> {
 export async function addToCart(
   page: Page,
   product: { name: string; url: string },
-  opts: { quantity: string; options?: string[]; turnaround?: 'Standard' | 'Express'; expectTotal: string }
+  opts: { quantity: string; options?: string[]; turnaround?: 'Standard' | 'Express' | 'Rush'; expectTotal: string }
 ): Promise<void> {
   await page.goto(product.url);
   await expect(qtyInput(page).first()).toBeVisible({ timeout: 30_000 });
   for (const label of opts.options ?? []) await optionButton(page, label).first().click();
-  if (opts.turnaround) await turnaroundCard(page, opts.turnaround as 'Standard' | 'Express').click();
+  if (opts.turnaround) await turnaroundCard(page, opts.turnaround).click();
   await typeQuantity(page, opts.quantity);
   await expect(summary(page).getByText(opts.expectTotal, { exact: true })).toBeVisible({ timeout: 20_000 });
   await addToCartButton(page).click();

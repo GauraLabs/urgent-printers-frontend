@@ -61,7 +61,9 @@ export interface FxCart {
   err?: string;
   lines_e?: { unit: number; extra: number; total: number; mrp: number | null; save: number | null }[];
   e?: Record<"subtotal" | "eligible" | "mrp_savings" | "discount" | "shipping" | "gst" | "total" | "total_savings" | "razorpay", number>;
-  validate?: { valid: boolean; discount: number };
+  eligible_item_ids?: string[];
+  eligible_line_indexes?: number[];
+  validate?: { valid: boolean; discount: number; eligible_line_indexes?: number[]; error?: string | null };
 }
 
 export interface CheckoutFixture {
@@ -91,10 +93,12 @@ export interface Selection {
 }
 
 export function select(product: Product, o: { size_id: string | null; paper_id: string | null; finish_id: string | null; sides: string | null; ta: string | null }): Selection {
-  const size = o.size_id ? product.printSpec.sizes.find((s) => s.id === o.size_id) : undefined;
-  const paper = o.paper_id ? product.printSpec.papers.find((s) => s.id === o.paper_id) : undefined;
-  const finish = o.finish_id ? product.printSpec.finishes.find((s) => s.id === o.finish_id) : undefined;
-  const side = o.sides ? product.printSpec.sides.find((s) => s.label === o.sides) : undefined;
+  // A null id means "not chosen": the PDP preselects the category default (else the first), as the backend does.
+  const dflt = <T extends { isDefault: boolean }>(opts: T[]): T | undefined => opts.find((x) => x.isDefault) ?? opts[0];
+  const size = o.size_id ? product.printSpec.sizes.find((s) => s.id === o.size_id) : dflt(product.printSpec.sizes);
+  const paper = o.paper_id ? product.printSpec.papers.find((s) => s.id === o.paper_id) : dflt(product.printSpec.papers);
+  const finish = o.finish_id ? product.printSpec.finishes.find((s) => s.id === o.finish_id) : dflt(product.printSpec.finishes);
+  const side = o.sides ? product.printSpec.sides.find((s) => s.label === o.sides) : dflt(product.printSpec.sides);
   if ((o.size_id && !size) || (o.paper_id && !paper) || (o.finish_id && !finish) || (o.sides && !side)) {
     throw new Error(`option not found on mapped product ${product.slug}: ${JSON.stringify(o)}`);
   }

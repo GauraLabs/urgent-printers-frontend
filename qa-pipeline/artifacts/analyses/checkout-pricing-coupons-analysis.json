@@ -1,88 +1,96 @@
 {
   "feature_name": "Checkout Pricing and Coupons (Cart to Order)",
-  "pass_count": 43,
+  "pass_count": 64,
   "fail_count": 0,
   "failures": [],
   "accessibility_summary": {
     "critical": [
-      "FIXED DURING THIS RUN — `button-name` (1 node, /cart): the button that removes an applied coupon was an icon-only <button> with no accessible name, so a screen-reader user could apply a coupon but had no way to know how to remove it. It appeared on every step where a coupon was applied (alt-08, alt-09). Fixed by frontend-developer (aria-label=\"Remove coupon <CODE>\", icon marked aria-hidden) and re-captured: the re-run of the cart-edits spec reports zero critical violations and `color-contrast` as the only remaining rule."
+      "FIXED THIS PASS — `label` (2 nodes, /coupons/new and /coupons/[id]) and `button-name` (up to 20 nodes, /coupons): the admin coupon form's Code / Description / Value / Max Discount / Minimum Order / Usage Limit / Per User Limit / trigger inputs had bare <label> elements with no htmlFor-id pairing, and the coupons list's per-row action trigger was an icon-only button with no accessible name, so that count scaled with the number of rows. Fixed by `admin-panel-developer` (useId-derived id/htmlFor pairs plus aria-labelledby on the Base UI Select, and aria-label=\"Actions for <CODE>\" on the row trigger) and re-captured: /coupons and /coupons/new now report zero criticals.",
+      "FIXED IN THE PREVIOUS PASS, still clean — `button-name` on the storefront /cart remove-coupon button.",
+      "REMAINING, NOT THIS FEATURE'S SURFACE — `button-name` (1 node) on the admin panel's /login page. Pre-existing, reported by earlier admin-panel runs, and the only critical left anywhere in this 64-step run."
     ],
     "serious": [
-      "`color-contrast` — 88 node-instances summed across the run, on 9 routes (/account, /account/orders/[id], /cart, /checkout, /checkout/confirmation/[id], /products/business-cards, the two PDPs). This is the same site-wide token-level contrast finding the Product Catalog and Quantity Pricing runs reported, not something this feature introduced: it is attributable to the routes, not to the coupon/pricing controls, and it is present on pages that contain none of this feature's UI. It still blocks a clean WCAG AA pass and is worth fixing once at the theme-token level rather than per screen."
+      "`color-contrast` — 190 node-instances summed across 64 steps on the storefront's /account, /cart, /checkout, confirmation and order-detail routes, the category listing, the two PDPs, plus the admin /dashboard and /coupons. Unchanged across three consecutive pipeline runs, present on pages containing none of this feature's UI, and attributable to the theme tokens rather than to any coupon or pricing control."
     ],
     "moderate": [
-      "`heading-order` (1 node each on /checkout/confirmation/[id] and /account/orders/[id]) — a heading level is skipped on the two order-summary screens, so the money breakdown is not reachable as a properly nested section by heading navigation. Low effort, and these are exactly the screens a customer is most likely to re-read.",
-      "`landmark-main-is-top-level`, `landmark-no-duplicate-main`, `landmark-unique` (1 node each, on /account and /account/orders/[id]) — the account area renders a nested/duplicated <main>, so landmark navigation lands in the wrong place. Pre-existing on the account shell, not introduced by checkout."
+      "`heading-order` (6 nodes) on the order confirmation and account order-detail screens — a skipped heading level on exactly the two pages a customer re-reads to check what they paid.",
+      "`landmark-unique` (7), `landmark-main-is-top-level` (3), `landmark-no-duplicate-main` (3) — a nested/duplicated <main> in the storefront account shell and on the admin pages; landmark navigation lands in the wrong place. Pre-existing.",
+      "`region` (5), `landmark-one-main` (1), `page-has-heading-one` (1) on the admin /login page — pre-existing, outside this feature."
     ],
     "coverage_caveat": "automated scan only — manual/screen-reader review still needed"
   },
   "performance_summary": {
-    "initial_load": "VOID — `url_mismatch: true`. Lighthouse requested /account but audited http://localhost:3000/auth/login?redirect=%2Faccount. The storefront keeps its access token in memory only (features/auth/store.ts partialize) and the session is restored from an httpOnly refresh cookie that capture.js's `seedDefaultContextStorage` cannot copy, so an audit of any authenticated route is redirected to the login page. The reported 0.28 performance / 0.95 accessibility / 0.73 best-practices are the LOGIN page's numbers and must not be read as the account page's. This is the same structural failure mode pipeline/README.md documents for the admin panel; it is now confirmed to apply to the storefront too, for authenticated routes only.",
-    "final_state": "VOID for the same reason — requested /account/orders/20936, audited /auth/login?redirect=%2Faccount%2Forders%2F20936. `warm_cache: true` would make it non-comparable to a cold load even if the URL had matched.",
+    "initial_load": "VOID — `url_mismatch: true`. Lighthouse requested /account and audited http://localhost:3000/auth/login?redirect=%2Faccount instead. The storefront's access token lives in memory only and the session is restored from an httpOnly refresh cookie that capture.js's storage seeding cannot copy into the context Lighthouse drives, so any authenticated route redirects the audit to the login page. The numbers in the log are the LOGIN page's and must not be read as the account page's.",
+    "final_state": "VOID for the same reason, and `warm_cache: true` would make it non-comparable to a cold load even if the URL had matched.",
     "concerns": [
-      "Both checkpoints are unusable as written; future checkout runs should either set `lighthouse: 'off'` (as the other three specs in this feature already do) or checkpoint on a public route such as a PDP, which needs no session.",
-      "These would be Next.js dev-server numbers in any case, not a production build — useful only as a run-over-run baseline, never as a shippable score.",
-      "No performance signal was collected for the two screens that matter commercially (the review step and the confirmation page), so nothing in this run says whether the checkout is fast enough."
+      "Unchanged from the previous pass: Lighthouse should be off for authenticated storefront routes (as it already is on five of the six specs here) or checkpointed on a public PDP.",
+      "Next.js dev-server numbers in any case, never a shippable score.",
+      "No performance signal exists for the review step or the confirmation page — the two screens that matter commercially.",
+      "Observed, not a defect: the global rate limit is 100/minute/IP (`app/core/limiter.py` default_limits) and the capture tripped it once on /cart (a 429 recorded at sc-09). Coupon auto-revalidation now adds one POST /coupons/validate per cart mutation on top of the existing debounced cart sync, so a busy session sits closer to that ceiling than before."
     ]
   },
   "ux_gaps": [
     {
-      "issue": "An applied coupon is never re-validated when the cart changes. err-12 proves it: a coupon with a ₹3,000 minimum is applied to a ₹4,450.00 cart, the customer removes a line, and the cart still advertises '−₹445.00' (10% of the OLD subtotal) on a ₹2,200.00 cart. `features/cart/store.ts`'s own comment claims the coupon is 'cleared when items change significantly', but no code does that. The customer only discovers it at the review step, which then shows 'Could not confirm pricing: Minimum order amount for this coupon is ₹3000.00' alongside the reassuring 'shown amounts are estimates. You can still place the order' — and placing it is guaranteed to fail. Deciding what should happen (silently drop the coupon, re-validate on every cart mutation, or block checkout) is a product call, not a mechanical fix.",
-      "related_edge_case": "Coupon validated at the cart, then the cart changes so the coupon no longer qualifies"
+      "issue": "The coupon auto-revalidation does not reliably run for a given cart change. Its trigger is a single 600 ms timer in `CartSyncProvider` keyed on `[items, couponCode, _isHydrated]`, so every `items` identity change — including the one `applyServerLines` makes when the debounced sync returns — clears and re-arms it; `revalidateAppliedCoupon` additionally bails out whenever any line is `pricePending`. Measured across consecutive runs of the same steps: the coupon was dropped on two runs of sc-08 and not dropped on a third, and the same non-determinism appeared on err-12. A full page load always revalidates once against a settled cart, which is why both specs now reload to make the assertion deterministic. Money is never at risk — the order preview refuses the coupon independently — but a customer can be left looking at a discount that will not survive checkout.",
+      "related_edge_case": "An applied coupon stops qualifying because the cart changed"
     },
     {
-      "issue": "Coupon product/category restrictions are stored, exposed and editable but never enforced. `coupons.applicable_product_ids` / `applicable_category_ids` are written by POST /admin/coupons and echoed by AdminCouponResponse, but neither `coupon_service.validate_for_customer` nor `order_service._compute_order` reads them. Verified end to end: QA-CHECKOUT-PRODONLY, restricted to product 17 (T-shirts), discounted a cart containing none of that product by the full ₹445.00 at both /coupons/validate and /orders/preview. Any product-scoped promotion run today silently discounts the whole catalogue. The fix needs a semantic decision first (scope the discount basis to the matching lines, or refuse the coupon outright), so it is flagged rather than dispatched.",
-      "related_edge_case": "Coupon restricted to specific products or categories (applicable_product_ids)"
+      "issue": "`revalidateAppliedCoupon`'s two failure branches are inconsistent with each other and with its own docstring (\"keeps it on network errors (the order preview is the final authority)\"). A rejection or a transport failure arrives as a plain Error, so the coupon is DROPPED — including when `fetch` itself fails, which the docstring says it should survive (demonstrated by aborting the route in sc-11). An HTTP error arrives as an `ApiError`, so the coupon is KEPT — including a 429 from the global 100/minute limit, which is how a coupon the server would refuse stayed applied during err-12. The intended rule (drop on a verdict, keep on an outage) is the exact inverse of what the code does for transport failures.",
+      "related_edge_case": "An applied coupon stops qualifying because the cart changed"
     },
     {
-      "issue": "A cart line removed within ~500 ms of a full page load comes back. `CartSyncProvider` debounces its sync by 500 ms, and its login-merge path unions local and server lines (`mergeCartItems` re-adds anything server-only), so a removal that has not yet been pushed is undone by the next hard navigation. Observed directly on the first run of the error spec: /cart read ₹2,200.00 with 2 lines and the review step then read ₹4,450.00 with 3 products. A deleted line and a line added on another device are indistinguishable to that merge. Narrow window, but the direction of the failure is wrong — it resurrects something the customer deleted, on the screen immediately before payment.",
+      "issue": "Coupon scope is computed but never persisted on the order. `OrderPricing` carries `eligibleItemIds`/`eligibleLineIndexes`/`couponScope` on the preview, but the stored order returns all three as null — confirmed on order 24737: the customer order detail and the admin order detail both show the correct ₹220.00 discount with no record of which two of the three lines it applied to. A support agent auditing a scoped promotion cannot reconstruct it from the order.",
+      "related_edge_case": "Coupon restricted to specific products or categories (applicable_product_ids / applicable_category_ids)"
+    },
+    {
+      "issue": "An unscoped exclude-discounted coupon reports every line as covered. For a scoped coupon the backend returns the true eligible-line set and the storefront marks the rest 'Not included in the coupon' (verified at sc-09, where one of two lines of the same product is marked). For an UNSCOPED coupon with `applies_to_discounted_items = false`, `validate_for_customer` sets `eligible_line_indexes` to every line even though the discount basis excluded the on-sale ones — so QA-CHECKOUT-NODISC discounts ₹2,200.00 of a ₹4,450.00 cart (err-08, −₹440.00, correct) while the UI claims all three lines are covered and shows no marks. The per-line truth is already on the wire (`discounted`); only the flag set is wrong.",
+      "related_edge_case": "Coupon restricted to specific products or categories (applicable_product_ids / applicable_category_ids)"
+    },
+    {
+      "issue": "FIXED THIS PASS (backend) — `DELETE /admin/coupons/{id}` returned 500 `internal_error` for any coupon that had ever been redeemed: the `coupon_redemptions_coupon_id_fkey` violation escaped unhandled. Reproduced twice on coupon 11549 (used_count 3); unused coupons deleted cleanly. Now returns 409 `coupon_has_redemptions` — \"This coupon has been used on 3 order(s) and cannot be deleted. Deactivate it instead.\" — with the row intact, re-verified live after the fix.",
       "related_edge_case": null
     },
     {
-      "issue": "The review step's failure copy is too soft when the preview itself failed. 'Could not confirm pricing — shown amounts are estimates. You can still place the order.' is right for a network blip but wrong for a 422 the server will raise again on create (an invalid coupon, an out-of-range quantity); in that case the Place Order button is a guaranteed dead end that still shows a total built from client estimates.",
-      "related_edge_case": "Coupon validated at the cart, then the cart changes so the coupon no longer qualifies"
+      "issue": "Minimum-order and discount are deliberately computed on different bases for a scoped coupon — the minimum is checked on the whole cart, the discount on the eligible lines — and the only hint a customer gets is the suffix \"(checked on your whole cart)\" appended to the minimum-order rejection. That is defensible, but nothing says it up front: a coupon reading '20% off business cards, min ₹3,000' can be rejected on a cart holding ₹3,000 of other things, or accepted and then discount only ₹200.",
+      "related_edge_case": "Coupon restricted to specific products or categories (applicable_product_ids / applicable_category_ids)"
     },
     {
-      "issue": "The email sign-in form reports every failure as 'Invalid email or password. Please try again.', including a 429 from the 10/hour rate limit on POST /auth/login — so a customer who is merely rate-limited is told their credentials are wrong and will keep retrying. Found while building this run's sign-in helper, not by a capture step.",
+      "issue": "Carried over, unchanged: the email sign-in form reports a 429 rate-limit as 'Invalid email or password. Please try again.', and the dev catalogue points at a CDN product image that does not exist, so `next/image` logs 404s on several captured steps.",
       "related_edge_case": null
     },
     {
-      "issue": "Coverage gap, not a defect: the 'rush' turnaround could not be exercised. Both products that define it (Matte Finish Business Cards +₹300, Custom Die-Cut Stickers +₹500) have `is_active: false` on that option in the dev data, so the PDP correctly does not render it and the server correctly answers 422 `invalid_turnaround` for it. Standard (+₹0) and Express (+₹150 / +₹200) were both charged and verified; the rush surcharge path has no live data to test against.",
-      "related_edge_case": "Rush turnaround advertised in print_specs but inactive"
-    },
-    {
-      "issue": "Console noise, not a defect: three steps (hp-07, hp-08, alt-04) record `404 (Not Found)`. Reproduced deterministically — it is `next/image` proxying `https://cdn.urgentprinters.com/product/2a979355823148079c1bbfd08b5ded14_lg.webp`, a dev-catalogue image that does not exist on the CDN. Unrelated to checkout. The other two console errors are the API doing its job and are expected: 422 at err-12 (coupon minimum not met) and 409 at edge-03 (price_changed).",
+      "issue": "Coverage gaps, not defects: payment capture is still unexercised (the Razorpay modal is a third-party iframe — the order is created for real in test mode and the paise amount asserted, then the SDK constructor is stubbed); the `rush` turnaround is `is_active: false` on the two products that define it, so its surcharge has no live data on those products (it IS exercised on Standard Business Cards at sc-09, +₹150); guest-cart merge, multi-device carts and post-payment order progression remain out of scope.",
       "related_edge_case": null
     }
   ],
   "recommendations": [
     {
       "priority": "high",
-      "action": "Decide and implement what a product/category-restricted coupon should mean, then enforce it in `coupon_service` and `order_service` (both paths — validate and create). Until then, treat `applicable_product_ids`/`applicable_category_ids` in the admin UI as a trap: it looks like a working control and discounts everything. This is the only finding in this run that can cost real margin."
+      "action": "Make coupon revalidation deterministic. Do not let a single shared 600 ms timer be re-armed by every `items` identity change (including the sync's own write-back), and do not abandon the check when a line is `pricePending` — re-run it once the cart settles instead. A customer should never be shown a discount that checkout will refuse, even though the preview correctly refuses it today."
     },
     {
       "priority": "high",
-      "action": "Re-validate (or clear) an applied coupon whenever the cart's contents change, so the cart can never advertise a discount the server will refuse. Pair it with a narrower review-step message: when the preview failed with a 4xx the server will repeat, say so and disable Place Order instead of offering 'you can still place the order'."
+      "action": "Invert `revalidateAppliedCoupon`'s failure handling to match its own documented rule: drop on a verdict (an is_valid:false response), keep on an outage (transport failure, 429, 5xx). Today a brief loss of connectivity removes a perfectly valid coupon while a 429 keeps an invalid one."
     },
     {
       "priority": "medium",
-      "action": "Make the cart's server sync removal-safe: either flush the pending sync on page unload, or give the merge enough information (a tombstone / per-line updated_at) to tell a deleted line from a line added on another device. Today a removal inside the 500 ms debounce window is silently undone by the next page load."
+      "action": "Persist the coupon's eligible-line set on the order (or recompute it in the order-detail builders) so account order history and the admin order detail can show which lines a scoped coupon covered. A ₹220.00 discount on a three-line order is currently unauditable after the fact."
     },
     {
       "priority": "medium",
-      "action": "Fix the two moderate landmark/heading findings on the order-summary screens (/checkout/confirmation/[id], /account/orders/[id]) — one skipped heading level and a duplicated <main> in the account shell. Small, and they are on the screens customers return to."
+      "action": "Return the true eligible-line set for an unscoped exclude-discounted coupon too, so 'Applied to N of M items' and the per-line 'Not included in the coupon' marks are consistent with the basis the discount was actually computed on."
     },
     {
       "priority": "medium",
-      "action": "Stop collecting Lighthouse on authenticated storefront routes until the audit can carry the session: both checkpoints in this run measured the login page. Either set `lighthouse: 'off'` for checkout specs or checkpoint on a PDP."
+      "action": "Say the whole-cart-minimum rule in the coupon's own copy, not only in the rejection message, so 'min ₹3,000' on a scoped coupon is not read as '₹3,000 of the scoped items'."
+    },
+    {
+      "priority": "medium",
+      "action": "Fix the `heading-order` and duplicated-<main> findings on the confirmation and account order-detail screens, and stop collecting Lighthouse on authenticated storefront routes until the audit can carry a session."
     },
     {
       "priority": "low",
-      "action": "Address `color-contrast` once at the theme-token level rather than per screen — 88 node-instances across 9 routes, present on pages with none of this feature's UI, and unchanged since the previous two pipeline runs."
-    },
-    {
-      "priority": "low",
-      "action": "Distinguish a 429 from bad credentials in the email sign-in form, and give the dev catalogue a product image that resolves (or a local placeholder) so the PDP stops logging 404s that mask real errors."
+      "action": "Address `color-contrast` once at the theme-token level (190 node-instances, three consecutive runs, mostly on pages unrelated to this feature), distinguish a 429 from bad credentials in the email sign-in form, and give the dev catalogue a product image that resolves so real failed requests are not buried in 404 noise."
     }
   ]
 }

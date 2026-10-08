@@ -1,7 +1,7 @@
 {
   "feature_name": "Checkout Pricing and Coupons Happy Path",
   "plan_path": "qa-pipeline/artifacts/plans/checkout-pricing-coupons-plan.json",
-  "run_timestamp": "2026-10-08T03:53:31.873Z",
+  "run_timestamp": "2026-10-08T10:03:33.995Z",
   "trace_path": null,
   "viewport": {
     "width": 1280,
@@ -14,7 +14,7 @@
       "selector": "locator('#email-address')",
       "route": "/account",
       "bounding_box": null,
-      "timestamp_ms": 5664,
+      "timestamp_ms": 5845,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-01.png",
       "status": "pass",
       "error": null,
@@ -25,7 +25,7 @@
           "id": "color-contrast",
           "impact": "serious",
           "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
-          "nodes": 1
+          "nodes": 2
         },
         {
           "id": "landmark-main-is-top-level",
@@ -59,7 +59,7 @@
         "width": 576,
         "height": 213
       },
-      "timestamp_ms": 13505,
+      "timestamp_ms": 14059,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-02.png",
       "status": "pass",
       "error": null,
@@ -73,7 +73,10 @@
           "nodes": 8
         }
       ],
-      "console_errors": []
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
     },
     {
       "step_id": "hp-03",
@@ -86,7 +89,7 @@
         "width": 284,
         "height": 41
       },
-      "timestamp_ms": 13800,
+      "timestamp_ms": 14420,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-03.png",
       "status": "pass",
       "error": null,
@@ -106,7 +109,7 @@
         "width": 284,
         "height": 58
       },
-      "timestamp_ms": 14400,
+      "timestamp_ms": 15010,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-04.png",
       "status": "pass",
       "error": null,
@@ -126,7 +129,7 @@
         "width": 576,
         "height": 63
       },
-      "timestamp_ms": 15326,
+      "timestamp_ms": 15911,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-05.png",
       "status": "pass",
       "error": null,
@@ -146,7 +149,7 @@
         "width": 128,
         "height": 44
       },
-      "timestamp_ms": 16056,
+      "timestamp_ms": 16628,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-06.png",
       "status": "pass",
       "error": null,
@@ -166,16 +169,14 @@
         "width": 576,
         "height": 48
       },
-      "timestamp_ms": 16673,
+      "timestamp_ms": 17236,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-07.png",
       "status": "pass",
       "error": null,
       "typed_text": null,
       "typed_masked": false,
       "axe_violations": [],
-      "console_errors": [
-        "Failed to load resource: the server responded with a status of 404 (Not Found)"
-      ]
+      "console_errors": []
     },
     {
       "step_id": "hp-08",
@@ -183,7 +184,7 @@
       "selector": null,
       "route": "/products/flyers-leaflets/a5-flyers",
       "bounding_box": null,
-      "timestamp_ms": 21246,
+      "timestamp_ms": 21401,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-08.png",
       "status": "pass",
       "error": null,
@@ -199,6 +200,7 @@
       ],
       "console_errors": [
         "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
         "Failed to load resource: the server responded with a status of 404 (Not Found)"
       ]
     },
@@ -213,7 +215,7 @@
         "width": 320,
         "height": 683
       },
-      "timestamp_ms": 22276,
+      "timestamp_ms": 22329,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-09.png",
       "status": "pass",
       "error": null,
@@ -240,7 +242,7 @@
         "width": 208,
         "height": 36
       },
-      "timestamp_ms": 22577,
+      "timestamp_ms": 22628,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-10.png",
       "status": "pass",
       "error": null,
@@ -260,7 +262,7 @@
         "width": 278,
         "height": 44
       },
-      "timestamp_ms": 23043,
+      "timestamp_ms": 23079,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-11.png",
       "status": "pass",
       "error": null,
@@ -287,7 +289,7 @@
         "width": 608,
         "height": 70
       },
-      "timestamp_ms": 23309,
+      "timestamp_ms": 23405,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-12.png",
       "status": "pass",
       "error": null,
@@ -307,7 +309,7 @@
         "width": 608,
         "height": 626
       },
-      "timestamp_ms": 23539,
+      "timestamp_ms": 23633,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-13.png",
       "status": "pass",
       "error": null,
@@ -320,14 +322,14 @@
       "step_id": "hp-14",
       "action": "Place the Cash-on-Delivery order",
       "selector": "getByRole('button', { name: /^(Place Order|Pay ₹)/ })",
-      "route": "/checkout/confirmation/20936",
+      "route": "/checkout/confirmation/24740",
       "bounding_box": {
         "x": 439,
         "y": 336,
         "width": 505,
         "height": 48
       },
-      "timestamp_ms": 24130,
+      "timestamp_ms": 24064,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-14.png",
       "status": "pass",
       "error": null,
@@ -353,14 +355,14 @@
       "step_id": "hp-15",
       "action": "Read the order confirmation totals",
       "selector": "locator('main').first()",
-      "route": "/checkout/confirmation/20936",
+      "route": "/checkout/confirmation/24740",
       "bounding_box": {
         "x": 0,
         "y": 57,
         "width": 1280,
         "height": 1348
       },
-      "timestamp_ms": 24336,
+      "timestamp_ms": 24238,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-15.png",
       "status": "pass",
       "error": null,
@@ -373,9 +375,9 @@
       "step_id": "hp-16",
       "action": "Open the same order from account order history",
       "selector": null,
-      "route": "/account/orders/20936",
+      "route": "/account/orders/24740",
       "bounding_box": null,
-      "timestamp_ms": 26257,
+      "timestamp_ms": 25871,
       "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-16.png",
       "status": "pass",
       "error": null,
@@ -423,40 +425,40 @@
       "url_mismatch": true,
       "session_seeded": true,
       "warm_cache": true,
-      "fetched_at": "2026-10-08T03:53:53.759Z",
+      "fetched_at": "2026-10-08T10:03:56.498Z",
       "scores": {
         "performance": 0.28,
         "accessibility": 0.95,
         "best_practices": 0.73
       },
       "metrics": {
-        "first_contentful_paint_ms": 907.5561,
-        "largest_contentful_paint_ms": 5070.812149999999,
-        "total_blocking_time_ms": 864.9999999999998,
+        "first_contentful_paint_ms": 907.6596,
+        "largest_contentful_paint_ms": 5395.9778,
+        "total_blocking_time_ms": 737.9999999999998,
         "cumulative_layout_shift": 0.3431166666666666,
-        "speed_index_ms": 1915.084023167518,
-        "time_to_interactive_ms": 8571.538532499997
+        "speed_index_ms": 2092.428934154446,
+        "time_to_interactive_ms": 8763.994695
       }
     },
     "final_state": {
-      "url": "http://localhost:3000/auth/login?redirect=%2Faccount%2Forders%2F20936",
-      "requested_url": "http://localhost:3000/account/orders/20936",
+      "url": "http://localhost:3000/auth/login?redirect=%2Faccount%2Forders%2F24740",
+      "requested_url": "http://localhost:3000/account/orders/24740",
       "url_mismatch": true,
       "session_seeded": true,
       "warm_cache": true,
-      "fetched_at": "2026-10-08T03:54:32.931Z",
+      "fetched_at": "2026-10-08T10:04:35.159Z",
       "scores": {
-        "performance": 0.52,
+        "performance": 0.49,
         "accessibility": 0.95,
         "best_practices": 0.73
       },
       "metrics": {
-        "first_contentful_paint_ms": 947.7264,
-        "largest_contentful_paint_ms": 2490.7157908996583,
-        "total_blocking_time_ms": 648.0000000000005,
+        "first_contentful_paint_ms": 949.0448999999999,
+        "largest_contentful_paint_ms": 3270.702724005127,
+        "total_blocking_time_ms": 575.5000000000009,
         "cumulative_layout_shift": 0.169575,
-        "speed_index_ms": 1362.7575254100552,
-        "time_to_interactive_ms": 2560.1479019348153
+        "speed_index_ms": 1311.0524322419137,
+        "time_to_interactive_ms": 3348.7717458023076
       }
     }
   }

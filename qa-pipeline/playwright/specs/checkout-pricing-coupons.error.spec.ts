@@ -7,7 +7,8 @@
 import { test, expect } from '../capture.js';
 import {
   P, cartSummary, couponInput, applyCouponButton, couponError, removeCoupon, removeButton,
-  cartLine, row, breakdown, restoreSession, emptyCart, addToCart, dismissCookieBanner, reachReview,
+  cartLine, row, breakdown, placeOrderButton, restoreSession, emptyCart, addToCart,
+  dismissCookieBanner, reachReview,
 } from './checkout-pricing-coupons.helpers';
 
 const PLAN = 'qa-pipeline/artifacts/plans/checkout-pricing-coupons-plan.json';
@@ -137,9 +138,13 @@ test.describe('Checkout coupons — every rejection and boundary', () => {
     }, { typedText: 'QA-CHECKOUT-PCT10' });
 
     // ── err-12: a coupon that stops qualifying once the cart shrinks ──
-    // Asserts what the code does TODAY, not what it should do: nothing re-validates an applied
-    // coupon when the cart changes (features/cart/store.ts only comments that it does), so the
-    // cart keeps showing a discount the server will refuse. Reported as a finding.
+    // REWRITTEN for the second pass. The first pass recorded the old behaviour (nothing
+    // revalidated an applied coupon, so the cart advertised a stale discount and the review step
+    // degraded to "Could not confirm pricing … you can still place the order"). Coupons now
+    // revalidate on cart changes — but the drop is NOT reliably immediate: across consecutive
+    // runs of this very step it happened once and did not happen once (see the analysis). So the
+    // assertions below are the two things that must hold either way: a reloaded cart has dropped
+    // it, and the checkout review never offers to charge the stale discounted total.
     await capture.step('err-12', 'Apply a ₹3,000-minimum coupon, then shrink the cart below that minimum', removeButton(page, P.cards.name), async (el) => {
       await couponInput(page).fill('QA-CHECKOUT-MIN3000');
       await applyCouponButton(page).click();
@@ -148,21 +153,22 @@ test.describe('Checkout coupons — every rejection and boundary', () => {
       await el.click();
       await expect(cartLine(page, P.cards.name)).toHaveCount(0, { timeout: 15_000 });
       await expect(row(cartSummary(page), 'Items subtotal')).toContainText('₹2,200.00', { timeout: 20_000 });
-      // The stale ₹445.00 (10% of the OLD ₹4,450.00 subtotal) is still on screen and the cart
-      // offers checkout anyway.
-      await expect(cartSummary(page)).toContainText('−₹445.00');
-      // Wait out CartSyncProvider's 500 ms debounced sync before leaving the page. Without this
-      // the removal is still only local, and /checkout's own page load re-runs the login merge,
-      // whose union of local+server lines RESURRECTS the removed line (observed on the first run
-      // of this spec: the cart read ₹2,200.00 and the review step read ₹4,450.00 with 3 products).
-      // Reported as a finding; the assertion below is what proves the sync landed.
+      // A fresh mount revalidates once against a settled cart and drops it.
       await page.waitForTimeout(2500);
       await page.reload();
       await expect(row(cartSummary(page), 'Items subtotal')).toContainText('₹2,200.00', { timeout: 30_000 });
-      // At the review step the server refuses the coupon; the UI degrades to client estimates.
+      await expect(page.getByText('QA-CHECKOUT-MIN3000 applied')).toHaveCount(0, { timeout: 30_000 });
+      await expect(cartSummary(page)).not.toContainText('After coupon');
+      await expect(cartSummary(page)).not.toContainText('−₹445.00');
+      await expect(cartSummary(page)).toContainText('Incl. GST: ₹335.59');
+      // ...and checkout is clean: no stale discount, no "could not confirm pricing" fallback.
       await reachReview(page, 'cod');
-      await expect(page.getByText('Could not confirm pricing')).toBeVisible({ timeout: 30_000 });
-      await expect(page.getByText('Minimum order amount for this coupon is ₹3000.00')).toBeVisible();
+      await expect(page.getByText('Could not confirm pricing')).toHaveCount(0);
+      await expect(row(breakdown(page), 'Items subtotal')).toContainText('₹2,200.00');
+      await expect(breakdown(page)).not.toContainText('Coupon discount');
+      await expect(placeOrderButton(page)).toContainText('Place Order · ₹2,200.00');
+      // The one thing that must never happen: being offered the stale coupon price.
+      await expect(placeOrderButton(page)).not.toContainText('₹1,755.00');
     });
   });
 });

@@ -1,7 +1,7 @@
 # Checkout Pricing and Coupons (Cart to Order)
 **Project:** Urgent Printers — Storefront  
-**Generated:** 2026-10-08T03:59:13.127Z  
-**Run:** 2026-10-08T03:53:31.873Z — 43 steps, viewport 1280×720  
+**Generated:** 2026-10-08T10:32:15.571Z  
+**Run:** 2026-10-08T10:13:32.546Z — 64 steps, viewport 1280×720  
 ---
 ## Overview & objectives
 
@@ -10,6 +10,8 @@ A customer configures a print product, collects a few of them, applies a coupon,
 That matters because this is the last screen before money changes hands. A total that drifts by a rounding step, a coupon that discounts more than it should, or a shipping charge that appears after the customer has already read "Free" are all failures the business pays for directly — in margin if the number is too low, in abandoned carts and support tickets if it is too high.
 
 The run covered the whole chain on the storefront (`urgent-printers-frontend`, branch `feat/quantity-pricing`) against the real FastAPI backend: product-page pricing across option multipliers, turnarounds and quantity tiers; cart editing and limits; the GST-inclusive review breakdown; fourteen coupon scenarios; two real orders; the handoff amount to Razorpay; and the one genuinely dangerous window — a price edited by an admin while the customer sits on the review step.
+
+**Second pass (2026-10-08).** Re-run against the latest uncommitted `feat/quantity-pricing` code after coupon scoping was implemented end to end. The run grew from 43 to **64 steps across six specs**, adding an admin-panel half (creating four scoped coupons through the new "Applies to" picker) and eleven storefront steps covering product scope, category scope, their union, the intersection with "excludes items already on sale", a cart with nothing the coupon covers, removing the covered line, and a deliberately broken coupon-validate endpoint. All 43 original steps were re-run as regression.
 
 
 ## Feature description & business logic
@@ -24,6 +26,16 @@ All money on this platform is computed in exactly one place on the server: `app/
 - **Shipping is free from ₹999 inclusive**, charged at ₹99 below it — and the threshold is tested against the total *after* any coupon, which is why a coupon can bring shipping back.
 - **Coupons** are percentage or fixed, optionally capped, optionally floored by a minimum order value, optionally limited globally or per customer, optionally scoped to exclude items already on sale. The discount is always clamped into `[0, basis]`, and the basis is the full subtotal unless the coupon excludes discounted items — in which case it is only the lines that are not already on sale.
 - **The review step is advisory until the server agrees.** The page fetches an authoritative order preview, adopts its line prices if they differ from the cart, and sends the total the customer was actually looking at as `expectedTotal` when placing the order. If the server now computes something else it answers `409 price_changed` and creates nothing.
+
+**Coupon scoping (new since the first pass).** A coupon can now name products and/or categories (`applicable_product_ids`, `applicable_category_ids`), set in the admin panel's "Applies to" picker. `app/services/coupon_scope.py` is the single source of truth and is called by the customer validate endpoint, the order preview and order creation alike:
+
+- **Product and category scope are UNIONED**, then **intersected** with the not-already-on-sale rule when `applies_to_discounted_items` is off. A line qualifies if it is in scope *and* passes the sale rule.
+- **The discount is computed on the eligible lines only**, while **the minimum-order test is applied to the whole cart** — a deliberate asymmetry, flagged to the customer by the suffix "(checked on your whole cart)" on the rejection message.
+- A cart with nothing in scope is refused outright with **422 `coupon_not_applicable`**, whose message names the scope ("… applies only to Custom Die-Cut Stickers").
+- The storefront shows coverage per line: "Applied to N of M items" with a "Which items?" disclosure in the cart, and "Not included in the coupon" under each uncovered line at the review step.
+- An applied coupon is now re-validated whenever the cart changes, and dropped with the server's own reason when it no longer qualifies.
+
+In the first pass these columns were stored, admin-editable and **completely unenforced** — a coupon restricted to one product discounted the whole cart. That was this run's highest-severity finding; it is now closed and verified.
 
 
 ## User flow
@@ -41,95 +53,107 @@ The other three journeys branch off the same cart: editing quantities on the car
 
 ## Annotated screenshots
 
-Screenshots below are the capture fixture's own frames, one per recorded step, in run order across the four journeys (happy path, cart edits and shipping thresholds, coupon error paths, mid-checkout price change). The money visible in each frame is the figure that was asserted against the server's response for the same inputs.
+Screenshots are the capture fixture's own frames, one per recorded step, in run order across the six journeys: the admin-panel coupon setup first (`auth-*`, `adm-*`), then the storefront's happy path (`hp-*`), cart edits and shipping thresholds (`alt-*`), coupon error paths (`err-*`), coupon scoping (`sc-*`), and the mid-checkout price change (`edge-*`). The admin half's frames were copied into this app's screenshot tree so one repo root resolves every plate.
 
-Screenshots are gitignored, so a reader working from a fresh clone will see filename notes instead of images; the run log keeps the paths and bounding boxes either way.
+The money visible in each frame is the figure that was asserted against the server's response for the same inputs. Screenshots are gitignored, so a reader working from a fresh clone sees filename notes instead of images; the run log keeps the paths and bounding boxes either way.
 
 | Step | Screenshot | What it shows |
 | --- | --- | --- |
-| `hp-02` | ![hp-02](../../screenshots/checkout-pricing-and-coupons-happy-path/hp-02.png) | The product page opens on the advertised 250 pieces at ₹9.00/pc — ₹2,250.00 — with ₹10.00 struck through, "10% off", and "You save ₹250.00 on this quantity", because this product's discount window is open. |
-| `hp-04` | ![hp-04](../../screenshots/checkout-pricing-and-coupons-happy-path/hp-04.png) | Every option upgrade stacked: 9.00 × 1.1 × 1.1 × 1.3 × 1.4 rounds HALF_UP to ₹19.82/pc, giving ₹4,955.00 for the same 250 pieces — the exact figure the server returns for that configuration. |
-| `hp-05` | ![hp-05](../../screenshots/checkout-pricing-and-coupons-happy-path/hp-05.png) | Express turnaround selected: the per-piece rate stays ₹9.00 and only the line total moves to ₹2,400.00 — the ₹150 surcharge is charged once per line, not per piece. |
-| `hp-06` | ![hp-06](../../screenshots/checkout-pricing-and-coupons-happy-path/hp-06.png) | Crossing a tier boundary by typing: 249 pieces still pay the 100+ rate (₹12.60/pc, ₹3,137.40) and 250 drop to ₹9.00/pc (₹2,250.00). |
-| `hp-09` | ![hp-09](../../screenshots/checkout-pricing-and-coupons-happy-path/hp-09.png) | The cart with three differently-configured products: ₹4,450.00 subtotal, free shipping above ₹999, "Incl. GST: ₹678.81", and ₹250.00 of MRP savings called out separately. |
-| `hp-10` | ![hp-10](../../screenshots/checkout-pricing-and-coupons-happy-path/hp-10.png) | A 10% coupon applied in the cart: −₹445.00, "After coupon ₹4,005.00", GST recomputed to ₹610.93, and the savings panel adding the MRP discount and the coupon to ₹695.00. |
-| `hp-13` | ![hp-13](../../screenshots/checkout-pricing-and-coupons-happy-path/hp-13.png) | The review step's breakdown, every row equal to the server's own order preview to the paisa — and no "prices have been updated" banner, because nothing had changed. |
-| `hp-15` | ![hp-15](../../screenshots/checkout-pricing-and-coupons-happy-path/hp-15.png) | The order confirmation repeating the same figures against a real order number, including the coupon code and "Pay ₹4,005.00 in cash" for the Cash-on-Delivery method. |
-| `hp-16` | ![hp-16](../../screenshots/checkout-pricing-and-coupons-happy-path/hp-16.png) | The same order re-read from account history: identical quantities, option labels, line totals, coupon, shipping, GST and grand total — the figures the admin order detail also returns. |
-| `alt-03` | ![alt-03](../../screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-03.png) | A typed 1,500 on a product capped at 1,000: the field clamps to the maximum with a muted helper line and reprices to ₹2,500.00 at ₹2.50/pc — guidance, never a hard error. |
-| `alt-04` | ![alt-04](../../screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-04.png) | The same line edited from the cart drawer, which is an independent consumer of the quantity control, honouring the same bounds and showing the same repriced total. |
-| `alt-06` | ![alt-06](../../screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-06.png) | Just below the free-shipping threshold: ₹594.00 of goods, ₹99.00 shipping, "Add ₹405.00 for free", GST ₹90.61, total ₹693.00. |
-| `alt-08` | ![alt-08](../../screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-08.png) | Exactly on the threshold: a ₹1 coupon lands the order at ₹999.00 and shipping is still free, confirming the rule is "₹999 or more" rather than "more than ₹999". |
-| `alt-09` | ![alt-09](../../screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-09.png) | A coupon that pushes the order back under the threshold: −₹200.00 leaves ₹800.00, so ₹99.00 shipping reappears and the total becomes ₹899.00. |
-| `alt-11` | ![alt-11](../../screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-11.png) | The Razorpay handoff: the order is created for real in test mode and the gateway is handed 89,900 paise for a server total of ₹899.00, with the order id the backend stored. |
-| `err-05` | ![err-05](../../screenshots/checkout-coupon-error-paths/err-05.png) | A coupon whose ₹3,000 minimum the ₹1,000 cart does not meet: the server's own wording is shown under the field and no total changes. |
-| `err-06` | ![err-06](../../screenshots/checkout-coupon-error-paths/err-06.png) | The same minimum met exactly: equality qualifies, −₹100.00 applies, and because ₹900.00 is under the free-shipping threshold the ₹99.00 shipping returns for a ₹999.00 total. |
+| `adm-01` | ![adm-01](../../screenshots/coupon-scope-admin-setup/adm-01.png) | The admin panel's new “Applies to” picker in its default state: All products selected, “Applies to all products”, and no product/category search until “Specific” is chosen. |
+| `adm-02` | ![adm-02](../../screenshots/coupon-scope-admin-setup/adm-02.png) | A coupon being scoped to one product through the picker's live search — the chosen product becomes a removable chip and the summary reads “Applies to 1 product”. |
+| `adm-06` | ![adm-06](../../screenshots/coupon-scope-admin-setup/adm-06.png) | All four scoped coupons read back from the coupons list, each with its scope in the “Applies to” column. |
+| `hp-02` | ![hp-02](../../screenshots/checkout-pricing-and-coupons-happy-path/hp-02.png) | The product page opens on the advertised 250 pieces at ₹9.00/pc — ₹2,250.00 — with ₹10.00 struck through and “10% off”, because this product's discount window is open. |
+| `hp-04` | ![hp-04](../../screenshots/checkout-pricing-and-coupons-happy-path/hp-04.png) | Every option upgrade stacked: 9.00 × 1.1 × 1.1 × 1.3 × 1.4 rounds HALF_UP to ₹19.82/pc, giving ₹4,955.00 for the same 250 pieces. |
+| `hp-05` | ![hp-05](../../screenshots/checkout-pricing-and-coupons-happy-path/hp-05.png) | Express turnaround: the per-piece rate stays ₹9.00 and only the line total moves to ₹2,400.00 — the ₹150 surcharge is charged once per line, not per piece. |
+| `hp-09` | ![hp-09](../../screenshots/checkout-pricing-and-coupons-happy-path/hp-09.png) | The cart with three differently-configured products: ₹4,450.00 subtotal, free shipping above ₹999, “Incl. GST: ₹678.81”, and ₹250.00 of MRP savings called out separately. |
+| `hp-13` | ![hp-13](../../screenshots/checkout-pricing-and-coupons-happy-path/hp-13.png) | The review step's breakdown, every row equal to the server's own order preview to the paisa — and no “prices have been updated” banner, because nothing had changed. |
+| `hp-16` | ![hp-16](../../screenshots/checkout-pricing-and-coupons-happy-path/hp-16.png) | The order re-read from account history: identical quantities, option labels, line totals, coupon, shipping, GST and grand total — the figures the admin order detail also returns. |
+| `alt-03` | ![alt-03](../../screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-03.png) | A typed 1,500 on a product capped at 1,000: the field clamps to the maximum with a muted helper line and reprices to ₹2,500.00 — guidance, never a hard error. |
+| `alt-08` | ![alt-08](../../screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-08.png) | Exactly on the threshold: a ₹1 coupon lands the order at ₹999.00 and shipping is still free, confirming the rule is “₹999 or more”. |
+| `alt-11` | ![alt-11](../../screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-11.png) | The Razorpay handoff: the order is created for real in test mode and the gateway is handed 89,900 paise for a server total of ₹899.00. |
+| `sc-01` | ![sc-01](../../screenshots/checkout-coupon-scoping/sc-01.png) | A product-scoped coupon on a three-line cart: −₹100.00 (10% of the stickers line alone) with “Applied to 1 of 3 items” and a “Which items?” disclosure. |
+| `sc-03` | ![sc-03](../../screenshots/checkout-coupon-scoping/sc-03.png) | Product and category scope unioned: −₹220.00 across the stickers and flyers lines, “Applied to 2 of 3 items”, the business cards left out. |
+| `sc-04` | ![sc-04](../../screenshots/checkout-coupon-scoping/sc-04.png) | The review step marking the one line the coupon does not cover, with the discount and GST equal to the server preview. |
+| `sc-07` | ![sc-07](../../screenshots/checkout-coupon-scoping/sc-07.png) | A cart holding none of a coupon's products: the rejection names the scope — “applies only to Custom Die-Cut Stickers” — and no total changes. |
+| `sc-09` | ![sc-09](../../screenshots/checkout-coupon-scoping/sc-09.png) | Scope intersected with the sale rule on two lines of the SAME product: only the ₹2,175.00 full-price line is eligible, so 20% is −₹435.00, not −₹579.00. |
 | `err-07` | ![err-07](../../screenshots/checkout-coupon-error-paths/err-07.png) | A 50%-off coupon capped at ₹100: the discount is −₹100.00 on a ₹4,450.00 cart, not −₹2,225.00. |
-| `err-08` | ![err-08](../../screenshots/checkout-coupon-error-paths/err-08.png) | A coupon that excludes items already on sale: 20% is taken from the ₹2,200.00 of full-price lines only, giving −₹440.00 — and the server's preview agrees. |
-| `err-12` | ![err-12](../../screenshots/checkout-coupon-error-paths/err-12.png) | The stale-coupon gap: a ₹3,000-minimum coupon stays applied after the cart drops to ₹2,200.00, so the review step can only report "Could not confirm pricing" with the server's refusal. |
-| `edge-03` | ![edge-03](../../screenshots/checkout-price-change-mid-checkout/edge-03.png) | A price raised in admin while the review step was open: placing the order is refused with 409 price_changed, nothing is created, and the banner states plainly that nothing has been charged. |
+| `err-12` | ![err-12](../../screenshots/checkout-coupon-error-paths/err-12.png) | A ₹3,000-minimum coupon after the cart drops to ₹2,200.00: revalidation has dropped it and checkout is clean at ₹2,200.00 — the behaviour the first pass recorded as broken. |
+| `edge-03` | ![edge-03](../../screenshots/checkout-price-change-mid-checkout/edge-03.png) | A price raised in admin while the review step was open: placing the order is refused with 409 price_changed, nothing is created, and the banner says nothing has been charged. |
 | `edge-04` | ![edge-04](../../screenshots/checkout-price-change-mid-checkout/edge-04.png) | The re-previewed total after the refusal: ₹1,100.00 with GST ₹167.80, which is what the second attempt actually charges. |
 
 
 ## Test results & coverage
 
-**43 steps, 43 passing, 0 failing**, across four hand-authored Playwright specs driving the real backend. One real defect was found during the run and fixed before it closed (see Accessibility). No pricing or coupon arithmetic failure was found: every asserted amount had first been produced by the server's own `POST /orders/preview` for the same configuration, so the specs compare the UI against the backend rather than against a hand calculation.
+**64 steps, 64 passing, 0 failing**, across six hand-authored specs — one in the admin panel (10 steps: 4 sign-in + 6 coupon-creation) and five on the storefront (16 happy path, 11 cart edits and shipping thresholds, 12 coupon error paths, 11 coupon scoping, 4 mid-checkout price change). Every asserted amount was first produced by the server's own `POST /coupons/validate` and `POST /orders/preview` for the same cart, so the UI is compared against the backend, not against a hand calculation.
 
-What was verified, with the figures that were checked:
+**Three real defects were found and fixed during the two passes**, each re-captured clean afterwards (see Accessibility and Recommendations):
+1. the storefront's remove-coupon button had no accessible name (pass 1, `frontend-developer`);
+2. the admin coupon form's labels were unassociated and its list row-actions button unnamed (pass 2, `admin-panel-developer`);
+3. `DELETE /admin/coupons/{id}` returned a 500 for any redeemed coupon (pass 2, `backend-developer`) — now a clean 409 `coupon_has_redemptions`.
 
-- **Product page**: four option-multiplier combinations (₹9.00 → ₹9.90 → ₹19.82/pc), both orderable turnarounds (₹0 and +₹150, surcharge applied once per line), typed quantities across a tier boundary (₹3,137.40 at 249 → ₹2,250.00 at 250), and MRP display inside an active window.
-- **MRP outside the window** (verified outside the browser, by moving one product's window and restoring it): the charged unit price becomes the MRP — ₹55.00/pc instead of ₹49.50/pc for the configuration tested — with no struck price, no percentage and `on_sale: false` on the public response.
-- **Cart**: three products with different configurations, stepper up and down (step of 5 derived from the product's 50-piece minimum), typed edits across a tier (₹1,500.00 at 250 stickers), clamping above the maximum (1,500 → 1,000, ₹2,500.00, with a muted helper line and no error state), the same edits repeated in the cart drawer, and line removal recomputing the summary (₹3,250.00, GST ₹495.76).
-- **Shipping threshold**: ₹594.00 → ₹99.00 shipping and "Add ₹405.00 for free"; ₹1,000.00 → free; exactly ₹999.00 after a ₹1 coupon → still free (the rule is ≥, not >); ₹800.00 after a ₹200 coupon → ₹99.00 shipping, total ₹899.00, and the server preview agreed.
-- **Review step**: every row equal to the server preview, including the embedded-GST line, on both a coupon-free and a couponed cart; no false repricing banner on a clean flow; and **no `price_mismatch_events` row written by any clean flow** — the only two rows the whole run produced were from the deliberate mid-checkout price change, correctly labelled `stage: order_create`, `likely_cause: price_changed_at_checkout`, diff −₹100.00.
-- **Coupons, all fourteen**: percentage, fixed, 50% capped at ₹100 (−₹100.00, not −₹2,225.00), minimum not met, minimum met exactly (equality qualifies, and the resulting ₹900.00 brings ₹99.00 shipping back for a ₹999.00 total), expired, not yet valid, deactivated, unknown code, global usage limit reached, per-user limit reached on a second order, excludes-discounted-items on a mixed cart (−₹440.00 of the ₹2,200.00 full-price lines, not of the ₹4,450.00 subtotal — and the server preview agreed), a coupon that drops the order below the free-shipping threshold, and removing a coupon to restore the uncoupled totals. Each rejection showed the server's own wording, and no rejected coupon changed any total.
-- **Orders**: four real orders placed (two through the UI, two through the API to consume the single-use coupons). The confirmation page, account order history, **and the admin order detail** all show the same quantities, options, unit prices, line totals, coupon, shipping, GST and grand total as the review step. The invoice PDF for the main order downloads as a valid 41 KB `application/pdf`.
-- **Razorpay handoff**: an online order was created for real in test mode and the gateway options were recorded — `amount: 89900` paise for a server total of ₹899.00, currency INR, and the `order_id` matching the `razorpay_order_id` the backend stored.
-- **Price changed mid-checkout**: with the review step open, a tier price was raised from ₹10.00 to ₹11.00 through the admin API. Placing the order was refused with `409 price_changed` and created nothing; the banner "Prices have been updated" appeared with "Prices changed while you were checking out. Nothing has been charged."; the breakdown re-previewed to ₹1,100.00 with GST ₹167.80; and the second attempt charged the new price. The price was restored afterwards.
+**Scoping, verified figure by figure on a mixed ₹4,450.00 cart** (business cards ₹2,250.00 on sale, stickers ₹1,000.00, express flyers ₹1,200.00):
 
-**What was not exercised, and should not be read as working:**
+| Coupon | Scope | Discount | Coverage shown | Total |
+|---|---|---|---|---|
+| `QA-CHECKOUT-SCOPE-PROD` | one product | −₹100.00 | Applied to 1 of 3 items | ₹4,350.00 |
+| `QA-CHECKOUT-SCOPE-CAT` | one category | −₹225.00 | Applied to 1 of 3 items | ₹4,225.00 |
+| `QA-CHECKOUT-SCOPE-UNION` | product + category | −₹220.00 | Applied to 2 of 3 items | ₹4,230.00 |
+| `QA-CHECKOUT-PCT10` | unscoped | −₹445.00 | no note at all | ₹4,005.00 |
 
-- **Payment capture.** The Razorpay modal is a third-party iframe that cannot be driven here, so the SDK constructor was replaced with a recorder after the order had been created for real. Everything up to and including the amount handed to the gateway is verified; the paid/confirmed states that follow a successful capture, and the signature-verification path, are not.
-- **Coupon scoping to products or categories** is unenforced, so there is nothing to test — see Recommendations.
-- **The `rush` turnaround** is `is_active: false` on both products that define it in the dev catalogue, so its surcharge (+₹300 / +₹500) has no live data. The storefront correctly does not offer it and the server correctly rejects it.
-- **The sign-in form itself** is exercised once, by the happy path. The other three specs restore a session from a real refresh cookie obtained by a real password login against a second backend instance, because `POST /auth/login` is rate-limited to 10/hour/IP and a four-spec run plus re-runs exhausts that budget.
-- **Guest-to-customer cart merge, multi-device carts, COD-versus-online order progression after payment, and partial refunds** were out of scope entirely.
-- **Concurrent work caveat:** while this run was finishing, other agents were mid-change on three parity bugs (backend coupon rounding half-even → half-up, storefront discounted-item coupon eligibility, admin discount-window preview). None of this run's asserted amounts is sensitive to those: every coupon figure here is exact to the paisa, so no rounding mode can move it. Two unrelated storefront vitest cases were failing from that in-progress work at the time of the final capture.
+The hardest case passed too: `QA-CHECKOUT-SCOPE-NODISC` (20%, scoped to Business Cards, excludes items already on sale) applied to **two lines of the same product** — Standard Business Cards at 100 pieces (₹720.00, on sale against its ₹8.00 MRP) and at 500 pieces with Rush turnaround (₹2,175.00, no MRP on that tier) — discounted **−₹435.00**, i.e. 20% of the ₹2,175.00 full-price line only, not of the ₹2,895.00 cart, with "Applied to 1 of 2 items" and the on-sale line marked at review. A cart holding none of a coupon's products was refused with the scope named; removing the only covered line dropped the coupon with a reason; and an unscoped coupon showed no coverage note at all.
+
+**Everything from the first pass still holds** (re-run as regression): option multipliers compounding with a single HALF_UP rounding (₹9.00 → ₹9.90 → ₹19.82/pc = ₹4,955.00), the per-line turnaround surcharge, tier boundaries (₹3,137.40 at 249 → ₹2,250.00 at 250), MRP struck inside an active window and MRP actually charged outside it, cart stepper/typed/clamped edits in both the page and the drawer, line removal, the ₹999 shipping threshold from below (₹594.00 → ₹99.00 shipping), above (₹1,000.00 → free) and exactly at it (₹999.00 → still free), the full fourteen-coupon error matrix, four real orders whose confirmation, account history **and admin order detail** agree with the review step, a valid 41 KB invoice PDF, a real Razorpay test-mode order handed **89,900 paise for a ₹899.00 total**, and a mid-checkout admin price change refused with **409 `price_changed`** and charged correctly only after re-previewing. **No `price_mismatch_events` row came from any clean flow** — the only rows are the deliberate price change, correctly labelled.
+
+**One first-pass finding is now closed by better behaviour, so its step was rewritten.** err-12 previously recorded that nothing re-validated an applied coupon, so the cart advertised a stale discount and the review step could only degrade to "Could not confirm pricing … you can still place the order". Coupons now revalidate, so the step asserts the new rule instead: the coupon is dropped and checkout is clean at ₹2,200.00.
+
+**What was not exercised, and should not be read as working:** payment capture (third-party iframe); the `rush` surcharge on the two products where it is `is_active: false`; guest-to-customer cart merge; multi-device carts; post-payment order progression; and partial refunds. Lighthouse produced no usable numbers (see Performance). Two storefront vitest cases were failing from other agents' in-progress parity work at capture time; no figure asserted here is sensitive to it, since every coupon amount in this run is exact to the paisa.
 
 
 ## Accessibility
 
-**One critical violation was found and fixed during this run.** On `/cart`, the button that removes an applied coupon was an icon-only `<button>` with no accessible name (`button-name`, 1 node), so a screen-reader user could apply a coupon but had no way to discover how to take it off again. It surfaced on every captured step where a coupon was applied. It was fixed by `frontend-developer` — the button now carries `aria-label="Remove coupon <CODE>"` and the icon is `aria-hidden` — and the spec was re-captured: the re-run reports **zero critical violations**, with `color-contrast` the only rule still firing anywhere in the flow.
+**Criticals.** FIXED THIS PASS — `label` (2 nodes, /coupons/new and /coupons/[id]) and `button-name` (up to 20 nodes, /coupons): the admin coupon form's Code / Description / Value / Max Discount / Minimum Order / Usage Limit / Per User Limit / trigger inputs had bare <label> elements with no htmlFor-id pairing, and the coupons list's per-row action trigger was an icon-only button with no accessible name, so that count scaled with the number of rows. Fixed by `admin-panel-developer` (useId-derived id/htmlFor pairs plus aria-labelledby on the Base UI Select, and aria-label="Actions for <CODE>" on the row trigger) and re-captured: /coupons and /coupons/new now report zero criticals.
 
-**Serious.** `color-contrast`, 88 node-instances summed across the run on nine routes (`/account`, `/account/orders/[id]`, `/cart`, `/checkout`, `/checkout/confirmation/[id]`, the category listing and both product pages). This is the same site-wide, token-level contrast finding the Product Catalog and Quantity Pricing runs reported; it is attributable to the routes rather than to this feature's controls, and it appears on pages containing none of this feature's UI. It still prevents a clean WCAG AA pass and is best fixed once in the theme tokens.
+FIXED IN THE PREVIOUS PASS, still clean — `button-name` on the storefront /cart remove-coupon button.
 
-**Moderate.** A skipped heading level (`heading-order`) on the order confirmation and account order-detail screens, so the money breakdown is not reachable as a properly nested section by heading navigation — on exactly the two screens customers go back to re-read. Plus a nested/duplicated `<main>` in the account shell (`landmark-main-is-top-level`, `landmark-no-duplicate-main`, `landmark-unique`, one node each), which sends landmark navigation to the wrong place. Both are pre-existing rather than introduced here.
+REMAINING, NOT THIS FEATURE'S SURFACE — `button-name` (1 node) on the admin panel's /login page. Pre-existing, reported by earlier admin-panel runs, and the only critical left anywhere in this 64-step run.
+
+**Serious.** `color-contrast` — 190 node-instances summed across 64 steps on the storefront's /account, /cart, /checkout, confirmation and order-detail routes, the category listing, the two PDPs, plus the admin /dashboard and /coupons. Unchanged across three consecutive pipeline runs, present on pages containing none of this feature's UI, and attributable to the theme tokens rather than to any coupon or pricing control.
+
+**Moderate.** `heading-order` (6 nodes) on the order confirmation and account order-detail screens — a skipped heading level on exactly the two pages a customer re-reads to check what they paid. `landmark-unique` (7), `landmark-main-is-top-level` (3), `landmark-no-duplicate-main` (3) — a nested/duplicated <main> in the storefront account shell and on the admin pages; landmark navigation lands in the wrong place. Pre-existing. `region` (5), `landmark-one-main` (1), `page-has-heading-one` (1) on the admin /login page — pre-existing, outside this feature.
 
 *automated scan only — manual/screen-reader review still needed*
 
 
 ## Performance
 
-**No usable performance numbers came out of this run, and the ones in the run log must not be quoted.** Both Lighthouse checkpoints report `url_mismatch: true`: the audit asked for `/account` and `/account/orders/[id]` and measured `http://localhost:3000/auth/login?redirect=…` instead. The cause is structural — the storefront keeps its access token in memory only and restores sessions from an httpOnly refresh cookie, which the capture fixture's storage seeding cannot copy into the context Lighthouse drives, so any authenticated route redirects the audit to the login page. The scores sitting in the log (performance 0.28 initial, 0.50 final) are the **login page's** numbers, not the account pages'. `warm_cache: true` on the final checkpoint would make it non-comparable to a cold load even if the URL had matched.
+**No usable performance numbers came out of this run, and the ones in the run log must not be quoted.**
 
-This is the same failure mode `pipeline/README.md` already documents for the admin panel's in-memory token; this run confirms it applies to the storefront too, for authenticated routes. Future checkout runs should either turn Lighthouse off (as the other three specs here already do) or checkpoint on a public route such as a product page, which needs no session.
+VOID — `url_mismatch: true`. Lighthouse requested /account and audited http://localhost:3000/auth/login?redirect=%2Faccount instead. The storefront's access token lives in memory only and the session is restored from an httpOnly refresh cookie that capture.js's storage seeding cannot copy into the context Lighthouse drives, so any authenticated route redirects the audit to the login page. The numbers in the log are the LOGIN page's and must not be read as the account page's.
 
-Even with the URLs fixed these would be **Next.js dev-server measurements, not a production build** — useful only as a run-over-run baseline, never as a shippable score. The practical consequence is that nothing in this run says whether the review step and the confirmation page are fast enough, which for a checkout is the measurement that would have been worth having.
+VOID for the same reason, and `warm_cache: true` would make it non-comparable to a cold load even if the URL had matched.
+
+- Unchanged from the previous pass: Lighthouse should be off for authenticated storefront routes (as it already is on five of the six specs here) or checkpointed on a public PDP.
+
+- Next.js dev-server numbers in any case, never a shippable score.
+
+- No performance signal exists for the review step or the confirmation page — the two screens that matter commercially.
+
+- Observed, not a defect: the global rate limit is 100/minute/IP (`app/core/limiter.py` default_limits) and the capture tripped it once on /cart (a 429 recorded at sc-09). Coupon auto-revalidation now adds one POST /coupons/validate per cart mutation on top of the existing debounced cart sync, so a busy session sits closer to that ceiling than before.
 
 
 ## Recommendations & future improvements
 
-**High — decide what a product/category-restricted coupon means, then enforce it.** `coupons.applicable_product_ids` and `applicable_category_ids` are written by the admin API, stored, and echoed back to the admin UI, but neither `coupon_service.validate_for_customer` nor `order_service._compute_order` ever reads them. Verified end to end during this run: a coupon restricted to product 17 discounted a cart containing none of that product by its full ₹445.00, at both the validate and the preview endpoint. Any product-scoped promotion run today silently discounts the whole catalogue. This is the only finding here that can cost real margin. It needs a semantic decision first — scope the discount basis to the matching lines, or refuse the coupon outright — which is why it was flagged rather than handed straight to a developer.
+**High —** Make coupon revalidation deterministic. Do not let a single shared 600 ms timer be re-armed by every `items` identity change (including the sync's own write-back), and do not abandon the check when a line is `pricePending` — re-run it once the cart settles instead. A customer should never be shown a discount that checkout will refuse, even though the preview correctly refuses it today.
 
-**High — re-validate an applied coupon when the cart changes.** A coupon with a ₹3,000 minimum applied to a ₹4,450.00 cart keeps advertising its ₹445.00 discount after the customer removes a line and drops to ₹2,200.00. `features/cart/store.ts` comments that the coupon is "cleared when items change significantly", but no code does it. The customer only finds out at the review step, which then shows "Could not confirm pricing: Minimum order amount for this coupon is ₹3000.00" next to the reassuring "shown amounts are estimates. You can still place the order" — and placing it is guaranteed to fail. Pair the re-validation with a narrower review-step message: when the preview failed with a 4xx the server will repeat, say so and disable Place Order instead of inviting the attempt.
+**High —** Invert `revalidateAppliedCoupon`'s failure handling to match its own documented rule: drop on a verdict (an is_valid:false response), keep on an outage (transport failure, 429, 5xx). Today a brief loss of connectivity removes a perfectly valid coupon while a 429 keeps an invalid one.
 
-**Medium — make the cart's server sync removal-safe.** `CartSyncProvider` debounces its sync by 500 ms and its login-merge unions local and server lines, so a removal that has not been pushed yet is undone by the next full page load; a deleted line and a line added on another device look identical to that merge. Observed directly: the cart read ₹2,200.00 with two lines and the review step then read ₹4,450.00 with three. Either flush on unload or give the merge tombstones / per-line timestamps. The window is narrow, but the direction of the failure is wrong — it resurrects something the customer deleted, one screen before payment.
+**Medium —** Persist the coupon's eligible-line set on the order (or recompute it in the order-detail builders) so account order history and the admin order detail can show which lines a scoped coupon covered. A ₹220.00 discount on a three-line order is currently unauditable after the fact.
 
-**Medium — fix the heading and landmark findings on the two order-summary screens.** One skipped heading level on the confirmation and order-detail pages, and a duplicated `<main>` in the account shell. Small changes on the screens customers return to.
+**Medium —** Return the true eligible-line set for an unscoped exclude-discounted coupon too, so 'Applied to N of M items' and the per-line 'Not included in the coupon' marks are consistent with the basis the discount was actually computed on.
 
-**Medium — stop collecting Lighthouse on authenticated storefront routes** until the audit can carry a session; both checkpoints in this run measured the login page.
+**Medium —** Say the whole-cart-minimum rule in the coupon's own copy, not only in the rejection message, so 'min ₹3,000' on a scoped coupon is not read as '₹3,000 of the scoped items'.
 
-**Low — address `color-contrast` once at the theme-token level** rather than screen by screen: 88 node-instances across nine routes, unchanged across three consecutive pipeline runs.
+**Medium —** Fix the `heading-order` and duplicated-<main> findings on the confirmation and account order-detail screens, and stop collecting Lighthouse on authenticated storefront routes until the audit can carry a session.
 
-**Low — two small clean-ups.** The email sign-in form reports a 429 rate-limit as "Invalid email or password. Please try again.", so a merely rate-limited customer is told their credentials are wrong and keeps retrying. And the dev catalogue points at a CDN product image that does not exist (`cdn.urgentprinters.com/product/2a97…_lg.webp`), producing `404`s through `next/image` on three captured steps — harmless in itself, but it is noise that would mask a real failed request.
+**Low —** Address `color-contrast` once at the theme-token level (190 node-instances, three consecutive runs, mostly on pages unrelated to this feature), distinguish a 429 from bad credentials in the email sign-in form, and give the dev catalogue a product image that resolves so real failed requests are not buried in 404 noise.
 

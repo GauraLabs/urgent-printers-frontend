@@ -17,7 +17,7 @@ const rowsByProduct = new Map<string, FxRow[]>();
 for (const r of fx.rows) rowsByProduct.set(r.p, [...(rowsByProduct.get(r.p) ?? []), r]);
 
 // The backend charges (and records) an MRP/savings on lines whose discount rounds to 0%, but the public
-// tiers it publishes strip the MRP in that case, so the storefront cannot know it. See the KNOWN MISMATCH test.
+// tiers it publishes now keep the MRP in that case, so the storefront counts it.
 const mrpHiddenAtZeroPercent = (r: FxRow) => r.e!.mrp !== null && r.e!.pct === null;
 
 const describeRow = (r: FxRow) => `${r.p} q=${r.q} ${JSON.stringify(r.o)} [${r.k}]`;
@@ -192,8 +192,8 @@ describe("MRP on lines whose discount rounds to 0%", () => {
     expect(zeroPct.length).toBeGreaterThan(0);
   });
 
-  // Backend: compute_item_pricing returns mrp_per_unit/discount_per_unit (counted in preview mrpSavings) at 0%.
-  // Storefront: public tiers carry no MRP at 0% so the cart line has none. it.fails flips to a failure once fixed.
+  // The public tiers carry the MRP even when the percent rounds to 0, so the storefront counts the same savings
+  // as the backend order preview.
   it("storefront knows the same MRP as the backend charges for (backend savings counted in the order preview)", () => {
     for (const r of zeroPct) {
       const { product } = products.get(r.p)!;

@@ -70,6 +70,9 @@ interface BackendPricing {
   totalAmount: string | number;
   mrpSavings?: string | number | null;
   totalSavings?: string | number | null;
+  eligibleItemIds?: (string | number)[] | null;
+  eligibleLineIndexes?: number[] | null;
+  couponScope?: { productNames?: string[]; categoryNames?: string[]; allItems?: boolean } | null;
 }
 
 interface BackendPreviewItem {
@@ -312,7 +315,20 @@ export function mapPreview(raw: BackendPreview): OrderPreview {
     lineSavings:     nOpt(i.lineSavings),
     unitLabel:       normalizeUnitLabel(i.unitLabel),
   }));
-  return { pricing: mapPricing(raw.pricing), items, estimatedDelivery: raw.estimatedDelivery };
+  return {
+    pricing: mapPricing(raw.pricing),
+    items,
+    estimatedDelivery: raw.estimatedDelivery,
+    ...(raw.pricing.eligibleItemIds && { eligibleItemIds: raw.pricing.eligibleItemIds.map(String) }),
+    ...(raw.pricing.eligibleLineIndexes && { eligibleLineIndexes: raw.pricing.eligibleLineIndexes }),
+    ...(raw.pricing.couponScope && {
+      couponScope: {
+        productNames: raw.pricing.couponScope.productNames ?? [],
+        categoryNames: raw.pricing.couponScope.categoryNames ?? [],
+        allItems: raw.pricing.couponScope.allItems ?? true,
+      },
+    }),
+  };
 }
 
 export async function previewOrder(

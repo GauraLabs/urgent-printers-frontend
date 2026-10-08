@@ -8,7 +8,7 @@ import { getCart, syncCart } from "@/lib/api";
 import { trackConnectivity } from "@/features/site-status/trackConnectivity";
 import { correctionMessage } from "./corrections";
 import { loadLineRates } from "./rateResolver";
-import { revalidateAppliedCoupon } from "./couponRevalidation";
+import { cartSignature, revalidateAppliedCoupon } from "./couponRevalidation";
 import type { CartItem } from "@/types";
 
 // Local wins on conflict — guest's latest intent takes priority over an old server item
@@ -35,6 +35,9 @@ function announceCorrections(serverLines: CartItem[]): void {
   toastCorrected(store.applyQuantityCorrections(serverLines.filter((l) => l.quantityCorrected)));
   store.applyServerLines(serverLines);
 }
+
+const COUPON_DEBOUNCE_MS = 600;
+const COUPON_RETRY_DELAYS_MS = [3000, 10000, 30000];
 
 export function CartSyncProvider({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -158,12 +161,27 @@ export function CartSyncProvider({ children }: { children: React.ReactNode }) {
   }, [pushNow]);
 
   // ── An applied coupon must keep matching the cart ─────────────────────────
-  const couponCode = useCartStore((s) => s.appliedCoupon?.code);
+  // Keyed on a signature of what the coupon depends on, so identity-only store updates neither re-arm
+  // nor cancel the check; the last real change always gets exactly one run after it settles, and a run
+  // that could not reach the server is retried with backoff.
+  const signature = useCartStore(() => cartSignature());
+  const hasCoupon = useCartStore((s) => Boolean(s.appliedCoupon));
   useEffect(() => {
-    if (!_isHydrated || !couponCode) return;
-    const timer = setTimeout(() => void revalidateAppliedCoupon(tokenRef.current ?? undefined), 600);
-    return () => clearTimeout(timer);
-  }, [items, couponCode, _isHydrated]);
+    if (!_isHydrated || !hasCoupon) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const run = (attempt: number) => {
+      timer = setTimeout(async () => {
+        const result = await revalidateAppliedCoupon(tokenRef.current ?? undefined);
+        if (!cancelled && result === "kept" && attempt < COUPON_RETRY_DELAYS_MS.length) run(attempt + 1);
+      }, attempt === 0 ? COUPON_DEBOUNCE_MS : COUPON_RETRY_DELAYS_MS[attempt - 1]);
+    };
+    run(0);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [signature, hasCoupon, _isHydrated]);
 
   return <>{children}</>;
 }

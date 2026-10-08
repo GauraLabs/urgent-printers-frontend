@@ -9,7 +9,8 @@ import { SafeImage } from "@/components/common/SafeImage";
 import { useCartStore } from "@/features/cart/store";
 import { PriceDisplay } from "@/components/common/PriceDisplay";
 import { SavingsSummary, savingsFromPricing, type Savings } from "@/components/common/SavingsSummary";
-import { cartLinePrice, cartMrpSavings, cartTotalSavings } from "@/features/cart/savings";
+import { cartLinePrice, cartMrpSavings, cartTotalSavings, isLineEligible } from "@/features/cart/savings";
+import { CouponMinNote, CouponScopeNote } from "@/features/cart/CouponScopeNote";
 import { formatQty } from "@/lib/quantity";
 import { formatPrice, cn } from "@/lib/utils";
 import type { CartItem, Address, OrderPreview } from "@/types";
@@ -49,6 +50,9 @@ export function ReviewStep({
 
   // Use server-confirmed pricing when available; fall back to client estimate
   const subtotal      = items.reduce((s, i) => s + i.totalPrice, 0);
+  // The preview is authoritative; the applied coupon's scope covers the time before it arrives.
+  const eligibleIds   = appliedCoupon ? (preview?.eligibleItemIds ?? appliedCoupon.eligibleItemIds) : undefined;
+  const eligibleLines = appliedCoupon ? (preview?.eligibleLineIndexes ?? appliedCoupon.eligibleLineIndexes) : undefined;
   const discount      = preview?.pricing.discountAmount ?? (appliedCoupon?.discountAmount ?? 0);
   const discountedSub = preview ? (preview.pricing.subtotal - preview.pricing.discountAmount) : parseFloat((subtotal - discount).toFixed(2));
   const shipping      = preview?.pricing.shippingCost ?? (discountedSub >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST);
@@ -91,7 +95,7 @@ export function ReviewStep({
           </p>
         </div>
         <div className="divide-y divide-border">
-          {items.map((item) => (
+          {items.map((item, index) => (
             <div key={item.cartItemId} className="flex gap-3 p-4">
               <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-muted shrink-0 border border-border">
                 {item.product.thumbnailUrl ?? item.product.images[0] ? (
@@ -108,6 +112,9 @@ export function ReviewStep({
                   {formatQty(item.config.quantity, item.config.unitLabel)}
                   {item.config.sizeLabel ? ` · ${item.config.sizeLabel}` : ""}
                 </p>
+                {appliedCoupon && (eligibleIds || eligibleLines) && !isLineEligible(index, item.product.id, { eligibleItemIds: eligibleIds, eligibleLineIndexes: eligibleLines }) && (
+                  <p className="text-[11px] text-muted-foreground/80">Not included in the coupon</p>
+                )}
                 <p className="text-xs text-muted-foreground">
                   {[item.config.paperLabel, item.config.finishLabel, item.config.turnaroundLabel]
                     .filter(Boolean)
@@ -185,6 +192,8 @@ export function ReviewStep({
                   </span>
                 </div>
                 <p className="text-[11px] text-muted-foreground mt-0.5">{appliedCoupon.description}</p>
+                <CouponScopeNote items={items} eligibleItemIds={eligibleIds} eligibleLineIndexes={eligibleLines} scope={preview?.couponScope ?? appliedCoupon.scope} />
+                <CouponMinNote coupon={{ ...appliedCoupon, scope: preview?.couponScope ?? appliedCoupon.scope }} />
               </div>
             </div>
           )}
