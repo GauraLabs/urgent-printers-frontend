@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, LayoutGrid, Search, ShoppingBag, User } from "lucide-react";
+import { useMobileMenuStore } from "@/features/navigation/mobileMenuStore";
 import { useCartStore } from "@/features/cart/store";
 import { useMounted } from "@/hooks/useMounted";
 import { ROUTES } from "@/lib/constants/routes";
@@ -10,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { label: "Home",       href: ROUTES.home,     icon: Home,       exact: true  },
-  { label: "Categories", href: ROUTES.products,  icon: LayoutGrid, exact: false },
+  { label: "Categories", href: ROUTES.products,  icon: LayoutGrid, exact: false, opensMenu: true },
   { label: "Search",     href: ROUTES.search,    icon: Search,     exact: false },
   { label: "Cart",       href: null,             icon: ShoppingBag,exact: false },
   { label: "Account",    href: ROUTES.account,   icon: User,       exact: false },
@@ -22,6 +23,7 @@ export function MobileBottomNav() {
 
   const itemCount = useCartStore((s) => s.itemCount());
   const openCart = useCartStore((s) => s.openCart);
+  const openMenu = useMobileMenuStore((s) => s.setOpen);
 
   // Suppress persisted value until after hydration
   const displayCount = mounted ? itemCount : 0;
@@ -57,6 +59,24 @@ export function MobileBottomNav() {
                     </span>
                   )}
                 </span>
+                <span className="text-[10px] leading-none font-medium">{item.label}</span>
+              </button>
+            );
+          }
+
+          if ("opensMenu" in item) {
+            return (
+              <button
+                key={item.label}
+                type="button"
+                onClick={() => openMenu(true)}
+                aria-haspopup="dialog"
+                className={cn(
+                  "flex-1 flex flex-col items-center justify-center gap-1 min-h-[44px] min-w-[44px] transition-colors",
+                  isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Icon size={22} />
                 <span className="text-[10px] leading-none font-medium">{item.label}</span>
               </button>
             );

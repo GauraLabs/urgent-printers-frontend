@@ -47,7 +47,7 @@ export async function Footer() {
               <Logo style={{ height: 26 }} />
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-              Premium print solutions delivered fast. Quality that speaks before you do.
+              Wedding cards, invitations and celebration stationery, delivered across India. Quality that speaks before you do.
             </p>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li className="flex items-center gap-2">

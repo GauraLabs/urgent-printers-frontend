@@ -8,6 +8,7 @@ import { SafeImage } from "@/components/common/SafeImage";
 import { Breadcrumb } from "@/components/common/Breadcrumb";
 import { SearchPageProvider, SearchPageForm, SearchResultsFrame } from "@/features/products/SearchPageClient";
 import { ROUTES } from "@/lib/constants/routes";
+import { FALLBACK_POPULAR_SEARCHES } from "@/lib/constants/popularSearches";
 
 interface PageProps {
   searchParams: Promise<{ q?: string }>;
@@ -19,16 +20,10 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   return {
     title,
     description: q
-      ? `Find print products matching "${q}" — business cards, flyers, banners, and more.`
-      : "Search our full range of printing products.",
+      ? `Find wedding and celebration products matching "${q}" — cards, envelopes, welcome boards, and more.`
+      : "Search wedding cards, shagun envelopes, welcome boards and more.",
   };
 }
-
-const FALLBACK_POPULAR_TERMS = [
-  "Business Cards", "A5 Flyers", "Vinyl Banners",
-  "Custom T-Shirts", "Packaging Boxes", "Tri-Fold Brochures",
-  "Luxury Foil Cards", "Eco Packaging", "Embroidered Caps",
-];
 
 export default async function SearchPage({ searchParams }: PageProps) {
   const { q = "" } = await searchParams;
@@ -42,7 +37,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
     getPopularSearches(),
   ]);
 
-  const terms = popularSearches.length > 0 ? popularSearches : FALLBACK_POPULAR_TERMS;
+  const terms = popularSearches.length > 0 ? popularSearches : FALLBACK_POPULAR_SEARCHES;
 
   return (
     <SearchPageProvider>
@@ -63,7 +58,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
         <div className="mb-8">
           <h1 className="font-heading font-bold text-2xl lg:text-3xl">Search</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Find the perfect print product for your business
+            Find the perfect card, envelope or keepsake for your celebration
           </p>
         </div>
       )}

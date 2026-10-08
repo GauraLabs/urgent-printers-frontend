@@ -4,31 +4,34 @@ import { productHref } from "@/features/products/productHref";
 import { useState, useRef, useEffect, useId } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, X, Loader2, ArrowRight, TrendingUp } from "lucide-react";
+import { Search, X, Loader2, ArrowRight, TrendingUp, History } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { SafeImage } from "@/components/common/SafeImage";
 import { searchProducts } from "@/lib/api";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useMounted } from "@/hooks/useMounted";
+import { useRecentSearchesStore } from "@/features/search/recentSearches";
 import { ROUTES } from "@/lib/constants/routes";
 import { ProductPrice } from "@/components/common/ProductPrice";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/types";
 
-const POPULAR = [
-  "Business Cards",
-  "Flyers",
-  "Vinyl Banners",
-  "Custom T-Shirts",
-  "Packaging Boxes",
-  "Brochures",
-];
-
 function hasPrice(product: Product): boolean {
   return product.pricingTiers.length > 0 || product.priceFrom !== undefined;
 }
 
-export function HeaderSearch() {
+interface HeaderSearchProps {
+  popularSearches: string[];
+}
+
+export function HeaderSearch({ popularSearches }: HeaderSearchProps) {
   const router = useRouter();
+  const mounted = useMounted();
+  const recentTerms = useRecentSearchesStore((s) => s.terms);
+  const recordSearch = useRecentSearchesStore((s) => s.record);
+  const removeSearch = useRecentSearchesStore((s) => s.remove);
+  const clearSearches = useRecentSearchesStore((s) => s.clear);
+  const visibleRecent = mounted ? recentTerms : [];
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -64,6 +67,7 @@ export function HeaderSearch() {
 
   function submit(q = query.trim()) {
     if (!q) return;
+    recordSearch(q);
     setIsOpen(false);
     setQuery("");
     router.push(`${ROUTES.search}?q=${encodeURIComponent(q)}`);
@@ -241,7 +245,7 @@ export function HeaderSearch() {
               <p className="text-sm font-medium mb-1">No results for &ldquo;{query}&rdquo;</p>
               <p className="text-xs text-muted-foreground mb-3">Try one of these instead:</p>
               <div className="flex flex-wrap gap-1.5">
-                {POPULAR.filter(t => t.toLowerCase() !== query.toLowerCase()).slice(0, 5).map(term => (
+                {popularSearches.filter(t => t.toLowerCase() !== query.toLowerCase()).slice(0, 5).map(term => (
                   <button
                     key={term}
                     onClick={() => { setQuery(term); submit(term); }}
@@ -251,6 +255,51 @@ export function HeaderSearch() {
                   </button>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Recent searches (empty state, client-only) */}
+          {query.trim() === "" && visibleRecent.length > 0 && (
+            <div className="p-3 pb-0">
+              <div className="flex items-center justify-between px-1 mb-2">
+                <div className="flex items-center gap-1.5">
+                  <History size={12} className="text-muted-foreground" aria-hidden="true" />
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                    Recent Searches
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={clearSearches}
+                  className="text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Clear all
+                </button>
+              </div>
+              <ul className="flex flex-wrap gap-2">
+                {visibleRecent.map((term) => (
+                  <li
+                    key={term}
+                    className="inline-flex items-center rounded-full border border-border bg-secondary text-secondary-foreground"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => submit(term)}
+                      className="pl-3 pr-1.5 py-1 text-xs font-medium hover:text-primary transition-colors"
+                    >
+                      {term}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeSearch(term)}
+                      aria-label={`Remove ${term} from recent searches`}
+                      className="pr-2 pl-0.5 py-1 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <X size={11} aria-hidden="true" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 
@@ -264,7 +313,7 @@ export function HeaderSearch() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                {POPULAR.map((term) => (
+                {popularSearches.map((term) => (
                   <button
                     key={term}
                     onClick={() => { setQuery(term); submit(term); }}

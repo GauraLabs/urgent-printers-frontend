@@ -1,8 +1,9 @@
 export const ROUTES = {
   home: "/",
   products: "/products",
-  category: (slug: string) => `/products/${slug}`,
-  product: (categorySlug: string, slug: string) => `/products/${categorySlug}/${slug}`,
+  category: (slug: string) => `/products/${encodeURIComponent(slug)}`,
+  product: (categorySlug: string, slug: string) =>
+    `/products/${encodeURIComponent(categorySlug)}/${encodeURIComponent(slug)}`,
   cart: "/cart",
   checkout: "/checkout",
   checkoutConfirmation: (orderId: string) => `/checkout/confirmation/${orderId}`,

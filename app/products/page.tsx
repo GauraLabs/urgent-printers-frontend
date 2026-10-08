@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { getProducts, getCategories, searchProductsPaged } from "@/lib/api";
 import { Breadcrumb } from "@/components/common/Breadcrumb";
 import { CategoryHero } from "@/features/categories/CategoryHero";
+import { CategoryChipBar } from "@/features/products/CategoryChipBar";
+import { toChipCategories } from "@/features/products/categoryChips";
+import { buildCategoryTree } from "@/features/navigation/buildCategoryTree";
 import { ProductsPageShell } from "@/features/products/ProductsPageShell";
 import type { ProductFilters } from "@/types";
 
@@ -22,12 +25,12 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     return {
       title: "All Products",
       description:
-        "Browse our full range of printing products — business cards, flyers, banners, packaging, brochures, and custom merchandise. Fast delivery across India.",
+        "Browse wedding cards and invitations, shagun envelopes, wedding essentials, welcome boards, and birthday and anniversary printing. Delivered across India.",
     };
   }
   return {
     title: `Results for "${query}"`,
-    description: `Find print products matching "${query}" — business cards, flyers, banners, and more.`,
+    description: `Find wedding and celebration products matching "${query}" — cards, envelopes, welcome boards, and more.`,
   };
 }
 
@@ -78,11 +81,12 @@ export default async function ProductsPage({ searchParams }: PageProps) {
           <p className="text-muted-foreground text-sm mt-1">
             {isSearching
               ? `${total} product${total !== 1 ? "s" : ""} found`
-              : "Premium printing for every business need — delivered fast across India"}
+              : "Wedding cards, envelopes and celebration essentials — delivered across India"}
           </p>
         </div>
       </div>
 
+      <CategoryChipBar categories={toChipCategories(buildCategoryTree(categories))} />
       <ProductsPageShell
         products={products}
         total={total}

@@ -168,7 +168,8 @@ function ShellInner({
           {isSearching && <> for &ldquo;{current.search}&rdquo;</>}
         </p>
         <div className="flex items-center gap-2 ml-auto">
-          <FiltersDrawer categories={categories} showCategoryFilter={showCategoryFilter} disabled={isSearching} />
+          {/* The category chip bar above covers category switching on mobile; the desktop sidebar keeps its own group. */}
+          <FiltersDrawer categories={categories} showCategoryFilter={false} disabled={isSearching} />
           <SortDropdown disabled={isSearching} />
         </div>
       </div>

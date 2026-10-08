@@ -1,5 +1,6 @@
 import { timingSafeEqual, createHash } from "crypto";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { CATEGORIES_CACHE_TAG } from "@/lib/api/categories";
 import { NextResponse, type NextRequest } from "next/server";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { planProductRevalidation } from "@/lib/revalidate-products";
@@ -44,6 +45,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // Product fetches carry no cache tags — freshness comes from page-level
   // `revalidate = 60` — so this must invalidate by path, not by tag.
+  // Any product change can move a category's productCount, which the header menu shows.
+  revalidateTag(CATEGORIES_CACHE_TAG, { expire: 0 });
+
   if (plan.all) {
     revalidatePath("/", "layout");
     return NextResponse.json({ revalidated: true, all: true });

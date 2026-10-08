@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 import { getProducts, getCategories, getCategoryBySlug } from "@/lib/api";
 import { Breadcrumb } from "@/components/common/Breadcrumb";
 import { CategoryHero } from "@/features/categories/CategoryHero";
+import { CategoryChipBar } from "@/features/products/CategoryChipBar";
+import { toChipCategories } from "@/features/products/categoryChips";
+import { buildCategoryTree } from "@/features/navigation/buildCategoryTree";
 import { ProductsPageShell } from "@/features/products/ProductsPageShell";
 import { ROUTES } from "@/lib/constants/routes";
 import type { ProductFilters } from "@/types";
@@ -25,7 +28,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return {
     title: category.name,
-    description: `${category.description} Fast delivery across India. Order from 25 units.`,
+    description: `${category.description} Delivered across India.`,
     openGraph: {
       title: `${category.name} | Urgent Printers`,
       description: category.description,
@@ -103,6 +106,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
           </div>
         </div>
 
+        <CategoryChipBar categories={toChipCategories(buildCategoryTree(categories))} />
         <ProductsPageShell
           products={products}
           total={total}

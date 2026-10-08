@@ -1,5 +1,6 @@
 "use client";
 
+import { useRecentSearchesStore } from "@/features/search/recentSearches";
 import { createContext, useContext, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { SearchField } from "@/components/common/SearchField";
@@ -31,6 +32,7 @@ export function SearchPageProvider({ children }: { children: ReactNode }) {
 export function SearchPageForm({ query }: { query: string }) {
   const { isPending, navigate } = usePending();
   const [value, setValue] = useState(query);
+  const recordSearch = useRecentSearchesStore((s) => s.record);
 
   // Resync when the URL changes from elsewhere (popular-search links, back/forward).
   const [prevQuery, setPrevQuery] = useState(query);
@@ -46,6 +48,7 @@ export function SearchPageForm({ query }: { query: string }) {
       className="mb-10"
       onSubmit={(e) => {
         e.preventDefault();
+        recordSearch(value);
         navigate(value);
       }}
     >

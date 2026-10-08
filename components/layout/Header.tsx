@@ -4,19 +4,32 @@ import { HeaderSearch } from "./HeaderSearch";
 import { HeaderActions } from "./HeaderActions";
 import { ThemeSelector } from "./ThemeSelector";
 import { MobileNavDrawer } from "./MobileNavDrawer";
-import { getNavLinks } from "@/lib/api";
+import { MegaMenu } from "@/features/navigation/MegaMenu";
+import { NavCategoriesProvider } from "@/features/navigation/NavCategoriesContext";
+import { buildCategoryTree } from "@/features/navigation/buildCategoryTree";
+import { FALLBACK_POPULAR_SEARCHES } from "@/lib/constants/popularSearches";
+import { getNavLinks, getCategories, getPopularSearches } from "@/lib/api";
 import { ROUTES } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils";
 
 const FALLBACK_NAV_LINKS = [{ label: "Products", href: ROUTES.products }];
 
 export async function Header() {
-  const fetchedLinks = await getNavLinks("header");
+  // getCategories / getPopularSearches swallow API errors and return [], so a
+  // failing fetch degrades to NavLinks-only and the fallback search terms.
+  const [fetchedLinks, categories, popular] = await Promise.all([
+    getNavLinks("header"),
+    getCategories(),
+    getPopularSearches(),
+  ]);
+  const navCategories = buildCategoryTree(categories);
+  const popularSearches = popular.length > 0 ? popular : FALLBACK_POPULAR_SEARCHES;
   const navLinks = fetchedLinks.length > 0 ? fetchedLinks : FALLBACK_NAV_LINKS;
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <NavCategoriesProvider categories={navCategories}>
         <div className="flex h-14 items-center gap-4">
           {/* Mobile nav trigger */}
           <MobileNavDrawer navLinks={navLinks} />
@@ -28,6 +41,7 @@ export async function Header() {
 
           {/* Desktop nav */}
           <nav className="hidden lg:flex items-center gap-1 ml-4" aria-label="Main navigation">
+            <MegaMenu />
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -46,12 +60,13 @@ export async function Header() {
           <div className="flex-1" />
 
           {/* Search */}
-          <HeaderSearch />
+          <HeaderSearch popularSearches={popularSearches} />
 
           {/* Theme + Cart + Auth */}
           <ThemeSelector />
           <HeaderActions />
         </div>
+      </NavCategoriesProvider>
       </div>
     </header>
   );

@@ -51,6 +51,8 @@ function mapCategory(c: BackendCategory): Category {
   };
 }
 
+export const CATEGORIES_CACHE_TAG = "categories";
+
 // ─── API functions ────────────────────────────────────────────────────────────
 
 export async function getCategories(): Promise<Category[]> {
@@ -60,7 +62,11 @@ export async function getCategories(): Promise<Category[]> {
     return mockCategories;
   }
   try {
-    const data = await apiFetch<BackendCategory[]>("/categories");
+    // The root-layout Header calls this on every page, so it must be cached; the tag
+    // lets /api/revalidate/products bust it when a catalog change moves product counts.
+    const data = await apiFetch<BackendCategory[]>("/categories", {
+      next: { revalidate: 300, tags: [CATEGORIES_CACHE_TAG] },
+    });
     return data.map(mapCategory);
   } catch (err) {
     logApiError("getCategories", err);

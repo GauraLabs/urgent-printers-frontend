@@ -3,7 +3,7 @@ import { AuthGuard } from "@/features/auth/AuthGuard";
 
 export const metadata: Metadata = {
   title: "Checkout",
-  description: "Complete your print order securely.",
+  description: "Complete your order securely.",
   robots: { index: false, follow: false },
 };
 

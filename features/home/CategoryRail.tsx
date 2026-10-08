@@ -20,7 +20,7 @@ interface CategoryRailProps {
 const MotionLink = motion.create(Link);
 
 /**
- * Full-catalog companion to CategoryGrid's curated bento layout above it —
+ * Quick-jump nav to every category (the per-category product shelves follow below) —
  * every category, swipeable on touch and click/scroll-driven on desktop.
  * Tile widths are fixed (not vw-based) so the row overflows and is
  * demonstrably scrollable even on wide desktop viewports with a short
@@ -38,7 +38,7 @@ export function CategoryRail({ categories }: CategoryRailProps) {
             id="category-rail-heading"
             eyebrow="Explore"
             title="All Categories"
-            description="Swipe through everything we print"
+            description="Swipe through everything we make"
             align="left"
             className="mb-8"
           />
@@ -66,7 +66,7 @@ export function CategoryRail({ categories }: CategoryRailProps) {
               id="category-rail-heading"
               eyebrow="Explore"
               title="All Categories"
-              description="Swipe through everything we print, from cards to custom merch"
+              description="Swipe through everything we make, from invitations to event essentials"
               align="left"
             />
           </motion.div>

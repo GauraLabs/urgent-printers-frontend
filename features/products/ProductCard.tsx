@@ -13,10 +13,10 @@ import { getCornerBadge } from "./badge";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { ProductPrice } from "@/components/common/ProductPrice";
 import { cn } from "@/lib/utils";
-import type { Product } from "@/types";
+import type { CardProduct } from "./cardProduct";
 
 interface ProductCardProps {
-  product: Product;
+  product: CardProduct;
   className?: string;
   /** Must match the calling grid's real column layout — see next/image `sizes` docs. */
   sizes?: string;

@@ -10,10 +10,10 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { ROUTES } from "@/lib/constants/routes";
 import { useScrollRail } from "./useScrollRail";
 import { ScrollRailButtons } from "./ScrollRailButtons";
-import type { Product } from "@/types";
+import type { CardProduct } from "@/features/products/cardProduct";
 
 interface FeaturedProductsProps {
-  products: Product[];
+  products: CardProduct[];
 }
 
 export function FeaturedProducts({ products }: FeaturedProductsProps) {
@@ -40,7 +40,7 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
               id="featured-heading"
               eyebrow="Bestsellers"
               title="Popular Products"
-              description="Our customers' most-ordered print products"
+              description="Our customers' most-ordered products"
               align="left"
             />
           </motion.div>
