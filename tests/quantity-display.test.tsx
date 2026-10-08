@@ -319,3 +319,16 @@ describe("card links and tier chips", () => {
     expect(onSelect).toHaveBeenCalledWith(100);
   });
 });
+
+describe("cart eligibility with a 0% MRP", () => {
+  it("a line whose MRP is above its price is excluded from the exclusive-coupon basis and its savings count", async () => {
+    const { eligibleSubtotal, cartMrpSavings } = await import("@/features/cart/savings");
+    const mk = (mrp?: number): CartItem => ({
+      cartItemId: "x", product: { id: "1", slug: "s", name: "S", images: [], categoryName: "", categorySlug: "" },
+      config: { quantity: 50, turnaroundId: "std", turnaroundLabel: "S", turnaroundExtraCost: 0 },
+      pricePerUnit: 6, mrpPerUnit: mrp, totalPrice: 300,
+    });
+    expect(eligibleSubtotal([mk(6.01), mk()])).toBe(300);
+    expect(cartMrpSavings([mk(6.01)])).toBe(0.5);
+  });
+});

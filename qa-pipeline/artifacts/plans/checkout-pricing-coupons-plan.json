@@ -1,0 +1,341 @@
+{
+  "feature_found": true,
+  "feature_name": "Checkout pricing and coupons (cart → checkout → order)",
+  "source_files": [
+    "urgent-printers-frontend/app/cart/page.tsx",
+    "urgent-printers-frontend/app/checkout/page.tsx",
+    "urgent-printers-frontend/app/checkout/confirmation/[orderId]/page.tsx",
+    "urgent-printers-frontend/app/account/orders/[id]/page.tsx",
+    "urgent-printers-frontend/features/checkout/CheckoutPageClient.tsx",
+    "urgent-printers-frontend/features/checkout/ReviewStep.tsx",
+    "urgent-printers-frontend/features/checkout/AddressStep.tsx",
+    "urgent-printers-frontend/features/checkout/PaymentStep.tsx",
+    "urgent-printers-frontend/features/checkout/repricing.ts",
+    "urgent-printers-frontend/features/checkout/clientPricing.ts",
+    "urgent-printers-frontend/features/cart/store.ts",
+    "urgent-printers-frontend/features/cart/savings.ts",
+    "urgent-printers-frontend/features/cart/CartDrawerItem.tsx",
+    "urgent-printers-frontend/features/cart/CartSyncProvider.tsx",
+    "urgent-printers-frontend/features/products/configurator/ProductConfigurator.tsx",
+    "urgent-printers-frontend/components/common/QuantityInput.tsx",
+    "urgent-printers-frontend/components/common/PriceDisplay.tsx",
+    "urgent-printers-frontend/components/common/SavingsSummary.tsx",
+    "urgent-printers-frontend/lib/api/coupons.ts",
+    "urgent-printers-frontend/lib/api/orders.ts",
+    "urgent-printers-frontend/lib/api/validationErrors.ts",
+    "urgent-printers-frontend/lib/quantity.ts",
+    "urgent-printers-backend/app/services/pricing.py",
+    "urgent-printers-backend/app/services/order_service.py",
+    "urgent-printers-backend/app/services/coupon_service.py",
+    "urgent-printers-backend/app/services/shipping_rules.py",
+    "urgent-printers-backend/app/services/price_mismatch_service.py",
+    "urgent-printers-backend/app/services/order_limits.py",
+    "urgent-printers-backend/app/api/v1/routes/orders.py",
+    "urgent-printers-backend/app/api/v1/routes/coupons.py",
+    "urgent-printers-backend/app/api/v1/routes/admin/coupons.py",
+    "urgent-printers-backend/app/schemas/order.py",
+    "urgent-printers-backend/app/schemas/coupon.py",
+    "urgent-printers-backend/app/models/coupon.py",
+    ".claude/plans/quantity-pricing-spec.md",
+    ".claude/plans/mrp-discount-spec.md"
+  ],
+  "user_goal": "Configure products, see an honest price at every step, apply a coupon, and pay exactly the total the review page promised.",
+  "business_goal": "Every rupee a customer is charged must match the server's own calculation, or the business either loses margin or loses trust at the last step before payment.",
+  "user_journey": [
+    { "step": "Price a configuration on the product page", "route_or_state": "/products/business-cards/matte-finish-business-cards" },
+    { "step": "Collect several products and adjust quantities", "route_or_state": "/cart" },
+    { "step": "Apply or remove a coupon", "route_or_state": "/cart (coupon input)" },
+    { "step": "Pick an address", "route_or_state": "/checkout step 1" },
+    { "step": "Pick a payment method", "route_or_state": "/checkout step 2" },
+    { "step": "Review the server-confirmed breakdown", "route_or_state": "/checkout step 3" },
+    { "step": "Place the order", "route_or_state": "POST /api/v1/orders" },
+    { "step": "See the confirmation", "route_or_state": "/checkout/confirmation/[orderId]" },
+    { "step": "Re-read the same figures in order history", "route_or_state": "/account/orders/[id]" }
+  ],
+  "happy_path": [
+    {
+      "step_id": "hp-01",
+      "action": "Sign in with the test customer's email and password (the phone tab uses Firebase phone auth, which cannot be driven in dev)",
+      "selector": "button 'Email' tab, then #email / #password, then button 'Sign In'",
+      "expected_result": "Redirected away from /auth/login with a 'Welcome back, QA!' toast; the header shows the signed-in state."
+    },
+    {
+      "step_id": "hp-02",
+      "action": "Open the Matte Finish Business Cards PDP and read the default configuration's price",
+      "selector": "/products/business-cards/matte-finish-business-cards; price summary containing 'GST and shipping calculated at checkout'",
+      "expected_result": "Opens at the listing quantity 250 with ₹9.00/pc and Total ₹2,250.00, a struck MRP of ₹10.00/pc and '10% off' (the product's discount window 2026-10-03→2026-10-23 is active)."
+    },
+    {
+      "step_id": "hp-03",
+      "action": "Switch size to 2.5 x 2.5 in (Square) (x1.1) and read the repriced total",
+      "selector": "button '2.5 x 2.5 in (Square)'",
+      "expected_result": "₹9.90/pc and Total ₹2,475.00 — exactly the server's unit_price x quantity for that multiplier."
+    },
+    {
+      "step_id": "hp-04",
+      "action": "Stack the remaining upgrades: 350 GSM Matte (x1.1), UV Coating (x1.3), Double Sided (x1.4)",
+      "selector": "buttons '350 GSM Matte', 'UV Coating', 'Double Sided'",
+      "expected_result": "₹19.82/pc and Total ₹4,955.00 (9.00 x 1.1 x 1.1 x 1.3 x 1.4 = 19.8198 → HALF_UP 19.82), with the struck MRP at ₹22.02/pc."
+    },
+    {
+      "step_id": "hp-05",
+      "action": "Return to the default options and choose the Express turnaround (+₹150 flat)",
+      "selector": "turnaround option 'Express'",
+      "expected_result": "Per-piece rate stays ₹9.00 and the total becomes ₹2,400.00 — the surcharge is per line, not per piece."
+    },
+    {
+      "step_id": "hp-06",
+      "action": "Type a quantity that sits between tiers (249) and then cross the tier boundary (250)",
+      "selector": "input[aria-label='Quantity']",
+      "expected_result": "249 prices at the 100-tier rate ₹12.60/pc = ₹3,137.40; 250 drops to ₹9.00/pc = ₹2,250.00."
+    },
+    {
+      "step_id": "hp-07",
+      "action": "Add the Standard-turnaround 250 business cards to the cart",
+      "selector": "button 'Add to Cart · ₹2,250.00'",
+      "expected_result": "The line is added and the CTA relabels to 'Update Cart'; the header cart count increments."
+    },
+    {
+      "step_id": "hp-08",
+      "action": "Add a second product (Custom Die-Cut Stickers, 100 pcs, standard) and a third (A5 Flyers, 250 pcs, Express +₹200)",
+      "selector": "/products/stickers-labels/custom-diecut-stickers and /products/flyers-leaflets/a5-flyers",
+      "expected_result": "Cart holds 3 lines: ₹1,000.00 (stickers at the 100-tier ₹10.00/pc), ₹1,200.00 (flyers 250 x ₹4.00 + ₹200 express)."
+    },
+    {
+      "step_id": "hp-09",
+      "action": "Open /cart and read the order summary",
+      "selector": "/cart, 'Order Summary' panel",
+      "expected_result": "Items subtotal ₹4,450.00, Shipping 'Free — above ₹999', Incl. GST ₹678.81, Total ₹4,450.00, and an MRP savings line of ₹250.00."
+    },
+    {
+      "step_id": "hp-10",
+      "action": "Apply the percentage coupon QA-CHECKOUT-PCT10",
+      "selector": "input[placeholder='Coupon code'] then button 'Apply'",
+      "expected_result": "'QA-CHECKOUT-PCT10 applied', Coupon −₹445.00, After coupon ₹4,005.00, Total ₹4,005.00, Incl. GST ₹610.93."
+    },
+    {
+      "step_id": "hp-11",
+      "action": "Proceed to checkout and pick the saved 'QA Checkout Home' address",
+      "selector": "link 'Proceed to Checkout', then the saved address card, then button 'Continue'",
+      "expected_result": "Step 2 (payment) is shown with the address recorded."
+    },
+    {
+      "step_id": "hp-12",
+      "action": "Choose Cash on Delivery and continue to review",
+      "selector": "payment option 'Cash on Delivery', then 'Continue'",
+      "expected_result": "Step 3 renders and a server order preview is fetched (the 'Confirming prices…' indicator resolves)."
+    },
+    {
+      "step_id": "hp-13",
+      "action": "Read every figure in the review breakdown and compare it against the server's own preview",
+      "selector": "'Price Breakdown' panel",
+      "expected_result": "Items subtotal ₹4,450.00, Coupon discount −₹445.00, After coupon ₹4,005.00, Shipping Free, Total Payable ₹4,005.00, 'Inclusive of GST: ₹610.93', savings ₹695.00 (₹250.00 MRP + ₹445.00 coupon) — identical to POST /orders/preview. No 'Prices have been updated' banner."
+    },
+    {
+      "step_id": "hp-14",
+      "action": "Place the order",
+      "selector": "button 'Place Order · ₹4,005.00'",
+      "expected_result": "Navigates to /checkout/confirmation/<id> with 'Order placed successfully!'; the cart and the applied coupon are cleared."
+    },
+    {
+      "step_id": "hp-15",
+      "action": "Read the confirmation page totals",
+      "selector": "/checkout/confirmation/[orderId]",
+      "expected_result": "Same three lines, same quantities/options, subtotal ₹4,450.00, discount ₹445.00, shipping Free, GST ₹610.93, total ₹4,005.00, coupon code QA-CHECKOUT-PCT10."
+    },
+    {
+      "step_id": "hp-16",
+      "action": "Open the same order from account order history",
+      "selector": "/account/orders then the order row",
+      "expected_result": "Identical quantities, option labels, per-unit prices, line totals, coupon, shipping, GST and grand total as the review step."
+    }
+  ],
+  "alternate_paths": [
+    {
+      "path_name": "Cart quantity editing and line removal",
+      "steps": [
+        {
+          "step_id": "alt-01",
+          "action": "Use the cart line's + and − buttons on the stickers line (min 50, max 1000, step 5 for a min under 100)",
+          "selector": "button 'Increase quantity' / 'Decrease quantity' inside the stickers line",
+          "expected_result": "Quantity steps by 5 and the line total reprices immediately from the tier card (100 → 105 stays ₹10.00/pc = ₹1,050.00)."
+        },
+        {
+          "step_id": "alt-02",
+          "action": "Type a quantity across a tier boundary in the cart (stickers 250)",
+          "selector": "input[aria-label='Quantity'] in the stickers line",
+          "expected_result": "Reprices to ₹6.00/pc = ₹1,500.00 and the summary subtotal follows."
+        },
+        {
+          "step_id": "alt-03",
+          "action": "Type above the product maximum (1,500 where max is 1,000)",
+          "selector": "input[aria-label='Quantity'] in the stickers line",
+          "expected_result": "Clamped to 1,000 on blur with a muted helper line, never a hard error; line total ₹2,500.00 at ₹2.50/pc."
+        },
+        {
+          "step_id": "alt-04",
+          "action": "Edit the same line from the cart drawer instead of the cart page",
+          "selector": "header button 'Cart, N items' then the drawer's quantity field",
+          "expected_result": "The drawer honours the same bounds and shows the same repriced total as the page."
+        },
+        {
+          "step_id": "alt-05",
+          "action": "Remove the flyers line",
+          "selector": "button 'Remove A5 Flyers'",
+          "expected_result": "The line disappears, the item count drops, and the subtotal/GST/total recompute without it."
+        }
+      ]
+    },
+    {
+      "path_name": "Shipping threshold just below, exactly at, and above ₹999",
+      "steps": [
+        {
+          "step_id": "alt-06",
+          "action": "Hold a single stickers line at 99 pcs (₹594.00) and read the cart summary",
+          "selector": "/cart 'Order Summary'",
+          "expected_result": "Shipping ₹99.00 with 'Add ₹405.00 for free'; Total ₹693.00; GST ₹90.61."
+        },
+        {
+          "step_id": "alt-07",
+          "action": "Raise it to 100 pcs (₹1,000.00)",
+          "selector": "input[aria-label='Quantity']",
+          "expected_result": "Shipping flips to 'Free — above ₹999'; Total ₹1,000.00; GST ₹152.54."
+        },
+        {
+          "step_id": "alt-08",
+          "action": "Apply QA-CHECKOUT-SHIPEDGE (flat ₹1) so the post-coupon total is exactly ₹999.00",
+          "selector": "coupon input + 'Apply'",
+          "expected_result": "Shipping stays Free at exactly the ₹999 threshold (the rule is ≥, not >); Total ₹999.00."
+        },
+        {
+          "step_id": "alt-09",
+          "action": "Swap in QA-CHECKOUT-FLAT200 so the post-coupon total falls under the threshold",
+          "selector": "coupon input + 'Apply'",
+          "expected_result": "Shipping reappears at ₹99.00, Total ₹899.00 — and the checkout preview agrees."
+        },
+        {
+          "step_id": "alt-10",
+          "action": "Carry that below-threshold coupon through to the checkout review",
+          "selector": "/checkout step 3 'Price Breakdown'",
+          "expected_result": "Server preview shows subtotal ₹1,000.00, discount ₹200.00, shipping ₹99.00, GST ₹122.03, total ₹899.00 — equal to the cart's own figures."
+        }
+      ]
+    },
+    {
+      "path_name": "Online (Razorpay) payment amount equals the server total",
+      "steps": [
+        {
+          "step_id": "alt-11",
+          "action": "Reach review with 'Pay Online (Razorpay)' selected and place the order",
+          "selector": "button 'Pay ₹X securely'",
+          "expected_result": "The order is created, the response carries payment.amount equal to the server's total_amount and a razorpay_order_id; the Razorpay modal's amount in paise is Math.round(total x 100)."
+        }
+      ]
+    }
+  ],
+  "error_paths": [
+    {
+      "trigger": "Coupon code that does not exist (QA-CHECKOUT-NOPE)",
+      "expected_ui_response": "Red helper under the coupon input: 'Invalid or inactive coupon code'; no discount line appears.",
+      "selector": "p.text-destructive under input[placeholder='Coupon code']"
+    },
+    {
+      "trigger": "Deactivated coupon (QA-CHECKOUT-OFF, is_active = false)",
+      "expected_ui_response": "'Invalid or inactive coupon code' — a deactivated coupon is deliberately indistinguishable from a missing one.",
+      "selector": "p.text-destructive"
+    },
+    {
+      "trigger": "Expired coupon (QA-CHECKOUT-EXPIRED, expires_at in the past)",
+      "expected_ui_response": "'Coupon has expired'.",
+      "selector": "p.text-destructive"
+    },
+    {
+      "trigger": "Not-yet-valid coupon (QA-CHECKOUT-FUTURE, valid_from 2027-01-01)",
+      "expected_ui_response": "'Coupon is not active yet'.",
+      "selector": "p.text-destructive"
+    },
+    {
+      "trigger": "Minimum order not met (QA-CHECKOUT-MIN3000 on a ₹1,000.00 cart)",
+      "expected_ui_response": "'Minimum order amount is ₹3000.00'.",
+      "selector": "p.text-destructive"
+    },
+    {
+      "trigger": "Minimum order met exactly (QA-CHECKOUT-MINEXACT, min ₹1,000.00, cart ₹1,000.00)",
+      "expected_ui_response": "Applies (the check is basis < minimum, so equality passes): −₹100.00, and because the post-coupon total is ₹900.00 the ₹99.00 shipping returns → Total ₹999.00.",
+      "selector": "'QA-CHECKOUT-MINEXACT applied'"
+    },
+    {
+      "trigger": "Percentage coupon with a max-discount cap (QA-CHECKOUT-CAP50: 50% capped at ₹100)",
+      "expected_ui_response": "Discount shown as −₹100.00, not −₹2,225.00; the badge still reads '50% OFF'.",
+      "selector": "Order Summary coupon row"
+    },
+    {
+      "trigger": "Coupon excluding already-discounted items (QA-CHECKOUT-NODISC, 20%) on a mixed cart",
+      "expected_ui_response": "Discount is 20% of the non-discounted lines only (₹2,200.00 of ₹4,450.00) = −₹440.00, and the server preview agrees.",
+      "selector": "Order Summary coupon row + review breakdown"
+    },
+    {
+      "trigger": "Global usage limit already reached (QA-CHECKOUT-ONCE, usage_limit 1, consumed by an earlier order)",
+      "expected_ui_response": "'Coupon usage limit reached'.",
+      "selector": "p.text-destructive"
+    },
+    {
+      "trigger": "Per-user limit already reached (QA-CHECKOUT-PERUSER, per_user_limit 1, used by this customer's earlier order)",
+      "expected_ui_response": "'You have already used this coupon the maximum number of times'.",
+      "selector": "p.text-destructive"
+    },
+    {
+      "trigger": "Remove an applied coupon",
+      "expected_ui_response": "The discount row, the 'After coupon' row and the savings line disappear; subtotal/shipping/GST/total return to the uncoupled figures.",
+      "selector": "button next to 'QA-CHECKOUT-… applied' (XCircle)"
+    },
+    {
+      "trigger": "Quantity below the product minimum reaches the server (stale client)",
+      "expected_ui_response": "Order preview answers 422 quantity_below_minimum with 'Matte Finish Business Cards: minimum order is 100 pcs'; the client refetches the clamped cart and returns the customer to /cart with that message as a toast.",
+      "selector": "toast + /cart"
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "A product's price is edited in the admin panel while the customer sits on the review step",
+      "existing_validation": "createOrder sends expectedTotal; order_service raises 409 price_changed when it differs by more than ₹0.01, and CheckoutPageClient re-previews and shows 'Prices changed while you were checking out. Nothing has been charged.'",
+      "risk_note": "The window between preview and create is the only place a customer can be charged a price they never saw; the 409 must create nothing and the re-preview must show the new total."
+    },
+    {
+      "case": "Clean flow must not write a price_mismatch_events row",
+      "existing_validation": "PriceMismatchService.record_preview only records when the clientPricing block disagrees with the server's computation",
+      "risk_note": "A false-positive row makes the admin price-mismatch dashboard useless; count the table before and after a clean checkout."
+    },
+    {
+      "case": "Coupon validated at the cart, then the cart changes so the coupon no longer qualifies",
+      "existing_validation": "none found on the client — features/cart/store.ts's setAppliedCoupon comment claims the coupon is cleared 'when items change significantly' but no code re-validates it, so a stale discountAmount stays on screen",
+      "risk_note": "The cart shows a discount the server will refuse, and the review step falls back to client estimates with a 'You can still place the order' hint even though placing it must fail."
+    },
+    {
+      "case": "Coupon restricted to specific products or categories (applicable_product_ids)",
+      "existing_validation": "no validation found — potential gap: the column is stored, exposed by the admin API and echoed back, but neither coupon_service nor order_service reads it",
+      "risk_note": "A coupon meant for one product discounts the whole cart; a product-scoped promotion cannot be run safely."
+    },
+    {
+      "case": "MRP charged outside the discount window",
+      "existing_validation": "effective_tier_price returns mrp_per_unit when the product window is inactive",
+      "risk_note": "Needs a product whose window has closed; the storefront must then show no strikethrough and charge the MRP."
+    },
+    {
+      "case": "Turnaround surcharge interaction with the tier rate",
+      "existing_validation": "compute_item_pricing adds extra_cost once per line after unit_price x quantity",
+      "risk_note": "A surcharge folded into the per-piece rate would silently multiply by the quantity."
+    },
+    {
+      "case": "Rush turnaround advertised in print_specs but inactive",
+      "existing_validation": "resolve_option / the turnaround lookup rejects an inactive option with invalid_turnaround",
+      "risk_note": "If the PDP renders an inactive turnaround the customer can configure a line the server will refuse."
+    }
+  ],
+  "gaps": [
+    "Customer phone login uses Firebase phone auth (signInWithPhoneNumber + invisible reCAPTCHA) and cannot be driven in this environment; the backend's own OTP endpoints (used by /auth/register) are the only OTP path reachable in dev. This plan signs in with email + password instead.",
+    "Coupon apply/remove lives only on /cart — the checkout review renders the applied coupon read-only, so coupon error copy can only be asserted on the cart page.",
+    "applicable_product_ids / applicable_category_ids are backend data with no enforcement anywhere; deciding what they should mean (scope the basis, or reject the cart) is a product decision, not a frontend fix.",
+    "The invoice PDF is generated by WeasyPrint on the backend (GET /orders/{id}/receipt); it has no storefront UI entry point on the confirmation page, so it can only be verified outside the browser."
+  ]
+}

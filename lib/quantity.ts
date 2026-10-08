@@ -106,6 +106,8 @@ export interface QuantityPricing {
   /** Server-equal total: subtotal plus the flat turnaround surcharge. */
   total: number;
   savings: number;
+  /** The backend refuses a per-piece price that rounds below one paisa (product_unavailable). */
+  unavailable: boolean;
 }
 
 /** Equals the server's `unit_price * qty + extra`: per-piece rounded first, then multiplied in integer cents. */
@@ -119,7 +121,9 @@ export function priceForQuantity(
   if (!tier) return null;
   const p = priceTier(tier, optionMultiplier);
   const subtotal = (toCents(p.pricePerUnit) * qty) / 100;
-  const savings = p.mrpPerUnit !== undefined && p.discountPercent !== undefined
+  // Savings follow the backend: any MRP above the rounded price counts, even when
+  // the percent rounds to 0 (only the badge/strikethrough is hidden then).
+  const savings = p.mrpPerUnit !== undefined && toCents(p.mrpPerUnit) > toCents(p.pricePerUnit)
     ? (toCents(p.mrpPerUnit) - toCents(p.pricePerUnit)) * qty / 100
     : 0;
   return {
@@ -130,6 +134,7 @@ export function priceForQuantity(
     subtotal,
     total: round2(subtotal + turnaroundExtra),
     savings: round2(savings),
+    unavailable: toCents(p.pricePerUnit) < 1,
   };
 }
 
@@ -156,7 +161,7 @@ export function nextTierNudge(
   if (!next || next.quantity > (max ?? MAX_LINE_QUANTITY)) return null;
   const current = priceForQuantity(tiers, qty, optionMultiplier, turnaroundExtra);
   const upgraded = priceForQuantity(tiers, next.quantity, optionMultiplier, turnaroundExtra);
-  if (!current || !upgraded) return null;
+  if (!current || !upgraded || upgraded.unavailable) return null;
   const cur = toCents(current.total);
   const nxt = toCents(upgraded.total);
   if (!(nxt <= cur || (nxt - cur) * 100 <= cur * NUDGE_MAX_EXTRA_PERCENT)) return null;

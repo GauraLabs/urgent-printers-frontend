@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { ReviewStep } from "@/features/checkout/ReviewStep";
 import { useCartStore } from "@/features/cart/store";
 import { useAuthStore } from "@/features/auth/store";
 import { createOrder, previewOrder, verifyPayment, isPriceChangedError, isQuantityLimitError, getCart } from "@/lib/api";
+import { revalidateAppliedCoupon } from "@/features/cart/couponRevalidation";
 import { buildClientPricing } from "./clientPricing";
 import { applyPreviewPrices, pricesDiffer } from "./repricing";
 import type { SiteStatus } from "@/lib/api/siteStatus";
@@ -69,6 +70,8 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
     couponCode:      appliedCoupon?.code || undefined,
   }), [items, appliedCoupon, paymentMethod]);
 
+  const runPreviewRef = useRef<typeof runPreview>(runPreview);
+
   function handleAddressNext(addr: PartialAddress) {
     setAddress(addr);
     setStep(2);
@@ -84,7 +87,11 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
     setPreview(null);
     setPreviewError(null);
     setPriceNotice(null);
-    void runPreview(address, token, "Totals below use the latest prices. Review them before placing your order.", false, true);
+    void (async () => {
+      // Re-check the coupon first so the preview and the review match what the server will accept.
+      if (await revalidateAppliedCoupon(token)) await new Promise((r) => setTimeout(r, 0));
+      void runPreviewRef.current(address, token, "Totals below use the latest prices. Review them before placing your order.", false, true);
+    })();
   }
 
   // Fetches the authoritative preview and, if its line prices differ from the
@@ -130,6 +137,8 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
       setPreviewLoading(false);
     }
   }
+
+  runPreviewRef.current = runPreview;
 
   // A stale cart line outside its allowed range: pull the server's clamped cart,
   // then explain on the cart page rather than failing the checkout.

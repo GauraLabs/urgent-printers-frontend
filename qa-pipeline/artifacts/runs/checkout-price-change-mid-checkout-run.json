@@ -1,0 +1,108 @@
+{
+  "feature_name": "Checkout Price Change Mid Checkout",
+  "plan_path": "qa-pipeline/artifacts/plans/checkout-pricing-coupons-plan.json",
+  "run_timestamp": "2026-10-07T19:15:44.518Z",
+  "trace_path": null,
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "edge-01",
+      "action": "Reach the review step with a server-confirmed preview",
+      "selector": null,
+      "route": "/checkout",
+      "bounding_box": null,
+      "timestamp_ms": 39914,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-price-change-mid-checkout/edge-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 4
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "edge-02",
+      "action": "An admin raises the 100+ tier from ₹10.00 to ₹11.00 while the customer waits",
+      "selector": null,
+      "route": "/checkout",
+      "bounding_box": null,
+      "timestamp_ms": 40280,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-price-change-mid-checkout/edge-02.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "edge-03",
+      "action": "Press Place Order with the total the customer was shown",
+      "selector": "getByRole('button', { name: /^(Place Order|Pay ₹)/ })",
+      "route": "/checkout",
+      "bounding_box": {
+        "x": 439,
+        "y": 583,
+        "width": 505,
+        "height": 48
+      },
+      "timestamp_ms": 40623,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-price-change-mid-checkout/edge-03.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 409 (Conflict)"
+      ]
+    },
+    {
+      "step_id": "edge-04",
+      "action": "Read the re-previewed total and confirm the order at the new price",
+      "selector": "getByRole('button', { name: /^(Place Order|Pay ₹)/ })",
+      "route": "/checkout/confirmation/20106",
+      "bounding_box": {
+        "x": 439,
+        "y": 583,
+        "width": 505,
+        "height": 48
+      },
+      "timestamp_ms": 41202,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-price-change-mid-checkout/edge-04.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        },
+        {
+          "id": "heading-order",
+          "impact": "moderate",
+          "description": "Ensure the order of headings is semantically correct",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    }
+  ],
+  "lighthouse": {
+    "initial_load": null,
+    "final_state": null
+  }
+}

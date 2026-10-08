@@ -1,5 +1,5 @@
 import type { User } from "@/types";
-import { apiFetch } from "./client";
+import { apiFetch, ApiError } from "./client";
 import { logApiError } from "./logApiError";
 
 const AUTH = "/auth";
@@ -114,6 +114,15 @@ export async function completeRegister(
 }
 
 // ─── Email + Password login ───────────────────────────────────────────────────
+
+/** 429 is rate limiting, not a wrong password; other non-401 failures are not credential errors either. */
+export function loginErrorMessage(err: unknown): string {
+  if (err instanceof ApiError) {
+    if (err.status === 429) return "Too many attempts — please wait a few minutes and try again.";
+    if (err.status === 401 || err.status === 400 || err.status === 422) return "Invalid email or password. Please try again.";
+  }
+  return "We couldn\u2019t sign you in right now. Please try again.";
+}
 
 export async function login(
   email: string,

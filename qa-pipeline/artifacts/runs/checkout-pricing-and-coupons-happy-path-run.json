@@ -1,0 +1,463 @@
+{
+  "feature_name": "Checkout Pricing and Coupons Happy Path",
+  "plan_path": "qa-pipeline/artifacts/plans/checkout-pricing-coupons-plan.json",
+  "run_timestamp": "2026-10-08T03:53:31.873Z",
+  "trace_path": null,
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "hp-01",
+      "action": "Sign in with the test customer email and password",
+      "selector": "locator('#email-address')",
+      "route": "/account",
+      "bounding_box": null,
+      "timestamp_ms": 5664,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "description": "Ensure the main landmark is at top level",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-no-duplicate-main",
+          "impact": "moderate",
+          "description": "Ensure the document has at most one main landmark",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-unique",
+          "impact": "moderate",
+          "description": "Ensure landmarks are unique",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-02",
+      "action": "Read the live price for the default configuration",
+      "selector": "locator('div').filter({ has: getByText('GST and shipping calculated at checkout') }).last()",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 672,
+        "y": 254,
+        "width": 576,
+        "height": 213
+      },
+      "timestamp_ms": 13505,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-02.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 8
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-03",
+      "action": "Switch the size to 2.5 x 2.5 in (Square), a x1.1 option",
+      "selector": "getByRole('button', { name: /^2\\.5 x 2\\.5 in \\(Square\\)/ })",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 964,
+        "y": 339,
+        "width": 284,
+        "height": 41
+      },
+      "timestamp_ms": 13800,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-03.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-04",
+      "action": "Stack 350 GSM Matte, UV Coating and Double Sided on top",
+      "selector": "getByRole('button', { name: /^UV Coating/ })",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 964,
+        "y": 539,
+        "width": 284,
+        "height": 58
+      },
+      "timestamp_ms": 14400,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-04.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-05",
+      "action": "Return to the default options and pick the Express turnaround (+₹150)",
+      "selector": "getByRole('button', { name: /^Express \\d+ business days/ })",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 672,
+        "y": 501,
+        "width": 576,
+        "height": 63
+      },
+      "timestamp_ms": 15326,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-05.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-06",
+      "action": "Type 249 and then 250 to cross a tier boundary",
+      "selector": "getByLabel('Quantity', { exact: true }).first()",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 724,
+        "y": 676,
+        "width": 128,
+        "height": 44
+      },
+      "timestamp_ms": 16056,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-06.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-07",
+      "action": "Add 250 standard business cards to the cart",
+      "selector": "locator('button.w-full.h-12').filter({ hasText: /Add to Cart|Update Cart|Enter a quantity/ })",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 672,
+        "y": 336,
+        "width": 576,
+        "height": 48
+      },
+      "timestamp_ms": 16673,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-07.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    {
+      "step_id": "hp-08",
+      "action": "Add 100 die-cut stickers and 250 express A5 flyers",
+      "selector": null,
+      "route": "/products/flyers-leaflets/a5-flyers",
+      "bounding_box": null,
+      "timestamp_ms": 21246,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-08.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 11
+        }
+      ],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    {
+      "step_id": "hp-09",
+      "action": "Read the cart order summary for all three lines",
+      "selector": "locator('div.lg\\\\:w-80')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 928,
+        "y": 157,
+        "width": 320,
+        "height": 683
+      },
+      "timestamp_ms": 22276,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-09.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-10",
+      "action": "Type and apply the percentage coupon QA-CHECKOUT-PCT10",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 463,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 22577,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-10.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-PCT10",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-11",
+      "action": "Proceed to checkout and continue with the saved default address",
+      "selector": "getByRole('link', { name: /Proceed to Checkout/ })",
+      "route": "/checkout",
+      "bounding_box": {
+        "x": 949,
+        "y": 671,
+        "width": 278,
+        "height": 44
+      },
+      "timestamp_ms": 23043,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-11.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-12",
+      "action": "Choose Cash on Delivery and continue to the review step",
+      "selector": "getByRole('button', { name: /Cash on Delivery/ })",
+      "route": "/checkout",
+      "bounding_box": {
+        "x": 336,
+        "y": 644,
+        "width": 608,
+        "height": 70
+      },
+      "timestamp_ms": 23309,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-12.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-13",
+      "action": "Check every figure in the server-confirmed price breakdown",
+      "selector": "locator('div.rounded-2xl').filter({ hasText: 'Price Breakdown' }).first()",
+      "route": "/checkout",
+      "bounding_box": {
+        "x": 336,
+        "y": 95,
+        "width": 608,
+        "height": 626
+      },
+      "timestamp_ms": 23539,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-13.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-14",
+      "action": "Place the Cash-on-Delivery order",
+      "selector": "getByRole('button', { name: /^(Place Order|Pay ₹)/ })",
+      "route": "/checkout/confirmation/20936",
+      "bounding_box": {
+        "x": 439,
+        "y": 336,
+        "width": 505,
+        "height": 48
+      },
+      "timestamp_ms": 24130,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-14.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 5
+        },
+        {
+          "id": "heading-order",
+          "impact": "moderate",
+          "description": "Ensure the order of headings is semantically correct",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-15",
+      "action": "Read the order confirmation totals",
+      "selector": "locator('main').first()",
+      "route": "/checkout/confirmation/20936",
+      "bounding_box": {
+        "x": 0,
+        "y": 57,
+        "width": 1280,
+        "height": 1348
+      },
+      "timestamp_ms": 24336,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-15.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-16",
+      "action": "Open the same order from account order history",
+      "selector": null,
+      "route": "/account/orders/20936",
+      "bounding_box": null,
+      "timestamp_ms": 26257,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-16.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 6
+        },
+        {
+          "id": "heading-order",
+          "impact": "moderate",
+          "description": "Ensure the order of headings is semantically correct",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "description": "Ensure the main landmark is at top level",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-no-duplicate-main",
+          "impact": "moderate",
+          "description": "Ensure the document has at most one main landmark",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-unique",
+          "impact": "moderate",
+          "description": "Ensure landmarks are unique",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    }
+  ],
+  "lighthouse": {
+    "initial_load": {
+      "url": "http://localhost:3000/auth/login?redirect=%2Faccount",
+      "requested_url": "http://localhost:3000/account",
+      "url_mismatch": true,
+      "session_seeded": true,
+      "warm_cache": true,
+      "fetched_at": "2026-10-08T03:53:53.759Z",
+      "scores": {
+        "performance": 0.28,
+        "accessibility": 0.95,
+        "best_practices": 0.73
+      },
+      "metrics": {
+        "first_contentful_paint_ms": 907.5561,
+        "largest_contentful_paint_ms": 5070.812149999999,
+        "total_blocking_time_ms": 864.9999999999998,
+        "cumulative_layout_shift": 0.3431166666666666,
+        "speed_index_ms": 1915.084023167518,
+        "time_to_interactive_ms": 8571.538532499997
+      }
+    },
+    "final_state": {
+      "url": "http://localhost:3000/auth/login?redirect=%2Faccount%2Forders%2F20936",
+      "requested_url": "http://localhost:3000/account/orders/20936",
+      "url_mismatch": true,
+      "session_seeded": true,
+      "warm_cache": true,
+      "fetched_at": "2026-10-08T03:54:32.931Z",
+      "scores": {
+        "performance": 0.52,
+        "accessibility": 0.95,
+        "best_practices": 0.73
+      },
+      "metrics": {
+        "first_contentful_paint_ms": 947.7264,
+        "largest_contentful_paint_ms": 2490.7157908996583,
+        "total_blocking_time_ms": 648.0000000000005,
+        "cumulative_layout_shift": 0.169575,
+        "speed_index_ms": 1362.7575254100552,
+        "time_to_interactive_ms": 2560.1479019348153
+      }
+    }
+  }
+}

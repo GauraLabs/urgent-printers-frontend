@@ -1,0 +1,305 @@
+{
+  "feature_name": "Checkout Pricing Cart Edits and Shipping Thresholds",
+  "plan_path": "qa-pipeline/artifacts/plans/checkout-pricing-coupons-plan.json",
+  "run_timestamp": "2026-10-08T03:52:40.822Z",
+  "trace_path": null,
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "alt-01",
+      "action": "Step the stickers quantity up with the + button",
+      "selector": "locator('div.flex.gap-4.p-5').filter({ hasText: 'Custom Die-Cut Stickers' }).getByRole('button', { name: 'Increase quantity' })",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 297,
+        "y": 518,
+        "width": 36,
+        "height": 36
+      },
+      "timestamp_ms": 13093,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-02",
+      "action": "Type 250 into the cart line to cross into the cheaper tier",
+      "selector": "locator('div.flex.gap-4.p-5').filter({ hasText: 'Custom Die-Cut Stickers' }).getByLabel('Quantity', { exact: true })",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 193,
+        "y": 518,
+        "width": 96,
+        "height": 36
+      },
+      "timestamp_ms": 13348,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-02.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-03",
+      "action": "Type 1500 where this product allows at most 1,000",
+      "selector": "locator('div.flex.gap-4.p-5').filter({ hasText: 'Custom Die-Cut Stickers' }).getByLabel('Quantity', { exact: true })",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 193,
+        "y": 518,
+        "width": 96,
+        "height": 36
+      },
+      "timestamp_ms": 13568,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-03.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 4
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-04",
+      "action": "Edit the same line from the cart drawer instead of the cart page",
+      "selector": "getByRole('button', { name: /^Cart, \\d+ item/ })",
+      "route": "/products/business-cards",
+      "bounding_box": {
+        "x": 1145,
+        "y": 10,
+        "width": 36,
+        "height": 36
+      },
+      "timestamp_ms": 15645,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-04.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 2
+        }
+      ],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    {
+      "step_id": "alt-05",
+      "action": "Remove the A5 Flyers line",
+      "selector": "getByRole('button', { name: 'Remove A5 Flyers' })",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 848,
+        "y": 627,
+        "width": 27,
+        "height": 27
+      },
+      "timestamp_ms": 16714,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-05.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-06",
+      "action": "Reduce the cart to a single ₹594.00 line, just under the ₹999 threshold",
+      "selector": "getByRole('button', { name: 'Remove Matte Finish Business Cards' })",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 848,
+        "y": 223,
+        "width": 27,
+        "height": 27
+      },
+      "timestamp_ms": 17003,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-06.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-07",
+      "action": "Raise the line to 100 pcs (₹1,000.00), above the threshold",
+      "selector": "locator('div.flex.gap-4.p-5').filter({ hasText: 'Custom Die-Cut Stickers' }).getByLabel('Quantity', { exact: true })",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 193,
+        "y": 311,
+        "width": 96,
+        "height": 36
+      },
+      "timestamp_ms": 17256,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-07.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-08",
+      "action": "Apply a ₹1 coupon so the post-coupon total is exactly ₹999.00",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 383,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 17503,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-08.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-SHIPEDGE",
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 7
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-09",
+      "action": "Swap in a ₹200 coupon so the order falls below the threshold again",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": null,
+      "timestamp_ms": 21794,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-09.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-FLAT200",
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 5
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-10",
+      "action": "Carry the below-threshold coupon through to the checkout review",
+      "selector": null,
+      "route": "/checkout",
+      "bounding_box": null,
+      "timestamp_ms": 22902,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-10.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 7
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-11",
+      "action": "Press Pay and check the amount handed to Razorpay",
+      "selector": "getByRole('button', { name: /^(Place Order|Pay ₹)/ })",
+      "route": "/checkout",
+      "bounding_box": {
+        "x": 439,
+        "y": 336,
+        "width": 505,
+        "height": 48
+      },
+      "timestamp_ms": 23545,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-11.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 6
+        }
+      ],
+      "console_errors": []
+    }
+  ],
+  "lighthouse": {
+    "initial_load": null,
+    "final_state": null
+  }
+}

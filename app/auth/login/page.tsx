@@ -14,7 +14,7 @@ import { FormField } from "@/components/common/FormField";
 import { OTPInputs } from "@/features/auth/OTPInputs";
 import { useAuthStore } from "@/features/auth/store";
 import { useCountdown } from "@/hooks/useCountdown";
-import { login, firebaseVerifyPhone, firebaseVerifyPhoneLink, loginWithGoogle, completeProfile } from "@/lib/api";
+import { login, loginErrorMessage, firebaseVerifyPhone, firebaseVerifyPhoneLink, loginWithGoogle, completeProfile } from "@/lib/api";
 import { ROUTES } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils";
 
@@ -566,8 +566,8 @@ function EmailForm({ onDone }: { onDone: () => void }) {
       setUser(user, token);
       toast.success(`Welcome back, ${user.firstName}!`);
       onDone();
-    } catch {
-      toast.error("Invalid email or password. Please try again.");
+    } catch (err) {
+      toast.error(loginErrorMessage(err));
     }
   }
 

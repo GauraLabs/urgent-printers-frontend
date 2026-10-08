@@ -139,3 +139,22 @@ describe("tierGuideEntries", () => {
     expect(tierGuideEntries(stickers, 50, 1.15, 50, null)[0].pricePerUnit).toBe(6.9);
   });
 });
+
+describe("sub-percent MRP and sub-paisa prices (backend parity)", () => {
+  // MRP 6.01 vs price 6.00 rounds to 0%: the backend still counts the line as discounted.
+  const tiers = [t(50, 6, { mrpPerUnit: 6.01 })];
+  it("keeps the MRP and counts savings when the percent rounds to 0", () => {
+    const p = priceForQuantity(tiers, 50, 1)!;
+    expect(p.mrpPerUnit).toBe(6.01);
+    expect(p.discountPercent).toBeUndefined();
+    expect(p.savings).toBe(0.5);
+  });
+  it("flags a per-piece price that rounds under one paisa as unavailable", () => {
+    expect(priceForQuantity([t(1, 0.01)], 1, 0.4)).toMatchObject({ pricePerUnit: 0, unavailable: true });
+    expect(priceForQuantity([t(1, 0.01)], 1, 1)?.unavailable).toBe(false);
+    expect(priceForQuantity(stickers, 50, 1)?.unavailable).toBe(false);
+  });
+  it("never nudges toward an unavailable tier", () => {
+    expect(nextTierNudge(1, [t(1, 5), t(10, 0.001)], 1, 0, null)).toBeNull();
+  });
+});

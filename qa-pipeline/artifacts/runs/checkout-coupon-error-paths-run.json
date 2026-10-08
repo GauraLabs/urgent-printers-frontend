@@ -1,0 +1,253 @@
+{
+  "feature_name": "Checkout Coupon Error Paths",
+  "plan_path": "qa-pipeline/artifacts/plans/checkout-pricing-coupons-plan.json",
+  "run_timestamp": "2026-10-07T19:19:33.571Z",
+  "trace_path": null,
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "err-01",
+      "action": "Apply a coupon code that does not exist",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 383,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 10888,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-NOPE",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-02",
+      "action": "Apply a deactivated coupon (is_active = false)",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 383,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 11150,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-02.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-OFF",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-03",
+      "action": "Apply an expired coupon",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 383,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 11386,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-03.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-EXPIRED",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-04",
+      "action": "Apply a coupon whose valid_from is in the future",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 383,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 11639,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-04.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-FUTURE",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-05",
+      "action": "Apply a coupon whose ₹3,000 minimum this ₹1,000 cart does not meet",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 383,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 11870,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-05.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-MIN3000",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-06",
+      "action": "Apply a coupon whose ₹1,000 minimum this cart meets exactly",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 383,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 12135,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-06.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-MINEXACT",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-07",
+      "action": "Apply a 50%-off coupon that is capped at ₹100",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 463,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 16977,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-07.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-CAP50",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-08",
+      "action": "Apply a 20% coupon that excludes items already on sale",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": null,
+      "timestamp_ms": 22844,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-08.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-NODISC",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-09",
+      "action": "Apply a coupon whose single global use was already taken",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 463,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 25217,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-09.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-ONCE",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-10",
+      "action": "Apply a coupon this customer has already used once",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 463,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 25495,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-10.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-PERUSER",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-11",
+      "action": "Apply a valid coupon and then remove it again",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 463,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 25843,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-11.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-PCT10",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-12",
+      "action": "Apply a ₹3,000-minimum coupon, then shrink the cart below that minimum",
+      "selector": "getByRole('button', { name: 'Remove Matte Finish Business Cards' })",
+      "route": "/checkout",
+      "bounding_box": {
+        "x": 848,
+        "y": 420,
+        "width": 27,
+        "height": 27
+      },
+      "timestamp_ms": 30371,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-12.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)"
+      ]
+    }
+  ],
+  "lighthouse": {
+    "initial_load": null,
+    "final_state": null
+  }
+}

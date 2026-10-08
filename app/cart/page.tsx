@@ -270,7 +270,7 @@ export default function CartPage() {
                         <p className="text-[10px] text-success/70">
                           {appliedCoupon.discountType === "percentage"
                             ? `${appliedCoupon.discountValue}% off`
-                            : `Flat ₹${appliedCoupon.discountValue} off`}
+                            : `Flat ${formatPrice(appliedCoupon.discountValue)} off`}
                         </p>
                       </div>
                       <span className="font-bold">−{formatPrice(discount)}</span>
@@ -321,8 +321,8 @@ export default function CartPage() {
                     <p className="text-xs font-semibold text-success">{appliedCoupon.code} applied</p>
                     <p className="text-[11px] text-muted-foreground truncate">{appliedCoupon.description}</p>
                   </div>
-                  <button onClick={handleRemovePromo} className="p-1 text-muted-foreground hover:text-destructive transition-colors shrink-0">
-                    <XCircle size={14} />
+                  <button onClick={handleRemovePromo} aria-label={`Remove coupon ${appliedCoupon.code}`} className="p-1 text-muted-foreground hover:text-destructive transition-colors shrink-0">
+                    <XCircle size={14} aria-hidden="true" />
                   </button>
                 </div>
               ) : (

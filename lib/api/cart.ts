@@ -123,11 +123,12 @@ export async function getCart(token: string): Promise<CartItem[]> {
 }
 
 /** Resolves to every line as the server priced it (flagged when it clamped the quantity). */
-export async function syncCart(items: CartItem[], token: string): Promise<CartItem[]> {
+export async function syncCart(items: CartItem[], token: string, opts: { keepalive?: boolean } = {}): Promise<CartItem[]> {
   // REAL API: POST /api/v1/cart/sync — atomically replaces server cart
   const data = await apiFetch<BackendCartItem[] | null>(`${BASE}/sync`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
+    ...(opts.keepalive && { keepalive: true }),
     body: JSON.stringify({ items: items.map(toSyncItem) }),
   });
   return Array.isArray(data) ? data.map(mapCartItem) : [];

@@ -236,6 +236,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
     const pricePerUnit = pricing?.pricePerUnit ?? 0;
     const totalPrice = pricing?.total ?? 0;
     const lineSavings = pricing?.savings ?? 0;
+    const unavailable = pricing?.unavailable ?? false;
     const hasOptionPricing = [printSpec.sizes, printSpec.papers, printSpec.finishes, printSpec.sides].some(
       (opts) => opts.some((o) => o.priceMultiplier !== 1)
     );
@@ -549,6 +550,11 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
               />
             </div>
           </div>
+          {unavailable && (
+            <p role="status" className="text-xs font-medium text-destructive mt-2">
+              This combination isn&rsquo;t available. Please choose different options.
+            </p>
+          )}
           {pricing?.discountPercent !== undefined && lineSavings > 0 && (
             <p className="text-xs font-medium text-foreground mt-2">
               You save {formatPrice(lineSavings)} on this quantity
@@ -574,7 +580,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
           <button
             ref={ref}
             onClick={handleAddToCart}
-            disabled={quantityEmpty}
+            disabled={quantityEmpty || unavailable}
             className={cn(
               "disabled:opacity-60 disabled:cursor-not-allowed",
               "w-full h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2",
@@ -590,7 +596,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
               className="flex items-center justify-center gap-2"
             >
               {isInCart ? <CheckCircle2 size={18} /> : <ShoppingBag size={18} />}
-              {quantityEmpty ? "Enter a quantity" : `${isInCart ? "Update Cart" : "Add to Cart"} · ${formatPrice(totalPrice)}`}
+              {quantityEmpty ? "Enter a quantity" : unavailable ? "Unavailable" : `${isInCart ? "Update Cart" : "Add to Cart"} · ${formatPrice(totalPrice)}`}
             </motion.span>
           </button>
 

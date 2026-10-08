@@ -181,7 +181,7 @@ export function ReviewStep({
                   <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-success/15 text-success font-semibold">
                     {appliedCoupon.discountType === "percentage"
                       ? `${appliedCoupon.discountValue}% OFF`
-                      : `FLAT ₹${appliedCoupon.discountValue} OFF`}
+                      : `FLAT ${formatPrice(appliedCoupon.discountValue)} OFF`}
                   </span>
                 </div>
                 <p className="text-[11px] text-muted-foreground mt-0.5">{appliedCoupon.description}</p>
@@ -210,8 +210,8 @@ export function ReviewStep({
                   <span className="font-medium">Coupon discount</span>
                   <p className="text-[10px] text-success/70 mt-0.5">
                     {appliedCoupon.discountType === "percentage"
-                      ? `${appliedCoupon.discountValue}% off on ₹${subtotal}`
-                      : `Flat ₹${appliedCoupon.discountValue} off`}
+                      ? `${appliedCoupon.discountValue}% off on ${formatPrice(subtotal)}`
+                      : `Flat ${formatPrice(appliedCoupon.discountValue)} off`}
                   </p>
                 </div>
                 <span className="font-bold text-base">−{formatPrice(discount)}</span>

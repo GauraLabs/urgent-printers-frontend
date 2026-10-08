@@ -1,0 +1,1081 @@
+{
+  "feature_name": "Checkout Pricing and Coupons (Cart to Order)",
+  "plan_path": "qa-pipeline/artifacts/plans/checkout-pricing-coupons-plan.json",
+  "run_timestamp": "2026-10-08T03:53:31.873Z",
+  "trace_path": null,
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "hp-01",
+      "action": "Sign in with the test customer email and password",
+      "selector": "locator('#email-address')",
+      "route": "/account",
+      "bounding_box": null,
+      "timestamp_ms": 5664,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "description": "Ensure the main landmark is at top level",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-no-duplicate-main",
+          "impact": "moderate",
+          "description": "Ensure the document has at most one main landmark",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-unique",
+          "impact": "moderate",
+          "description": "Ensure landmarks are unique",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-02",
+      "action": "Read the live price for the default configuration",
+      "selector": "locator('div').filter({ has: getByText('GST and shipping calculated at checkout') }).last()",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 672,
+        "y": 254,
+        "width": 576,
+        "height": 213
+      },
+      "timestamp_ms": 13505,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-02.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 8
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-03",
+      "action": "Switch the size to 2.5 x 2.5 in (Square), a x1.1 option",
+      "selector": "getByRole('button', { name: /^2\\.5 x 2\\.5 in \\(Square\\)/ })",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 964,
+        "y": 339,
+        "width": 284,
+        "height": 41
+      },
+      "timestamp_ms": 13800,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-03.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-04",
+      "action": "Stack 350 GSM Matte, UV Coating and Double Sided on top",
+      "selector": "getByRole('button', { name: /^UV Coating/ })",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 964,
+        "y": 539,
+        "width": 284,
+        "height": 58
+      },
+      "timestamp_ms": 14400,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-04.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-05",
+      "action": "Return to the default options and pick the Express turnaround (+\u20b9150)",
+      "selector": "getByRole('button', { name: /^Express \\d+ business days/ })",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 672,
+        "y": 501,
+        "width": 576,
+        "height": 63
+      },
+      "timestamp_ms": 15326,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-05.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-06",
+      "action": "Type 249 and then 250 to cross a tier boundary",
+      "selector": "getByLabel('Quantity', { exact: true }).first()",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 724,
+        "y": 676,
+        "width": 128,
+        "height": 44
+      },
+      "timestamp_ms": 16056,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-06.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-07",
+      "action": "Add 250 standard business cards to the cart",
+      "selector": "locator('button.w-full.h-12').filter({ hasText: /Add to Cart|Update Cart|Enter a quantity/ })",
+      "route": "/products/business-cards/matte-finish-business-cards",
+      "bounding_box": {
+        "x": 672,
+        "y": 336,
+        "width": 576,
+        "height": 48
+      },
+      "timestamp_ms": 16673,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-07.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    {
+      "step_id": "hp-08",
+      "action": "Add 100 die-cut stickers and 250 express A5 flyers",
+      "selector": null,
+      "route": "/products/flyers-leaflets/a5-flyers",
+      "bounding_box": null,
+      "timestamp_ms": 21246,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-08.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 11
+        }
+      ],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    {
+      "step_id": "hp-09",
+      "action": "Read the cart order summary for all three lines",
+      "selector": "locator('div.lg\\\\:w-80')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 928,
+        "y": 157,
+        "width": 320,
+        "height": 683
+      },
+      "timestamp_ms": 22276,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-09.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-10",
+      "action": "Type and apply the percentage coupon QA-CHECKOUT-PCT10",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 463,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 22577,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-10.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-PCT10",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-11",
+      "action": "Proceed to checkout and continue with the saved default address",
+      "selector": "getByRole('link', { name: /Proceed to Checkout/ })",
+      "route": "/checkout",
+      "bounding_box": {
+        "x": 949,
+        "y": 671,
+        "width": 278,
+        "height": 44
+      },
+      "timestamp_ms": 23043,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-11.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-12",
+      "action": "Choose Cash on Delivery and continue to the review step",
+      "selector": "getByRole('button', { name: /Cash on Delivery/ })",
+      "route": "/checkout",
+      "bounding_box": {
+        "x": 336,
+        "y": 644,
+        "width": 608,
+        "height": 70
+      },
+      "timestamp_ms": 23309,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-12.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-13",
+      "action": "Check every figure in the server-confirmed price breakdown",
+      "selector": "locator('div.rounded-2xl').filter({ hasText: 'Price Breakdown' }).first()",
+      "route": "/checkout",
+      "bounding_box": {
+        "x": 336,
+        "y": 95,
+        "width": 608,
+        "height": 626
+      },
+      "timestamp_ms": 23539,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-13.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-14",
+      "action": "Place the Cash-on-Delivery order",
+      "selector": "getByRole('button', { name: /^(Place Order|Pay \u20b9)/ })",
+      "route": "/checkout/confirmation/20936",
+      "bounding_box": {
+        "x": 439,
+        "y": 336,
+        "width": 505,
+        "height": 48
+      },
+      "timestamp_ms": 24130,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-14.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 5
+        },
+        {
+          "id": "heading-order",
+          "impact": "moderate",
+          "description": "Ensure the order of headings is semantically correct",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-15",
+      "action": "Read the order confirmation totals",
+      "selector": "locator('main').first()",
+      "route": "/checkout/confirmation/20936",
+      "bounding_box": {
+        "x": 0,
+        "y": 57,
+        "width": 1280,
+        "height": 1348
+      },
+      "timestamp_ms": 24336,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-15.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "hp-16",
+      "action": "Open the same order from account order history",
+      "selector": null,
+      "route": "/account/orders/20936",
+      "bounding_box": null,
+      "timestamp_ms": 26257,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-and-coupons-happy-path/hp-16.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 6
+        },
+        {
+          "id": "heading-order",
+          "impact": "moderate",
+          "description": "Ensure the order of headings is semantically correct",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-main-is-top-level",
+          "impact": "moderate",
+          "description": "Ensure the main landmark is at top level",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-no-duplicate-main",
+          "impact": "moderate",
+          "description": "Ensure the document has at most one main landmark",
+          "nodes": 1
+        },
+        {
+          "id": "landmark-unique",
+          "impact": "moderate",
+          "description": "Ensure landmarks are unique",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-01",
+      "action": "Step the stickers quantity up with the + button",
+      "selector": "locator('div.flex.gap-4.p-5').filter({ hasText: 'Custom Die-Cut Stickers' }).getByRole('button', { name: 'Increase quantity' })",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 297,
+        "y": 518,
+        "width": 36,
+        "height": 36
+      },
+      "timestamp_ms": 40550,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-02",
+      "action": "Type 250 into the cart line to cross into the cheaper tier",
+      "selector": "locator('div.flex.gap-4.p-5').filter({ hasText: 'Custom Die-Cut Stickers' }).getByLabel('Quantity', { exact: true })",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 193,
+        "y": 518,
+        "width": 96,
+        "height": 36
+      },
+      "timestamp_ms": 40805,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-02.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-03",
+      "action": "Type 1500 where this product allows at most 1,000",
+      "selector": "locator('div.flex.gap-4.p-5').filter({ hasText: 'Custom Die-Cut Stickers' }).getByLabel('Quantity', { exact: true })",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 193,
+        "y": 518,
+        "width": 96,
+        "height": 36
+      },
+      "timestamp_ms": 41025,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-03.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 4
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-04",
+      "action": "Edit the same line from the cart drawer instead of the cart page",
+      "selector": "getByRole('button', { name: /^Cart, \\d+ item/ })",
+      "route": "/products/business-cards",
+      "bounding_box": {
+        "x": 1145,
+        "y": 10,
+        "width": 36,
+        "height": 36
+      },
+      "timestamp_ms": 43102,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-04.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 2
+        }
+      ],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    {
+      "step_id": "alt-05",
+      "action": "Remove the A5 Flyers line",
+      "selector": "getByRole('button', { name: 'Remove A5 Flyers' })",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 848,
+        "y": 627,
+        "width": 27,
+        "height": 27
+      },
+      "timestamp_ms": 44171,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-05.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-06",
+      "action": "Reduce the cart to a single \u20b9594.00 line, just under the \u20b9999 threshold",
+      "selector": "getByRole('button', { name: 'Remove Matte Finish Business Cards' })",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 848,
+        "y": 223,
+        "width": 27,
+        "height": 27
+      },
+      "timestamp_ms": 44460,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-06.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-07",
+      "action": "Raise the line to 100 pcs (\u20b91,000.00), above the threshold",
+      "selector": "locator('div.flex.gap-4.p-5').filter({ hasText: 'Custom Die-Cut Stickers' }).getByLabel('Quantity', { exact: true })",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 193,
+        "y": 311,
+        "width": 96,
+        "height": 36
+      },
+      "timestamp_ms": 44713,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-07.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-08",
+      "action": "Apply a \u20b91 coupon so the post-coupon total is exactly \u20b9999.00",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 383,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 44960,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-08.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-SHIPEDGE",
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 7
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-09",
+      "action": "Swap in a \u20b9200 coupon so the order falls below the threshold again",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": null,
+      "timestamp_ms": 49251,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-09.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-FLAT200",
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 5
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-10",
+      "action": "Carry the below-threshold coupon through to the checkout review",
+      "selector": null,
+      "route": "/checkout",
+      "bounding_box": null,
+      "timestamp_ms": 50359,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-10.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 7
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-11",
+      "action": "Press Pay and check the amount handed to Razorpay",
+      "selector": "getByRole('button', { name: /^(Place Order|Pay \u20b9)/ })",
+      "route": "/checkout",
+      "bounding_box": {
+        "x": 439,
+        "y": 336,
+        "width": 505,
+        "height": 48
+      },
+      "timestamp_ms": 51002,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-pricing-cart-edits-and-shipping-thresholds/alt-11.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 6
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-01",
+      "action": "Apply a coupon code that does not exist",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 383,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 63090,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-NOPE",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-02",
+      "action": "Apply a deactivated coupon (is_active = false)",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 383,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 63352,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-02.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-OFF",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-03",
+      "action": "Apply an expired coupon",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 383,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 63588,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-03.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-EXPIRED",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-04",
+      "action": "Apply a coupon whose valid_from is in the future",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 383,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 63841,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-04.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-FUTURE",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-05",
+      "action": "Apply a coupon whose \u20b93,000 minimum this \u20b91,000 cart does not meet",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 383,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 64072,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-05.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-MIN3000",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-06",
+      "action": "Apply a coupon whose \u20b91,000 minimum this cart meets exactly",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 383,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 64337,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-06.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-MINEXACT",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-07",
+      "action": "Apply a 50%-off coupon that is capped at \u20b9100",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 463,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 69179,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-07.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-CAP50",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-08",
+      "action": "Apply a 20% coupon that excludes items already on sale",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": null,
+      "timestamp_ms": 75046,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-08.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-NODISC",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-09",
+      "action": "Apply a coupon whose single global use was already taken",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 463,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 77419,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-09.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-ONCE",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-10",
+      "action": "Apply a coupon this customer has already used once",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 463,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 77697,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-10.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-PERUSER",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-11",
+      "action": "Apply a valid coupon and then remove it again",
+      "selector": "getByPlaceholder('Coupon code')",
+      "route": "/cart",
+      "bounding_box": {
+        "x": 949,
+        "y": 463,
+        "width": 208,
+        "height": 36
+      },
+      "timestamp_ms": 78045,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-11.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": "QA-CHECKOUT-PCT10",
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "err-12",
+      "action": "Apply a \u20b93,000-minimum coupon, then shrink the cart below that minimum",
+      "selector": "getByRole('button', { name: 'Remove Matte Finish Business Cards' })",
+      "route": "/checkout",
+      "bounding_box": {
+        "x": 848,
+        "y": 420,
+        "width": 27,
+        "height": 27
+      },
+      "timestamp_ms": 82573,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-coupon-error-paths/err-12.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)"
+      ]
+    },
+    {
+      "step_id": "edge-01",
+      "action": "Reach the review step with a server-confirmed preview",
+      "selector": null,
+      "route": "/checkout",
+      "bounding_box": null,
+      "timestamp_ms": 123687,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-price-change-mid-checkout/edge-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 4
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "edge-02",
+      "action": "An admin raises the 100+ tier from \u20b910.00 to \u20b911.00 while the customer waits",
+      "selector": null,
+      "route": "/checkout",
+      "bounding_box": null,
+      "timestamp_ms": 124053,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-price-change-mid-checkout/edge-02.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "edge-03",
+      "action": "Press Place Order with the total the customer was shown",
+      "selector": "getByRole('button', { name: /^(Place Order|Pay \u20b9)/ })",
+      "route": "/checkout",
+      "bounding_box": {
+        "x": 439,
+        "y": 583,
+        "width": 505,
+        "height": 48
+      },
+      "timestamp_ms": 124396,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-price-change-mid-checkout/edge-03.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 409 (Conflict)"
+      ]
+    },
+    {
+      "step_id": "edge-04",
+      "action": "Read the re-previewed total and confirm the order at the new price",
+      "selector": "getByRole('button', { name: /^(Place Order|Pay \u20b9)/ })",
+      "route": "/checkout/confirmation/20106",
+      "bounding_box": {
+        "x": 439,
+        "y": 583,
+        "width": 505,
+        "height": 48
+      },
+      "timestamp_ms": 124975,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/checkout-price-change-mid-checkout/edge-04.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 3
+        },
+        {
+          "id": "heading-order",
+          "impact": "moderate",
+          "description": "Ensure the order of headings is semantically correct",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    }
+  ],
+  "lighthouse": {
+    "initial_load": {
+      "url": "http://localhost:3000/auth/login?redirect=%2Faccount",
+      "requested_url": "http://localhost:3000/account",
+      "url_mismatch": true,
+      "session_seeded": true,
+      "warm_cache": true,
+      "fetched_at": "2026-10-08T03:53:53.759Z",
+      "scores": {
+        "performance": 0.28,
+        "accessibility": 0.95,
+        "best_practices": 0.73
+      },
+      "metrics": {
+        "first_contentful_paint_ms": 907.5561,
+        "largest_contentful_paint_ms": 5070.812149999999,
+        "total_blocking_time_ms": 864.9999999999998,
+        "cumulative_layout_shift": 0.3431166666666666,
+        "speed_index_ms": 1915.084023167518,
+        "time_to_interactive_ms": 8571.538532499997
+      }
+    },
+    "final_state": {
+      "url": "http://localhost:3000/auth/login?redirect=%2Faccount%2Forders%2F20936",
+      "requested_url": "http://localhost:3000/account/orders/20936",
+      "url_mismatch": true,
+      "session_seeded": true,
+      "warm_cache": true,
+      "fetched_at": "2026-10-08T03:54:32.931Z",
+      "scores": {
+        "performance": 0.52,
+        "accessibility": 0.95,
+        "best_practices": 0.73
+      },
+      "metrics": {
+        "first_contentful_paint_ms": 947.7264,
+        "largest_contentful_paint_ms": 2490.7157908996583,
+        "total_blocking_time_ms": 648.0000000000005,
+        "cumulative_layout_shift": 0.169575,
+        "speed_index_ms": 1362.7575254100552,
+        "time_to_interactive_ms": 2560.1479019348153
+      }
+    }
+  }
+}

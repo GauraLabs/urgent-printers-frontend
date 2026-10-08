@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/features/auth/store";
 import { useCartStore } from "./store";
@@ -8,12 +8,14 @@ import { getCart, syncCart } from "@/lib/api";
 import { trackConnectivity } from "@/features/site-status/trackConnectivity";
 import { correctionMessage } from "./corrections";
 import { loadLineRates } from "./rateResolver";
+import { revalidateAppliedCoupon } from "./couponRevalidation";
 import type { CartItem } from "@/types";
 
 // Local wins on conflict — guest's latest intent takes priority over an old server item
-function mergeCartItems(local: CartItem[], server: CartItem[]): CartItem[] {
+function mergeCartItems(local: CartItem[], server: CartItem[], removed: string[] = []): CartItem[] {
   const result = [...local];
   for (const serverItem of server) {
+    if (removed.includes(serverItem.cartItemId)) continue;
     if (!local.some((l) => l.cartItemId === serverItem.cartItemId)) {
       result.push(serverItem);
     }
@@ -79,12 +81,13 @@ export function CartSyncProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Both have items — merge, then sync result back
-        const merged = mergeCartItems(localItems, serverItems);
+        const merged = mergeCartItems(localItems, serverItems, useCartStore.getState().pendingRemovals);
         const addedFromServer = merged.length > localItems.length;
         setItems(merged);
         const localIds = new Set(localItems.map((l) => l.cartItemId));
         toastCorrected(serverItems.filter((i) => i.quantityCorrected && !localIds.has(i.cartItemId)));
         announceCorrections(await trackConnectivity(syncCart(merged, token)));
+        useCartStore.getState().clearPendingRemovals();
 
         if (addedFromServer) {
           toast.success("Cart updated", {
@@ -110,22 +113,57 @@ export function CartSyncProvider({ children }: { children: React.ReactNode }) {
 
   // ── Debounced sync after every cart mutation ──────────────────────────────
   const syncTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const dirtyRef = useRef(false);
+
+  const pushNow = useCallback((keepalive: boolean) => {
+    const t    = tokenRef.current;
+    const auth = useAuthStore.getState().isAuthenticated;
+    dirtyRef.current = false;
+    if (!auth || !t) return;
+    void trackConnectivity(syncCart(useCartStore.getState().items, t, { keepalive }))
+      .then((lines) => {
+        useCartStore.getState().clearPendingRemovals();
+        announceCorrections(lines);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!_isHydrated) return;
 
+    dirtyRef.current = true;
     clearTimeout(syncTimerRef.current);
-    syncTimerRef.current = setTimeout(() => {
-      const t    = tokenRef.current;
-      const auth = useAuthStore.getState().isAuthenticated;
-      if (!auth || !t) return;
-      void trackConnectivity(syncCart(useCartStore.getState().items, t)).then(announceCorrections).catch(() => {});
-    }, 500);
+    syncTimerRef.current = setTimeout(() => pushNow(false), 500);
 
     return () => clearTimeout(syncTimerRef.current);
-  // tokenRef is a ref — intentionally excluded so token changes don't re-trigger
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, _isHydrated]);
+  }, [items, _isHydrated, pushNow]);
+
+  // Leaving the page inside the debounce window must not lose the last edit
+  // (a removed line would otherwise come back from the old server cart).
+  useEffect(() => {
+    function flush() {
+      if (!dirtyRef.current) return;
+      clearTimeout(syncTimerRef.current);
+      pushNow(true);
+    }
+    function onVisibility() {
+      if (document.visibilityState === "hidden") flush();
+    }
+    window.addEventListener("pagehide", flush);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("pagehide", flush);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [pushNow]);
+
+  // ── An applied coupon must keep matching the cart ─────────────────────────
+  const couponCode = useCartStore((s) => s.appliedCoupon?.code);
+  useEffect(() => {
+    if (!_isHydrated || !couponCode) return;
+    const timer = setTimeout(() => void revalidateAppliedCoupon(tokenRef.current ?? undefined), 600);
+    return () => clearTimeout(timer);
+  }, [items, couponCode, _isHydrated]);
 
   return <>{children}</>;
 }

@@ -15,6 +15,10 @@ interface CartStore {
   // Actions
   addItem: (product: Pick<Product, "id" | "slug" | "name" | "images" | "thumbnailUrl" | "categoryName" | "categorySlug">, config: CartItemConfig, pricePerUnit: number, mrpPerUnit?: number) => void;
   removeItem: (cartItemId: string) => void;
+  // Removals the server has not confirmed yet (persisted), so a reload inside the sync debounce
+  // cannot resurrect the line from the old server cart.
+  pendingRemovals: string[];
+  clearPendingRemovals: () => void;
   updateQuantity: (cartItemId: string, quantity: number) => void;
   setItems: (items: CartItem[]) => void;
   // Applies server range corrections to matching local lines; returns the lines changed.
@@ -77,6 +81,8 @@ export const useCartStore = create<CartStore>()(
       appliedCoupon: null,
       unavailableIds: [],
       rateErrorIds: [],
+      pendingRemovals: [],
+      clearPendingRemovals: () => set((state) => (state.pendingRemovals.length ? { pendingRemovals: [] } : state)),
 
       setRateError: (cartItemId, failed) =>
         set((state) => {
@@ -119,6 +125,7 @@ export const useCartStore = create<CartStore>()(
 
         set((state) => {
           const existing = state.items.find((i) => i.cartItemId === cartItemId);
+          const pendingRemovals = state.pendingRemovals.filter((id) => id !== cartItemId);
           if (existing) {
             return {
               items: state.items.map((i) =>
@@ -126,6 +133,7 @@ export const useCartStore = create<CartStore>()(
                   ? { ...i, config: { ...i.config, quantity: config.quantity }, pricePerUnit, mrpPerUnit, totalPrice }
                   : i
               ),
+              pendingRemovals,
               isOpen: true,
             };
           }
@@ -134,13 +142,17 @@ export const useCartStore = create<CartStore>()(
               ...state.items,
               { cartItemId, product, config, pricePerUnit, mrpPerUnit, totalPrice, addedAt: new Date().toISOString() },
             ],
+            pendingRemovals,
             isOpen: true,
           };
         });
       },
 
       removeItem: (cartItemId) =>
-        set((state) => ({ items: state.items.filter((i) => i.cartItemId !== cartItemId) })),
+        set((state) => ({
+          items: state.items.filter((i) => i.cartItemId !== cartItemId),
+          pendingRemovals: state.pendingRemovals.includes(cartItemId) ? state.pendingRemovals : [...state.pendingRemovals, cartItemId],
+        })),
 
       updateQuantity: (cartItemId, requested) =>
         set((state) => ({
@@ -265,7 +277,7 @@ export const useCartStore = create<CartStore>()(
       // v1: cartItemId normalises option ids; recompute ids persisted by v0.
       version: 1,
       migrate: (persisted) => migrateCartState(persisted) as never,
-      partialize: (state) => ({ items: state.items, appliedCoupon: state.appliedCoupon }),
+      partialize: (state) => ({ items: state.items, appliedCoupon: state.appliedCoupon, pendingRemovals: state.pendingRemovals }),
     }
   )
 );
