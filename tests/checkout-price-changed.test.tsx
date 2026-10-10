@@ -14,7 +14,7 @@ const api = vi.hoisted(() => ({
 const replace = vi.hoisted(() => vi.fn());
 const toast = vi.hoisted(() => Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn() }));
 
-vi.mock("@/lib/api", () => ({ ...api, isPriceChangedError, isQuantityLimitError: () => false, getCart: vi.fn() }));
+vi.mock("@/lib/api", () => ({ ...api, isPriceChangedError, isQuantityLimitError: () => false, isCodUnavailableError: () => false, getCart: vi.fn(), getSiteStatus: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace }) }));
 vi.mock("sonner", () => ({ toast }));
 vi.mock("@/features/site-status/trackConnectivity", () => ({ trackConnectivity: <T,>(p: Promise<T>) => p }));
@@ -56,7 +56,7 @@ describe("CheckoutPageClient price_changed flow", () => {
       .mockRejectedValueOnce(new ApiError("Prices have changed", 409, "price_changed"))
       .mockResolvedValueOnce({ ...mapOrderDetail(orderOnSale), id: "10" });
 
-    render(<CheckoutPageClient siteStatus={{ orders_halted: false, message: null }} />);
+    render(<CheckoutPageClient siteStatus={{ orders_halted: false, message: null, cod: { enabled: true, min_order_amount: null, max_order_amount: null } }} />);
     await user.click(screen.getByText("address-next"));
     await user.click(screen.getByText("payment-next"));
 
@@ -91,7 +91,7 @@ describe("CheckoutPageClient price_changed flow", () => {
     api.previewOrder.mockResolvedValue(matching);
     api.createOrder.mockRejectedValue(new ApiError("boom", 500));
 
-    render(<CheckoutPageClient siteStatus={{ orders_halted: false, message: null }} />);
+    render(<CheckoutPageClient siteStatus={{ orders_halted: false, message: null, cod: { enabled: true, min_order_amount: null, max_order_amount: null } }} />);
     await user.click(screen.getByText("address-next"));
     await user.click(screen.getByText("payment-next"));
     const place = await screen.findByRole("button", { name: /Place Order/ });

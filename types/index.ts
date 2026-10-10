@@ -368,6 +368,8 @@ export interface OrderPreview {
   eligibleLineIndexes?: number[];
   couponScope?: CouponScope;
   estimatedDelivery?: string;
+  codAvailable?: boolean;
+  codReason?: string | null;
 }
 
 // ─── Order ────────────────────────────────────────────────────────────────────

@@ -4,10 +4,14 @@ import { useState } from "react";
 import { ArrowRight, Truck, Lock, ShieldCheck, QrCode, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SelectableCard } from "@/components/ui/selectable-card";
+import type { CodAvailability } from "./cod";
 
 export type PaymentMethod = "online" | "cod";
 
 interface PaymentStepProps {
+  cod?: CodAvailability;
+  codNotice?: string | null;
+  initialMethod?: PaymentMethod;
   onNext: (method: PaymentMethod) => void;
   onBack: () => void;
 }
@@ -55,8 +59,14 @@ const CARD_NETWORKS = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function PaymentStep({ onNext, onBack }: PaymentStepProps) {
-  const [selected, setSelected] = useState<PaymentMethod>("online");
+const COD_REASON_ID = "cod-unavailable-reason";
+
+export function PaymentStep({ cod = { available: true, reason: null }, codNotice = null, initialMethod = "online", onNext, onBack }: PaymentStepProps) {
+  const [picked, setPicked] = useState<PaymentMethod>(initialMethod);
+  // A disabled method can never be the effective selection, even before the parent re-syncs.
+  const selected: PaymentMethod = picked === "cod" && !cod.available ? "online" : picked;
+  const setSelected = setPicked;
+  const codDisabled = !cod.available;
 
   return (
     <div className="space-y-5">
@@ -64,6 +74,12 @@ export function PaymentStep({ onNext, onBack }: PaymentStepProps) {
         <h2 className="font-heading font-bold text-lg">Payment Method</h2>
         <p className="text-muted-foreground text-sm mt-1">Choose how you want to pay</p>
       </div>
+
+      {codNotice && (
+        <p role="status" className="text-xs rounded-lg border border-border bg-muted px-3 py-2 text-foreground">
+          {codNotice}
+        </p>
+      )}
 
       <div className="space-y-3">
 
@@ -140,8 +156,10 @@ export function PaymentStep({ onNext, onBack }: PaymentStepProps) {
         {/* ── Cash on Delivery ── */}
         <SelectableCard
           selected={selected === "cod"}
-          onClick={() => setSelected("cod")}
-          className="w-full p-4"
+          onClick={() => { if (!codDisabled) setSelected("cod"); }}
+          aria-disabled={codDisabled}
+          aria-describedby={codDisabled ? COD_REASON_ID : undefined}
+          className={cn("w-full p-4", codDisabled && "opacity-60 cursor-not-allowed hover:border-border hover:bg-transparent")}
         >
           <div className="flex items-center gap-3">
             <div className={cn(
@@ -159,6 +177,11 @@ export function PaymentStep({ onNext, onBack }: PaymentStepProps) {
             <div>
               <p className="font-semibold text-sm">Cash on Delivery</p>
               <p className="text-xs text-muted-foreground">Pay in cash when your order arrives</p>
+              {codDisabled && (
+                <p id={COD_REASON_ID} className="text-xs text-destructive mt-1">
+                  {cod.reason ?? "Cash on Delivery is currently unavailable"}
+                </p>
+              )}
             </div>
           </div>
         </SelectableCard>

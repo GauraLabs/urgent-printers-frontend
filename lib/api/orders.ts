@@ -92,6 +92,8 @@ export interface BackendPreview {
   pricing: BackendPricing;
   items: BackendPreviewItem[];
   estimatedDelivery?: string;
+  codAvailable?: boolean;
+  codReason?: string | null;
 }
 
 export interface BackendOrderDetail {
@@ -151,6 +153,14 @@ export function isQuantityLimitError(err: unknown): boolean {
 }
 
 export const PRICE_CHANGED_CODE = "price_changed";
+
+export function isCodUnavailableError(err: unknown): boolean {
+  return (
+    err instanceof ApiError &&
+    err.status === 422 &&
+    (err.code === "cod_unavailable" || err.code === "cod_amount_out_of_range")
+  );
+}
 
 export function isPriceChangedError(err: unknown): boolean {
   return err instanceof ApiError && err.status === 409 && err.code === PRICE_CHANGED_CODE;
@@ -319,6 +329,7 @@ export function mapPreview(raw: BackendPreview): OrderPreview {
     pricing: mapPricing(raw.pricing),
     items,
     estimatedDelivery: raw.estimatedDelivery,
+    ...(typeof raw.codAvailable === "boolean" && { codAvailable: raw.codAvailable, codReason: raw.codReason ?? null }),
     ...(raw.pricing.eligibleItemIds && { eligibleItemIds: raw.pricing.eligibleItemIds.map(String) }),
     ...(raw.pricing.eligibleLineIndexes && { eligibleLineIndexes: raw.pricing.eligibleLineIndexes }),
     ...(raw.pricing.couponScope && {

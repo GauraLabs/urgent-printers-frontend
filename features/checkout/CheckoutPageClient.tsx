@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -10,9 +10,10 @@ import { PaymentStep, type PaymentMethod } from "@/features/checkout/PaymentStep
 import { ReviewStep } from "@/features/checkout/ReviewStep";
 import { useCartStore } from "@/features/cart/store";
 import { useAuthStore } from "@/features/auth/store";
-import { createOrder, previewOrder, verifyPayment, isPriceChangedError, isQuantityLimitError, getCart } from "@/lib/api";
+import { createOrder, previewOrder, verifyPayment, isPriceChangedError, isQuantityLimitError, isCodUnavailableError, getCart, getSiteStatus } from "@/lib/api";
 import { revalidateAppliedCoupon } from "@/features/cart/couponRevalidation";
 import { buildClientPricing } from "./clientPricing";
+import { resolveCod, codBlockApplies, type ServerCodBlock } from "./cod";
 import { applyPreviewPrices, pricesDiffer } from "./repricing";
 import type { SiteStatus } from "@/lib/api/siteStatus";
 import { trackConnectivity } from "@/features/site-status/trackConnectivity";
@@ -44,6 +45,39 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError,   setPreviewError]   = useState<string | null>(null);
   const [priceNotice,    setPriceNotice]    = useState<string | null>(null);
+  const [refreshedStatus, setRefreshedStatus] = useState<SiteStatus | null>(null);
+  const liveStatus = refreshedStatus ?? siteStatus;
+  const [codNotice,      setCodNotice]      = useState<string | null>(null);
+  // Set when the server rejected COD on create. Cleared by a fresh preview, a changed
+  // COD config, or re-entering the payment step, so a failed refresh can't strand it.
+  const [serverCodBlock, setServerCodBlock] = useState<ServerCodBlock | null>(null);
+
+  const cod = useMemo(() => {
+    let estimate: number | null = null;
+    try {
+      estimate = buildClientPricing(items, appliedCoupon)?.total ?? null;
+    } catch {
+      estimate = null;
+    }
+    const base = resolveCod(liveStatus.cod, estimate, preview);
+    if (codBlockApplies(serverCodBlock, liveStatus.cod) && !base.reason) {
+      return { available: false, reason: serverCodBlock.reason };
+    }
+    return base;
+  }, [liveStatus.cod, items, appliedCoupon, preview, serverCodBlock]);
+
+  // Only an authoritative signal flips the customer's choice: a settled preview
+  // (or the 422 path). Before that, the client estimate just drives the card's
+  // disabled hint. Adjusted during render (React's derived-state pattern) so a
+  // request never goes out with a stale "cod".
+  if (paymentMethod === "cod" && !cod.available && preview !== null && !previewLoading) {
+    setPaymentMethod("online");
+    setCodNotice(`${cod.reason ?? "Cash on Delivery is unavailable"}. We switched you to online payment.`);
+  }
+
+  useEffect(() => {
+    if (step === 3 && codNotice) toast(codNotice);
+  }, [step, codNotice]);
 
   const buildRequest = useCallback((addr: PartialAddress): CreateOrderRequest => ({
     items: items.map((item) => ({
@@ -74,11 +108,15 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
 
   function handleAddressNext(addr: PartialAddress) {
     setAddress(addr);
+    setPreview(null);
+    setServerCodBlock(null);
     setStep(2);
   }
 
-  function handlePaymentNext(method: PaymentMethod) {
+  function handlePaymentNext(requested: PaymentMethod) {
+    const method: PaymentMethod = requested === "cod" && !cod.available ? "online" : requested;
     setPaymentMethod(method);
+    setCodNotice(null);
     setStep(3);
 
     const token = useAuthStore.getState().token;
@@ -119,6 +157,7 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
         previewOrder(clientPricing ? { ...request, clientPricing } : request, token)
       );
       setPreview(result);
+      setServerCodBlock(null);
       setPreviewError(null);
       if (pricesDiffer(items, result)) {
         setItems(applyPreviewPrices(items, result));
@@ -320,6 +359,14 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
         toast.error("Prices have changed. Please review the updated total and confirm again.");
       } else if (isQuantityLimitError(err)) {
         void sendBackToCart(err, token);
+      } else if (isCodUnavailableError(err)) {
+        const msg = err instanceof Error ? err.message : "Cash on Delivery is currently unavailable";
+        setPaymentMethod("online");
+        setServerCodBlock({ reason: msg, config: liveStatus.cod });
+        setCodNotice(`${msg}. We switched you to online payment.`);
+        toast.error(msg);
+        void getSiteStatus().then(setRefreshedStatus);
+        void runPreview(address, token, "Totals below use the latest prices. Review them before placing your order.");
       } else {
         toast.error(err instanceof Error ? err.message : "Failed to place order. Please try again.");
       }
@@ -338,7 +385,7 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
       {step === 1 && <AddressStep onNext={handleAddressNext} />}
 
       {step === 2 && (
-        <PaymentStep onNext={handlePaymentNext} onBack={() => setStep(1)} />
+        <PaymentStep cod={cod} codNotice={codNotice} initialMethod={paymentMethod} onNext={handlePaymentNext} onBack={() => setStep(1)} />
       )}
 
 
@@ -351,7 +398,7 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
           previewLoading={previewLoading}
           previewError={previewError}
           onPlaceOrder={handlePlaceOrder}
-          onBack={() => setStep(2)}
+          onBack={() => { setServerCodBlock(null); setStep(2); }}
           isPlacing={isPlacing}
           ordersHalted={siteStatus.orders_halted}
           haltMessage={siteStatus.message}

@@ -13,7 +13,7 @@ const api = vi.hoisted(() => ({
 }));
 const built = vi.hoisted(() => ({ throws: false }));
 
-vi.mock("@/lib/api", () => ({ ...api, isPriceChangedError, isQuantityLimitError: () => false, getCart: vi.fn() }));
+vi.mock("@/lib/api", () => ({ ...api, isPriceChangedError, isQuantityLimitError: () => false, isCodUnavailableError: () => false, getCart: vi.fn(), getSiteStatus: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn(), push: vi.fn() }) }));
 vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn() }) }));
 vi.mock("@/features/site-status/trackConnectivity", () => ({ trackConnectivity: <T,>(p: Promise<T>) => p }));
@@ -46,7 +46,7 @@ const preview = mapPreview(previewRepriced);
 
 async function gotoReview() {
   const user = userEvent.setup();
-  render(<CheckoutPageClient siteStatus={{ orders_halted: false, message: null }} />);
+  render(<CheckoutPageClient siteStatus={{ orders_halted: false, message: null, cod: { enabled: true, min_order_amount: null, max_order_amount: null } }} />);
   await user.click(screen.getByText("address-next"));
   await user.click(screen.getByText("payment-next"));
   await waitFor(() => expect(api.previewOrder).toHaveBeenCalled());
