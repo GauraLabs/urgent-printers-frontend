@@ -46,8 +46,17 @@ export function clampDescription(text: string, max: number = META_DESCRIPTION_MA
   return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`;
 }
 
+// Raw-text element bodies (script/style/...) are code, not prose, so they go with their tags.
+const NON_TEXT_BLOCK_RE = /<(script|style|textarea|noscript|iframe|noembed|noframes|template|xmp|title)\b[\s\S]*?(?:<\/\1\s*>|$)/gi;
+
 export function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+  return html
+    .replace(/<!--[\s\S]*?(?:-->|$)/g, " ")
+    .replace(NON_TEXT_BLOCK_RE, " ")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function pick(...candidates: Array<string | null | undefined>): string {

@@ -23,6 +23,7 @@ import { buildProductJsonLd, buildBreadcrumbJsonLd, SITE_URL } from "@/lib/struc
 import { buildProductMetadata } from "@/lib/seo/metadata";
 import { canonicalProductPath, isKnownCategorySlug, crumbsToBreadcrumbItems, productCrumbs } from "@/lib/seo/category";
 import { JsonLd } from "@/components/common/JsonLd";
+import { sanitizeRichText } from "@/lib/sanitize";
 
 interface PageProps {
   params: Promise<{ categorySlug: string; productSlug: string }>;
@@ -181,7 +182,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
               </h2>
               <div
                 className="prose prose-sm prose-neutral dark:prose-invert max-w-3xl text-muted-foreground [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
-                dangerouslySetInnerHTML={{ __html: product.description }}
+                dangerouslySetInnerHTML={{ __html: sanitizeRichText(product.description) }}
               />
 
               {/* Tags */}
