@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useAppPathname } from "@/hooks/useAppPathname";
 import { Home, LayoutGrid, Search, ShoppingBag, User } from "lucide-react";
 import { isBottomNavHidden } from "@/features/navigation/bottomNav";
 import { useMobileMenuStore } from "@/features/navigation/mobileMenuStore";
@@ -19,7 +19,7 @@ const NAV_ITEMS = [
 ] as const;
 
 export function MobileBottomNav() {
-  const pathname = usePathname();
+  const pathname = useAppPathname();
   const mounted = useMounted();
 
   const itemCount = useCartStore((s) => s.itemCount());

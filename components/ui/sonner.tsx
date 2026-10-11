@@ -1,15 +1,17 @@
 "use client"
 
-import { useTheme } from "next-themes"
+import { useThemeStore } from "@/features/theme/store"
+import { useMounted } from "@/hooks/useMounted"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
+  const mounted = useMounted()
+  const colorMode = useThemeStore((s) => s.colorMode)
 
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme={mounted ? colorMode : "light"}
       className="toaster group"
       icons={{
         success: (

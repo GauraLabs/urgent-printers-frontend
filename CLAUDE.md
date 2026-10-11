@@ -82,7 +82,7 @@ export async function getProducts(filters: ProductFilters): Promise<PaginatedRes
 - Rounding helpers: `round2`, `discountPercent`, `getDisplayDiscount`, `getUnitDiscount` in `lib/utils.ts`; configurator math in `features/products/configurator/pricing.ts`.
 - Savings: server `totalSavings` on checkout/confirmation/order pages (`SavingsSummary`); client-computed only in cart/drawer (`features/cart/savings.ts`). Don't add them together.
 - Checkout: preview is authoritative (`features/checkout/repricing.ts`); `createOrder` sends `expectedTotal`; 409 `price_changed` -> re-preview + confirm again.
-- `app/api/revalidate/products/route.ts` uses `revalidatePath` (product fetches have no tags). Never call `cookies()` in a layout (kills static generation).
+- `app/api/revalidate/products/route.ts` revalidates pages by path (page-level product fetches have no tags), and on every call also revalidates the `categories` and `products` tags (`products` tags only the SEO listing) plus `/sitemap.xml` and `/llms.txt`. Never call `cookies()` in a layout (kills static generation).
 - Tests: `npm test` (Vitest 3 + jsdom + Testing Library, `tests/`; same stack as the admin panel). Vitest 5 conflicts with the repo's `@types/node ^20` pin, so stay on 3.x.
 
 ## Key known fixes (do not regress)
@@ -95,6 +95,8 @@ export async function getProducts(filters: ProductFilters): Promise<PaginatedRes
 | Theme dropdown crash | `DropdownMenuLabel` must be inside `DropdownMenuGroup` |
 | LCP image warning | `loading="eager"` on hero banner and first product gallery slide |
 | `node-domexception` warning | `shadcn` is in `devDependencies` — do not move it to `dependencies` |
+| Prod sitemap stayed stale on Vercel (2026-10-11) | Keep `app/sitemap.xml/route.ts`; never go back to `app/sitemap.ts` (Next 16's generated handler hard-codes `Cache-Control: public, max-age=0, must-revalidate`, suppressing ISR s-maxage) |
+| Theme reverted to dark after reload on `/` (2026-10-11) | Vercel re-renders `/` with pathname `/index`; use `useAppPathname()` (maps `/index`→`/`) for pathname-conditional UI; `ColorModeSync` re-applies the stored mode after hydration recovery; default is light, no OS-dark CSS fallback |
 
 ## Branch strategy
 
@@ -105,7 +107,7 @@ export async function getProducts(filters: ProductFilters): Promise<PaginatedRes
 
 ```bash
 npm run dev          # local development
-npm run build        # next build (sitemap/robots/llms.txt are runtime routes: app/sitemap.ts, app/robots.ts, app/llms.txt/route.ts)
+npm run build        # next build (sitemap/robots/llms.txt are runtime routes: app/sitemap.xml/route.ts, app/robots.ts, app/llms.txt/route.ts)
 ```
 
 One required env var for production: `NEXT_PUBLIC_SITE_URL` (canonical origin for metadata, JSON-LD, sitemap, robots; read only via `lib/seo/site.ts`; recommended prod value `https://www.urgentprinters.com`). SEO builders live in `lib/seo/` and `lib/structured-data.ts`.
