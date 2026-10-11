@@ -75,10 +75,10 @@ describe("getRealCategoryCardImage", () => {
 });
 
 describe("category og:image", () => {
-  it("omits og:image when the category has no real image", () => {
+  it("falls back to the default site card when the category has no real image", () => {
     const meta = buildCategoryMetadata(imageless(), {}, SITE);
-    expect(meta.openGraph).toBeDefined();
-    expect(meta.openGraph && "images" in meta.openGraph).toBe(false);
+    expect(meta.openGraph?.images).toEqual([{ url: `${SITE}/opengraph-image`, alt: "Wedding Tags" }]);
+    expect(meta.twitter?.images).toEqual([`${SITE}/opengraph-image`]);
   });
 
   it("ignores a legacy picsum imageUrl", () => {
@@ -89,6 +89,7 @@ describe("category og:image", () => {
   it("uses the uploaded banner when present", () => {
     const meta = buildCategoryMetadata(imageless({ banner_url: "https://cdn/b.webp", thumbnail_url: "https://cdn/t.webp" }), {}, SITE);
     expect(meta.openGraph?.images).toEqual([{ url: "https://cdn/b.webp", alt: "Wedding Tags" }]);
+    expect(meta.twitter?.images).toEqual(["https://cdn/b.webp"]);
   });
 });
 

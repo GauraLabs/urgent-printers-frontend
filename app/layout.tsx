@@ -62,7 +62,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <script dangerouslySetInnerHTML={{ __html: CONSENT_INIT_SCRIPT }} />
         <ColorModeSync />
         <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
-        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
         <ConsentedScripts />
         <QueryProvider>
           <TokenRefreshProvider>

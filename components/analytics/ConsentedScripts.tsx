@@ -2,6 +2,10 @@
 
 import Script from "next/script";
 import { useConsent } from "@/hooks/useConsent";
+import { useAppPathname } from "@/hooks/useAppPathname";
+
+// Pages whose URL carries a secret (password-reset token) must never reach analytics.
+const NO_ANALYTICS_PREFIXES = ["/auth/reset-password", "/auth/forgot-password"];
 
 interface GatedScriptConfig {
   key: string;
@@ -13,10 +17,9 @@ interface GatedScriptConfig {
   inlineBody?: string;
 }
 
-// Analytics-only scripts, gated on consent === "accepted". Google Sign-In and
-// Razorpay checkout.js stay directly in app/layout.tsx, unconditional — they
-// are essential/functional, not analytics, and are out of scope for this
-// gate per the approved cookie-consent plan.
+// Analytics-only scripts, gated on consent === "accepted". Google Sign-In stays
+// directly in app/layout.tsx, unconditional — it is essential/functional, not
+// analytics. Razorpay checkout.js is loaded on demand by lib/razorpay.ts.
 //
 // Add future gated scripts (e.g. Meta Pixel) as one more entry here — do not
 // add new inline conditionals in the component below.
@@ -46,8 +49,10 @@ gtag('config', 'G-VQYX1D7JCP');`,
 
 export function ConsentedScripts() {
   const { status } = useConsent();
+  const pathname = useAppPathname();
 
   if (status !== "accepted") return null;
+  if (NO_ANALYTICS_PREFIXES.some((p) => pathname.startsWith(p))) return null;
 
   return (
     <>

@@ -10,6 +10,8 @@ import { PaymentStep, type PaymentMethod } from "@/features/checkout/PaymentStep
 import { ReviewStep } from "@/features/checkout/ReviewStep";
 import { useCartStore } from "@/features/cart/store";
 import { useAuthStore } from "@/features/auth/store";
+import { ApiError } from "@/lib/api/client";
+import { getPreviousPaymentInfo } from "@/lib/api/orders";
 import { createOrder, previewOrder, verifyPayment, isPriceChangedError, isQuantityLimitError, isCodUnavailableError, getCart, getSiteStatus } from "@/lib/api";
 import { revalidateAppliedCoupon } from "@/features/cart/couponRevalidation";
 import { buildClientPricing } from "./clientPricing";
@@ -19,7 +21,21 @@ import type { SiteStatus } from "@/lib/api/siteStatus";
 import { trackConnectivity } from "@/features/site-status/trackConnectivity";
 import { ROUTES } from "@/lib/constants/routes";
 import { RAZORPAY_THEME_COLOR } from "@/lib/constants/payment";
+import { loadRazorpay } from "@/lib/razorpay";
 import type { Address, OrderPreview, CreateOrderRequest, ClientPricing } from "@/types";
+
+// Only these answers prove no order was created; anything else (408/425/429, 5xx, ...) may have succeeded.
+const DEFINITIVE_ERROR_STATUSES: ReadonlySet<number> = new Set([400, 401, 403, 404, 409, 422]);
+const IN_PROGRESS_COOLDOWN_MS = 3000;
+
+function newIdempotencyKey(): string {
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  const h = Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
 
 type PartialAddress = Omit<Address, "id" | "userId" | "isDefault">;
 
@@ -198,6 +214,10 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
     router.replace(ROUTES.checkoutConfirmation(orderId));
   }
 
+  useEffect(() => {
+    if (step === 3 && paymentMethod === "online") void loadRazorpay();
+  }, [step, paymentMethod]);
+
   // An unavailable line would be rejected at order creation; send the customer to remove it first.
   useEffect(() => {
     if (!hasUnavailable) return;
@@ -205,8 +225,23 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
     router.replace(ROUTES.cart);
   }, [hasUnavailable, router]);
 
+  // One Idempotency-Key per distinct request body. It is kept while the outcome is unknown
+  // (lost connection, 5xx, 408/425/429, request still in progress) and through the whole payment
+  // flow; it is dropped at a terminal state (payment handler/dismiss/failure, a definitive
+  // 400/401/403/404/409/422 answer). A changed body (address, payment, coupon, cart, re-previewed
+  // total) always gets a fresh key.
+  const idempotencyRef = useRef<{ key: string; fingerprint: string } | null>(null);
+  // Synchronous guard: state updates are async, so a double tap could otherwise start two attempts.
+  const inFlightRef = useRef(false);
+
+  function release(keepKey = false) {
+    if (!keepKey) idempotencyRef.current = null;
+    inFlightRef.current = false;
+    setIsPlacing(false);
+  }
+
   async function handlePlaceOrder() {
-    if (!address || hasUnavailable) return;
+    if (!address || hasUnavailable || inFlightRef.current) return;
     const token = useAuthStore.getState().token;
     if (!token) {
       toast.error("Session expired. Please sign in again.");
@@ -214,26 +249,76 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
       return;
     }
 
+    inFlightRef.current = true;
     setIsPlacing(true);
 
     try {
+      // Make sure the gateway can open before an order exists, so a blocked script never leaves an unpaid order.
+      if (paymentMethod === "online" && !(await loadRazorpay())) {
+        toast.error("Payment gateway failed to load. Please refresh the page and try again.");
+        release();
+        return;
+      }
+
       // The disabled CTA is a UX nicety only — this call still goes to the
       // real API, so a halted incident (503, error_code "orders_halted")
-      // is still enforced server-side even if the button were somehow
-      // clicked (e.g. stale client state). Falls into the same catch below
-      // as any other order-creation failure — no separate short-circuit.
-      // expectedTotal is the total the customer is looking at; if the server's
-      // price differs (e.g. a sale ended mid-checkout) it answers 409
+      // is still enforced server-side. expectedTotal is the total the customer
+      // is looking at; if the server's price differs it answers 409
       // price_changed and creates nothing, so we re-preview and ask again.
-      const order = await trackConnectivity(
-        createOrder(
-          { ...buildRequest(address), ...(preview && { expectedTotal: preview.pricing.totalAmount }) },
-          token
-        )
-      );
+      const orderRequest: CreateOrderRequest = {
+        ...buildRequest(address),
+        ...(preview && { expectedTotal: preview.pricing.totalAmount }),
+      };
+      const fingerprint = JSON.stringify(orderRequest);
+      if (idempotencyRef.current?.fingerprint !== fingerprint) {
+        idempotencyRef.current = { key: newIdempotencyKey(), fingerprint };
+      }
+      let order: Awaited<ReturnType<typeof createOrder>>;
+      try {
+        order = await trackConnectivity(
+          createOrder(orderRequest, token, { idempotencyKey: idempotencyRef.current.key })
+        );
+      } catch (err) {
+        const previous = getPreviousPaymentInfo(err);
+        if (previous) {
+          release();
+          if (previous.kind === "completed") {
+            clearCart();
+            setAppliedCoupon(null);
+            toast.success(`Your previous payment for order #${previous.orderNumber} went through.`);
+            router.replace(ROUTES.accountOrder(previous.orderId));
+          } else {
+            toast.error(
+              `Your previous payment for order #${previous.orderNumber} is still being processed by the bank. Please wait a few minutes and check My Orders before paying again.`,
+              {
+                duration: 15000,
+                action: { label: "View order", onClick: () => router.push(ROUTES.accountOrder(previous.orderId)) },
+              }
+            );
+          }
+          return;
+        }
+        if (err instanceof ApiError && err.code === "idempotency_request_in_progress") {
+          // The first attempt is still running server-side: same key, and no new tap until the cooldown ends.
+          toast.error("Your order is still being processed — please wait a moment.", { duration: IN_PROGRESS_COOLDOWN_MS });
+          setTimeout(() => release(true), IN_PROGRESS_COOLDOWN_MS);
+          return;
+        }
+        if (err instanceof ApiError) {
+          if (DEFINITIVE_ERROR_STATUSES.has(err.status)) idempotencyRef.current = null;
+          throw err;
+        }
+        toast.error(
+          "Connection lost while placing your order. Please check your connection and tap Place Order again — you won't be charged twice.",
+          { duration: 10000 }
+        );
+        release(true);
+        return;
+      }
 
       // ── COD: no payment gateway needed ──────────────────────────────────────
       if (paymentMethod === "cod") {
+        idempotencyRef.current = null;
         finishOrder(order.id);
         return;
       }
@@ -247,14 +332,18 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
           `Could not start payment for order #${order.orderNumber}. Please retry from My Orders — you have not been charged.`,
           { duration: 10000 }
         );
-        setIsPlacing(false);
+        release();
         return;
       }
 
-      // ── Online payment: open Razorpay Standard Checkout ─────────────────────
-      if (!window.Razorpay) {
-        toast.error("Payment gateway failed to load. Please refresh the page and try again.");
-        setIsPlacing(false);
+      // ── Online payment: open Razorpay Standard Checkout (script was awaited before the order was created).
+      // From here the order exists, so any failure must say so instead of "Failed to place order".
+      const payment = order.payment;
+      const RazorpayCtor = window.Razorpay;
+      const savedMessage = `Order #${order.orderNumber} is saved — retry payment from My Orders.`;
+      if (!RazorpayCtor) {
+        toast.error(savedMessage, { duration: 10000 });
+        release();
         return;
       }
 
@@ -263,90 +352,94 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
       // Tracks whether a terminal callback (handler / ondismiss / payment.failed) already ran.
       // Used by the window-focus safety net below to avoid double-resetting.
       let paymentHandled = false;
-
-      const rzp = new window.Razorpay({
-        key:         order.payment.razorpayKeyId!,
-        amount:      Math.round(order.payment.amount * 100),  // rupees → paise
-        currency:    "INR",
-        order_id:    order.payment.razorpayOrderId,
-        name:        "Urgent Printers",
-        description: `Order ${order.orderNumber}`,
-
-        prefill: {
-          name:    user ? `${user.firstName} ${user.lastName}`.trim() : undefined,
-          email:   user?.email,
-          contact: user?.phone?.replace(/\D/g, "").slice(-10),
-        },
-
-        retry: { enabled: true, max_count: 3 },
-
-        theme: { color: RAZORPAY_THEME_COLOR },
-
-        notes: { order_number: order.orderNumber },
-
-        handler: async (response) => {
-          paymentHandled = true;
-          try {
-            await trackConnectivity(verifyPayment(order.id, {
-              razorpay_order_id:   response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature:  response.razorpay_signature,
-            }, token));
-            finishOrder(order.id);
-          } catch {
-            // Payment captured by Razorpay but verify failed — money may be deducted, don't retry
-            toast.error(
-              `Payment received but confirmation failed. Contact support with order #${order.orderNumber}.`,
-              { duration: 12000 }
-            );
-            setIsPlacing(false);
-          }
-        },
-
-        modal: {
-          confirm_close: true,
-          ondismiss: () => {
-            paymentHandled = true;
-            toast("Payment not completed. Your order is saved — retry from My Orders.", {
-              duration: 7000,
-            });
-            setIsPlacing(false);
-          },
-        },
-      });
-
-      rzp.on("payment.failed", (response) => {
-        paymentHandled = true;
-        const msg = response.error.description || "Payment failed.";
-        toast.error(`${msg} You can retry from My Orders.`, { duration: 8000 });
-        setIsPlacing(false);
-      });
-
-      // Safety net: Razorpay does NOT call ondismiss when their own API returns an error
-      // (e.g. invalid order_id → 400 on /preferences). The modal closes silently.
-      // Window regaining focus is the only reliable signal the modal is gone.
-      const handleFocus = () => {
-        window.removeEventListener("focus", handleFocus);
-        // Small delay so ondismiss/payment.failed can fire first if they're going to
-        setTimeout(() => {
-          if (!paymentHandled) {
-            setIsPlacing(false);
-            toast.error(
-              "Payment window closed unexpectedly. Your order is saved — retry from My Orders.",
-              { duration: 8000 }
-            );
-          }
-        }, 400);
-      };
-      window.addEventListener("focus", handleFocus);
+      let handleFocus: (() => void) | null = null;
 
       try {
+        const rzp = new RazorpayCtor({
+          key:         payment.razorpayKeyId!,
+          amount:      Math.round(payment.amount * 100),  // rupees → paise
+          currency:    "INR",
+          order_id:    payment.razorpayOrderId!,
+          name:        "Urgent Printers",
+          description: `Order ${order.orderNumber}`,
+
+          prefill: {
+            name:    user ? `${user.firstName} ${user.lastName}`.trim() : undefined,
+            email:   user?.email,
+            contact: user?.phone?.replace(/\D/g, "").slice(-10),
+          },
+
+          retry: { enabled: true, max_count: 3 },
+
+          theme: { color: RAZORPAY_THEME_COLOR },
+
+          notes: { order_number: order.orderNumber },
+
+          handler: async (response) => {
+            paymentHandled = true;
+            try {
+              await trackConnectivity(verifyPayment(order.id, {
+                razorpay_order_id:   response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature:  response.razorpay_signature,
+              }, token));
+              idempotencyRef.current = null;
+              finishOrder(order.id);
+            } catch {
+              // Payment captured by Razorpay but verify failed — money may be deducted, don't retry
+              toast.error(
+                `Payment received but confirmation failed. Contact support with order #${order.orderNumber}.`,
+                { duration: 12000 }
+              );
+              release();
+            }
+          },
+
+          modal: {
+            confirm_close: true,
+            ondismiss: () => {
+              paymentHandled = true;
+              toast("Payment not completed. Your order is saved — retry from My Orders.", {
+                duration: 7000,
+              });
+              release();
+            },
+          },
+        });
+
+        rzp.on("payment.failed", (response) => {
+          paymentHandled = true;
+          const msg = response.error.description || "Payment failed.";
+          toast.error(`${msg} You can retry from My Orders.`, { duration: 8000 });
+          release();
+        });
+
+        // Safety net: Razorpay does NOT call ondismiss when their own API returns an error
+        // (e.g. invalid order_id → 400 on /preferences). The modal closes silently.
+        // Window regaining focus is the only reliable signal the modal is gone.
+        const onFocus = () => {
+          window.removeEventListener("focus", onFocus);
+          // Small delay so ondismiss/payment.failed can fire first if they're going to
+          setTimeout(() => {
+            if (!paymentHandled) {
+              release();
+              toast.error(
+                "Payment window closed unexpectedly. Your order is saved — retry from My Orders.",
+                { duration: 8000 }
+              );
+            }
+          }, 400);
+        };
+        handleFocus = onFocus;
+        window.addEventListener("focus", onFocus);
+
         rzp.open();
       } catch {
-        window.removeEventListener("focus", handleFocus);
-        toast.error("Could not open payment window. Please refresh and try again.");
-        setIsPlacing(false);
+        if (handleFocus) window.removeEventListener("focus", handleFocus);
+        toast.error(savedMessage, { duration: 10000 });
+        release();
       }
+      return;
 
     } catch (err) {
       if (isPriceChangedError(err)) {
@@ -370,7 +463,7 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
       } else {
         toast.error(err instanceof Error ? err.message : "Failed to place order. Please try again.");
       }
-      setIsPlacing(false);
+      release(err instanceof ApiError && !DEFINITIVE_ERROR_STATUSES.has(err.status));
     }
   }
 

@@ -385,10 +385,7 @@ export default function CartPage() {
                     Sign In to Checkout <ArrowRight size={16} />
                   </Link>
                   <p className="text-xs text-center text-muted-foreground">
-                    <Link href={ROUTES.register} className="text-primary hover:underline">
-                      Create a free account
-                    </Link>{" "}
-                    to place your order
+                    New here? Sign in with your mobile number or Google to create your account and place your order
                   </p>
                 </div>
               )}

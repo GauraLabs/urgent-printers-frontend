@@ -13,12 +13,15 @@ export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, ""
 export class ApiError extends Error {
   readonly status: number;
   readonly code?: string;
+  // Parsed error body, for codes that carry extra fields (e.g. previous_payment_* order ids).
+  readonly body?: unknown;
 
-  constructor(message: string, status: number, code?: string) {
+  constructor(message: string, status: number, code?: string, body?: unknown) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.code = code;
+    this.body = body;
   }
 }
 
@@ -126,14 +129,16 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
 
   let detail = "";
   let code: string | undefined;
+  let body: unknown;
   try {
     const errJson = await res.json() as { message?: unknown; detail?: unknown; error?: string };
     detail = formatValidationDetail(errJson.message) ?? formatValidationDetail(errJson.detail) ?? "";
     code = errJson.error;
+    body = errJson;
   } catch (err) {
     logApiError(`apiFetch(${path}) — non-JSON error body`, err);
   }
-  throw new ApiError(codedErrorMessage(code, detail) ?? (detail || `API ${res.status}: ${path}`), res.status, code);
+  throw new ApiError(codedErrorMessage(code, detail) ?? (detail || `API ${res.status}: ${path}`), res.status, code, body);
 }
 
 export async function apiFetchPage<T>(path: string, init?: RequestInit): Promise<BackendPage<T>> {

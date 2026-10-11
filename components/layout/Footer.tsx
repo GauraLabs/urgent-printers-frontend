@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { Logo } from "@/components/common/Logo";
-import { InstagramIcon, FacebookIcon, XIcon } from "@/components/common/SocialIcons";
+import { InstagramIcon, FacebookIcon } from "@/components/common/SocialIcons";
 import { FooterLinkGroup } from "./FooterLinkGroup";
 import { Separator } from "@/components/ui/separator";
 import { getNavLinks } from "@/lib/api";
@@ -11,14 +11,12 @@ import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_HREF } from "@/lib/seo/site";
 const SOCIAL_LINKS = [
   { label: "Instagram", href: "https://www.instagram.com/urgent_printers_2026", icon: InstagramIcon },
   { label: "Facebook", href: "https://www.facebook.com/people/Urgent-Printers/61591832844842/", icon: FacebookIcon },
-  { label: "Twitter", href: "https://twitter.com/urgentprinters", icon: XIcon },
 ];
 
 const FALLBACK_NAV_LINKS = [{ label: "Products", href: ROUTES.products }];
 
 const ACCOUNT_LINKS = [
-  { label: "Sign In", href: ROUTES.login },
-  { label: "Create Account", href: ROUTES.register },
+  { label: "Sign In / Create Account", href: ROUTES.login },
   { label: "My Orders", href: ROUTES.accountOrders },
   { label: "Saved Items", href: ROUTES.accountSaved },
   { label: "Addresses", href: ROUTES.accountAddresses },

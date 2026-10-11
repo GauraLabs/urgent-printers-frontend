@@ -15,6 +15,10 @@ interface BackendUser {
   phone: string | null;
   avatarUrl: string | null;
   createdAt: string;
+  hasPassword?: boolean;
+  googleLinked?: boolean;
+  has_password?: boolean;
+  google_linked?: boolean;
 }
 
 interface AuthData {
@@ -32,6 +36,8 @@ function mapUser(u: BackendUser): User {
     phone: u.phone ?? undefined,
     avatarUrl: u.avatarUrl ?? undefined,
     createdAt: u.createdAt,
+    hasPassword: u.hasPassword ?? u.has_password,
+    googleLinked: u.googleLinked ?? u.google_linked,
   };
 }
 
@@ -61,56 +67,6 @@ export async function firebaseVerifyPhoneLink(
     body: JSON.stringify({ firebase_token: firebaseToken }),
   });
   return mapUser(res);
-}
-
-// ─── Phone OTP (legacy — kept for Google account phone-linking flow) ──────────
-
-export async function sendOtp(phone: string): Promise<{ success: boolean }> {
-  // REAL API: POST /api/v1/auth/send-otp
-  return apiFetch(`${AUTH}/send-otp`, {
-    method: "POST",
-    body: JSON.stringify({ phone }),
-  });
-}
-
-export async function verifyPhoneOtp(
-  phone: string,
-  otp: string
-): Promise<{ user: User; token: string; isNewUser: boolean }> {
-  // REAL API: POST /api/v1/auth/verify-otp
-  const res = await apiFetch<AuthData>(`${AUTH}/verify-otp`, {
-    method: "POST",
-    body: JSON.stringify({ phone, otp }),
-  });
-  return { user: mapUser(res.user), token: res.token, isNewUser: res.isNewUser };
-}
-
-// ─── Email registration ───────────────────────────────────────────────────────
-
-export async function initiateRegister(data: {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  password: string;
-}): Promise<{ success: boolean }> {
-  // REAL API: POST /api/v1/auth/register/initiate
-  return apiFetch(`${AUTH}/register/initiate`, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-}
-
-export async function completeRegister(
-  phone: string,
-  otp: string
-): Promise<{ user: User; token: string }> {
-  // REAL API: POST /api/v1/auth/register/complete
-  const res = await apiFetch<AuthData>(`${AUTH}/register/complete`, {
-    method: "POST",
-    body: JSON.stringify({ phone, otp }),
-  });
-  return { user: mapUser(res.user), token: res.token };
 }
 
 // ─── Email + Password login ───────────────────────────────────────────────────
@@ -150,18 +106,74 @@ export async function loginWithGoogle(
   return { user: mapUser(res.user), token: res.token, isNewUser: res.isNewUser };
 }
 
-// ─── Link phone to Google account ────────────────────────────────────────────
+// ─── Password + Google linking ────────────────────────────────────────────────
 
-export async function linkPhone(
-  phone: string,
-  otp: string,
-  token: string
-): Promise<User> {
-  // REAL API: POST /api/v1/auth/me/verify-phone
-  const res = await apiFetch<BackendUser>(`${AUTH}/me/verify-phone`, {
+export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MAX_LENGTH = 128;
+
+export const FORGOT_PASSWORD_GENERIC_MESSAGE =
+  "If an account exists for that email, we\u2019ve sent a reset link.";
+
+const PASSWORD_ERROR_MESSAGES: Record<string, string> = {
+  invalid_or_expired_token: "This reset link is invalid or has expired. Please request a new one.",
+  invalid_current_password: "Your current password is incorrect.",
+  google_already_linked: "That Google account is already linked to a different Urgent Printers account.",
+  google_email_unverified: "This Google account\u2019s email isn\u2019t verified.",
+  google_account_mismatch: "Your account is already linked to a different Google account.",
+};
+
+export function googleLoginErrorMessage(err: unknown): string {
+  if (err instanceof ApiError && err.code === "email_in_use_unverified") {
+    return "An account with this email already exists. Sign in with your mobile number, then link Google from your Profile.";
+  }
+  return err instanceof Error ? err.message : "Google sign-in failed";
+}
+
+export function passwordErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof ApiError) {
+    if (err.code && PASSWORD_ERROR_MESSAGES[err.code]) return PASSWORD_ERROR_MESSAGES[err.code];
+    if (err.status === 429) return "Too many attempts \u2014 please wait a few minutes and try again.";
+  }
+  return fallback;
+}
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  // REAL API: POST /api/v1/auth/password/forgot — always 200, never reveals whether the email exists
+  await apiFetch(`${AUTH}/password/forgot`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ phone, otp }),
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  // REAL API: POST /api/v1/auth/password/reset — 400 invalid_or_expired_token
+  await apiFetch(`${AUTH}/password/reset`, {
+    method: "POST",
+    body: JSON.stringify({ token, new_password: newPassword }),
+  });
+}
+
+export async function changePassword(
+  accessToken: string,
+  data: { currentPassword: string | null; newPassword: string }
+): Promise<{ user: User; token: string | null }> {
+  // REAL API: PUT /api/v1/auth/me/password — currentPassword null when the account has no password yet;
+  // 400 invalid_current_password. All refresh tokens are revoked server-side; the response carries a
+  // fresh access token (and a new refresh cookie) so the session continues.
+  const res = await apiFetch<BackendUser & { token?: string; user?: BackendUser }>(`${AUTH}/me/password`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ current_password: data.currentPassword, new_password: data.newPassword }),
+  });
+  return { user: mapUser(res.user ?? res), token: res.token ?? null };
+}
+
+export async function linkGoogleAccount(accessToken: string, idToken: string): Promise<User> {
+  // REAL API: POST /api/v1/auth/me/link-google — 409 google_already_linked
+  const res = await apiFetch<BackendUser>(`${AUTH}/me/link-google`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ id_token: idToken }),
   });
   return mapUser(res);
 }

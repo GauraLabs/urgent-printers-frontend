@@ -7,6 +7,8 @@ import { Loader2, UserCircle } from "lucide-react";
 import { toast } from "sonner";
 import { FormField } from "@/components/common/FormField";
 import { Separator } from "@/components/ui/separator";
+import { PasswordSection } from "@/features/account/PasswordSection";
+import { GoogleLinkSection } from "@/features/account/GoogleLinkSection";
 import { useAuthStore } from "@/features/auth/store";
 import { updateProfile } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
@@ -93,6 +95,14 @@ export default function ProfilePage() {
           Save Changes
         </button>
       </form>
+
+      <Separator />
+
+      <PasswordSection />
+
+      <Separator />
+
+      <GoogleLinkSection />
 
       <Separator />
 

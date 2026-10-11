@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
-export const metadata: Metadata = { title: "Terms of Service", alternates: { canonical: "/policies/terms" } };
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description:
+    "The terms for ordering from Urgent Printers: pricing in INR, GST, payments, artwork responsibility, production, delivery and governing law in India.",
+  alternates: { canonical: "/policies/terms" },
+};
 export default function TermsPage() {
   return (
     <article>

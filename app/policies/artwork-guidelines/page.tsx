@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
-export const metadata: Metadata = { title: "Artwork Guidelines", alternates: { canonical: "/policies/artwork-guidelines" } };
+export const metadata: Metadata = {
+  title: "Artwork Guidelines",
+  description:
+    "File formats, resolution, bleed, safe margins and colour tips to prepare print-ready artwork so your Urgent Printers order comes out as intended.",
+  alternates: { canonical: "/policies/artwork-guidelines" },
+};
 export default function ArtworkGuidelinesPage() {
   return (
     <article>

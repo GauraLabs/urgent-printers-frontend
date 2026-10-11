@@ -110,6 +110,8 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
 
   return (
     <section ref={sectionRef} aria-label="Featured promotions" className="relative w-full pt-4 sm:pt-6 lg:pt-8">
+      {/* Swiper loop clones slides, so the page's only h1 lives outside the carousel. */}
+      <h1 className="sr-only">Urgent Printers — Wedding Cards, Invitations &amp; Celebration Printing</h1>
       <Swiper
         modules={[Autoplay, A11y]}
         autoplay={{ delay: 2750, disableOnInteraction: false }}
@@ -130,7 +132,8 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
         }}
         className="hero-banner-swiper w-full !pb-9"
       >
-        {slides.map((banner, i) => (
+        {slides.map((banner, i) => {
+          return (
           <SwiperSlide key={`${banner.id}-${i}`}>
             <div className="hero-slide-photo relative w-full aspect-[4/3] sm:aspect-video lg:aspect-[9/4] max-h-[720px] rounded-xl overflow-hidden brightness-60 transition-[filter] duration-300 ease-out [.swiper-slide-active_&]:brightness-100">
               <SafeImage
@@ -150,14 +153,14 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
                     onMouseEnter={handleContentMouseEnter}
                     onMouseLeave={handleContentMouseLeave}
                   >
-                    <motion.h1
+                    <motion.h2
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: 0.2 }}
                       className="font-sans font-black uppercase text-white text-3xl sm:text-4xl lg:text-6xl leading-[0.95] tracking-tight mb-3 lg:mb-4 line-clamp-2"
                     >
                       {banner.headline}
-                    </motion.h1>
+                    </motion.h2>
                     <motion.div
                       initial={{ opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -183,7 +186,8 @@ export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
               </div>
             </div>
           </SwiperSlide>
-        ))}
+          );
+        })}
       </Swiper>
 
       {banners.length > 1 && (

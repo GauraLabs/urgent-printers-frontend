@@ -157,7 +157,6 @@ export function buildOrganizationJsonLd(siteUrl: string = SITE_URL): Record<stri
     sameAs: [
       "https://www.instagram.com/urgent_printers_2026",
       "https://www.facebook.com/people/Urgent-Printers/61591832844842/",
-      "https://twitter.com/urgentprinters",
     ],
   };
 }
