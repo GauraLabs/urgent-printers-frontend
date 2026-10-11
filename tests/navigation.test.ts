@@ -46,8 +46,8 @@ describe("buildCategoryTree", () => {
     const tree = buildCategoryTree([
       cat(2, "b", { sortOrder: 2 }),
       cat(1, "a", { sortOrder: 1 }),
-      cat(3, "a-child", { parentId: 1, sortOrder: 2 }),
-      cat(4, "a-child-first", { parentId: 1, sortOrder: 1 }),
+      cat(3, "a-child", { parentId: "1", sortOrder: 2 }),
+      cat(4, "a-child-first", { parentId: "1", sortOrder: 1 }),
     ]);
     expect(tree.map((c) => c.slug)).toEqual(["a", "b"]);
     expect(tree[0].children.map((c) => c.slug)).toEqual(["a-child-first", "a-child"]);
@@ -56,8 +56,8 @@ describe("buildCategoryTree", () => {
   it("promotes orphans and skips inactive categories", () => {
     const tree = buildCategoryTree([
       cat(1, "gone", { isActive: false }),
-      cat(2, "orphan", { parentId: 1 }),
-      cat(3, "missing-parent", { parentId: 99 }),
+      cat(2, "orphan", { parentId: "1" }),
+      cat(3, "missing-parent", { parentId: "99" }),
     ]);
     expect(tree.map((c) => c.slug).sort()).toEqual(["missing-parent", "orphan"]);
   });
@@ -66,7 +66,7 @@ describe("buildCategoryTree", () => {
     const tree = buildCategoryTree([
       cat(1, "empty", { productCount: 0 }),
       cat(2, "parent", { productCount: 0 }),
-      cat(3, "kid", { parentId: 2, productCount: 4 }),
+      cat(3, "kid", { parentId: "2", productCount: 4 }),
     ]);
     expect(tree.map((c) => c.slug)).toEqual(["parent"]);
     expect(tree[0].children.map((c) => c.slug)).toEqual(["kid"]);
@@ -75,24 +75,24 @@ describe("buildCategoryTree", () => {
   it("caps depth at three levels and survives cycles", () => {
     const deep = buildCategoryTree([
       cat(1, "l1"),
-      cat(2, "l2", { parentId: 1 }),
-      cat(3, "l3", { parentId: 2 }),
-      cat(4, "l4", { parentId: 3 }),
+      cat(2, "l2", { parentId: "1" }),
+      cat(3, "l3", { parentId: "2" }),
+      cat(4, "l4", { parentId: "3" }),
     ]);
     expect(deep[0].children[0].children[0].children).toHaveLength(0);
-    const cyc = buildCategoryTree([cat(1, "a", { parentId: 2 }), cat(2, "b", { parentId: 1 })]);
+    const cyc = buildCategoryTree([cat(1, "a", { parentId: "2" }), cat(2, "b", { parentId: "1" })]);
     expect(cyc.map((c) => c.slug)).toEqual(["a"]);
     expect(cyc[0].children.map((c) => c.slug)).toEqual(["b"]);
   });
 
   it("promotes self-parented and cyclic categories instead of dropping them", () => {
-    const self = buildCategoryTree([cat(1, "me", { parentId: 1 })]);
+    const self = buildCategoryTree([cat(1, "me", { parentId: "1" })]);
     expect(self.map((c) => c.slug)).toEqual(["me"]);
     const all = buildCategoryTree([
       cat(1, "ok"),
-      cat(2, "self", { parentId: 2 }),
-      cat(3, "x", { parentId: 4 }),
-      cat(4, "y", { parentId: 3 }),
+      cat(2, "self", { parentId: "2" }),
+      cat(3, "x", { parentId: "4" }),
+      cat(4, "y", { parentId: "3" }),
     ]);
     const slugs: string[] = [];
     const walk = (nodes: typeof all) => nodes.forEach((n) => { slugs.push(n.slug); walk(n.children); });
@@ -121,7 +121,7 @@ describe("selectShelfCategories", () => {
   it("keeps only active, non-empty, top-level categories in backend order, capped", () => {
     const cats = [
       cat(1, "parent"),
-      cat(2, "child", { parentId: 1 }),
+      cat(2, "child", { parentId: "1" }),
       cat(3, "empty", { productCount: 0 }),
       cat(4, "off", { isActive: false }),
       cat(5, "second"),
@@ -149,13 +149,13 @@ describe("pickCampaignCategory", () => {
     expect(pickCampaignCategory(cats, new Set(["railed"]))).toBeNull();
   });
   it("ignores sub-categories", () => {
-    const cats = [cat(1, "p", { productCount: 0 }), cat(2, "kid", { parentId: 1, bannerUrl: "https://cdn/k.jpg" })];
+    const cats = [cat(1, "p", { productCount: 0 }), cat(2, "kid", { parentId: "1", bannerUrl: "https://cdn/k.jpg" })];
     expect(pickCampaignCategory(cats, new Set())).toBeNull();
   });
 });
 
 describe("chip ancestry", () => {
-  const tree = toChipCategories(buildCategoryTree([cat(1, "a"), cat(2, "b", { parentId: 1 }), cat(3, "c", { parentId: 2 })]));
+  const tree = toChipCategories(buildCategoryTree([cat(1, "a"), cat(2, "b", { parentId: "1" }), cat(3, "c", { parentId: "2" })]));
   it("finds the root-to-node path so ancestors can be highlighted", () => {
     expect(findCategoryPath(tree, "c").map((n) => n.slug)).toEqual(["a", "b", "c"]);
     expect(findCategoryPath(tree, "nope")).toEqual([]);

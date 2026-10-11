@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { ProductListingSkeleton } from "@/components/common/ProductListingSkeleton";
 import { getProducts, getCategories, searchProductsPaged } from "@/lib/api";
+import { parseBadgeParam, parseSortParam } from "@/lib/api/products";
 import { Breadcrumb } from "@/components/common/Breadcrumb";
 import { CategoryHero } from "@/features/categories/CategoryHero";
 import { CategoryChipBar } from "@/features/products/CategoryChipBar";
 import { toChipCategories } from "@/features/products/categoryChips";
 import { buildCategoryTree } from "@/features/navigation/buildCategoryTree";
 import { ProductsPageShell } from "@/features/products/ProductsPageShell";
+import { ROUTES } from "@/lib/constants/routes";
+import { listingSeo } from "@/lib/seo/metadata";
 import type { ProductFilters } from "@/types";
 
 const PAGE_SIZE = 12;
@@ -21,31 +26,46 @@ function getString(val: string | string[] | undefined): string {
 export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
   const params = await searchParams;
   const query = getString(params.q).trim();
+  const { canonical, noindex } = listingSeo(ROUTES.products, params);
+  const robots = noindex ? { index: false, follow: true } : undefined;
   if (!query) {
     return {
+      alternates: { canonical },
+      robots,
       title: "All Products",
       description:
         "Browse wedding cards and invitations, shagun envelopes, wedding essentials, welcome boards, and birthday and anniversary printing. Delivered across India.",
     };
   }
   return {
+    alternates: { canonical },
+    robots,
     title: `Results for "${query}"`,
     description: `Find wedding and celebration products matching "${query}" — cards, envelopes, welcome boards, and more.`,
   };
 }
 
+// No notFound()/redirect() here, so the whole listing can sit behind Suspense without affecting the status code.
 export default async function ProductsPage({ searchParams }: PageProps) {
   const params = await searchParams;
+  return (
+    <Suspense fallback={<ProductListingSkeleton />}>
+      <ProductsContent params={params} />
+    </Suspense>
+  );
+}
+
+async function ProductsContent({ params }: { params: Awaited<PageProps["searchParams"]> }) {
   const query = getString(params.q).trim();
   const isSearching = query.length >= 2;
 
   const filters: ProductFilters = {
     categorySlug: getString(params.category) || undefined,
-    sort: (getString(params.sort) as ProductFilters["sort"]) || undefined,
+    sort: parseSortParam(getString(params.sort)),
     minPrice: params.min ? Number(params.min) : undefined,
     maxPrice: params.max ? Number(params.max) : undefined,
     tags: getString(params.tags) ? getString(params.tags).split(",").filter(Boolean) : undefined,
-    badge: (getString(params.badge) as ProductFilters["badge"]) || undefined,
+    badge: parseBadgeParam(getString(params.badge)),
     page: params.page ? Number(params.page) : 1,
     pageSize: PAGE_SIZE,
   };

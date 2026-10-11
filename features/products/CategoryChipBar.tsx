@@ -24,7 +24,7 @@ function ChipBarInner({ categories }: CategoryChipBarProps) {
   // One row for the top level, then one per level of the active branch that has children.
   const rows: { label: string; items: ChipCategory[] }[] = [{ label: "Filter by category", items: categories }];
   for (const node of path) {
-    if (node.children.length > 0) rows.push({ label: `${node.name} subcategories`, items: node.children });
+    if (node.children.length > 0) rows.push({ label: `${node.name} subcategory filters`, items: node.children });
   }
 
   useEffect(() => {

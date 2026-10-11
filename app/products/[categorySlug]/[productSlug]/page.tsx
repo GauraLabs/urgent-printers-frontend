@@ -1,7 +1,7 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { getProductBySlug, getCategoryBySlug } from "@/lib/api";
+import { getProductBySlug, getCategories } from "@/lib/api";
 import { Breadcrumb } from "@/components/common/Breadcrumb";
 import { StarRating } from "@/components/common/StarRating";
 import { ReviewSkeleton } from "@/components/common/ProductCardSkeleton";
@@ -19,7 +19,10 @@ import { RecentlyViewedCarousel } from "@/features/products/recentlyViewed/Recen
 import { ROUTES } from "@/lib/constants/routes";
 import { formatPricePerUnit, getDisplayPricePerUnit, getListingPrice, formatPrice } from "@/lib/utils";
 import { formatQty } from "@/lib/quantity";
-import { buildProductJsonLd, SITE_URL } from "@/lib/structured-data";
+import { buildProductJsonLd, buildBreadcrumbJsonLd, SITE_URL } from "@/lib/structured-data";
+import { buildProductMetadata } from "@/lib/seo/metadata";
+import { canonicalProductPath, isKnownCategorySlug, crumbsToBreadcrumbItems, productCrumbs } from "@/lib/seo/category";
+import { JsonLd } from "@/components/common/JsonLd";
 
 interface PageProps {
   params: Promise<{ categorySlug: string; productSlug: string }>;
@@ -31,22 +34,10 @@ interface PageProps {
 export const revalidate = 60;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { categorySlug, productSlug } = await params;
+  const { productSlug } = await params;
   const product = await getProductBySlug(productSlug);
-  if (!product || !product.categorySlug || product.categorySlug !== categorySlug) {
-    return { title: "Product Not Found" };
-  }
-
-  return {
-    title: product.name,
-    description: product.shortDescription,
-    alternates: { canonical: `${SITE_URL}/products/${categorySlug}/${productSlug}` },
-    openGraph: {
-      title: `${product.name} | Urgent Printers`,
-      description: product.shortDescription,
-      images: product.images.map((url) => ({ url, width: 800, height: 600, alt: product.name })),
-    },
-  };
+  if (!product || !product.categorySlug) return { title: "Product Not Found" };
+  return buildProductMetadata(product);
 }
 
 // Previously fetched every category then, per category, called getProducts
@@ -64,35 +55,42 @@ export async function generateStaticParams() {
 export default async function ProductDetailPage({ params }: PageProps) {
   const { categorySlug, productSlug } = await params;
 
-  const [product, category] = await Promise.all([
-    getProductBySlug(productSlug),
-    getCategoryBySlug(categorySlug),
-  ]);
+  const product = await getProductBySlug(productSlug);
+  if (!product || !product.categorySlug) notFound();
 
-  if (!product || !category) notFound();
-  // A product resolves independently of the category segment in the URL —
-  // without this check, e.g. /products/business-cards/photo-mugs (a
-  // mugs-promotional product) would 200 with a breadcrumb pointing at a
-  // category the product isn't in. An empty categorySlug (no category)
-  // must never be treated as matching every segment.
-  if (!product.categorySlug || product.categorySlug !== categorySlug) notFound();
+  // Slugs are globally unique, so a stale category segment (product moved to a
+  // subcategory, old shared/cached/feed link) is redirected rather than 404'd.
+  // The page stays statically cacheable, so the query string is not forwarded.
+  // Only known category slugs redirect, so junk segments 404 instead of each caching a redirect entry.
+  // 308 is deliberate (SEO equity; moves are rare). Browsers cache it hard: moving a product A->B and
+  // later B->A can loop for visitors who cached A->B, so prefer not to move products back.
+  const canonicalPath = canonicalProductPath(product, categorySlug);
+  if (canonicalPath) {
+    const categories = await getCategories();
+    // getCategories() swallows backend errors as []; a 404 here would be ISR-cached for the revalidate window.
+    if (categories.length === 0) throw new Error("Categories unavailable; cannot validate stale category slug");
+    if (!isKnownCategorySlug(categories, categorySlug)) notFound();
+    permanentRedirect(canonicalPath);
+  }
+
+  const category = { name: product.categoryName || product.categorySlug };
 
   const displayPrice = getDisplayPricePerUnit(product);
   const listing = getListingPrice(product);
 
   const jsonLd = buildProductJsonLd(product, SITE_URL);
+  const crumbs = productCrumbs(product);
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd(crumbs);
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={jsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 max-md:py-3">
         {/* Mobile: a single-line back link; the full breadcrumb stays for md+ (structured data is separate). */}
         <Link
-          href={ROUTES.category(categorySlug)}
+          href={ROUTES.category(product.categorySlug)}
           className="md:hidden mb-2 -ml-1 inline-flex min-h-11 items-center gap-0.5 text-sm font-medium text-muted-foreground hover:text-foreground"
         >
           <ChevronLeft size={18} aria-hidden="true" />
@@ -101,11 +99,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
         {/* Breadcrumb */}
         <Breadcrumb
-          items={[
-            { label: "All Products", href: ROUTES.products },
-            { label: category.name, href: ROUTES.category(categorySlug) },
-            { label: product.name },
-          ]}
+          items={crumbsToBreadcrumbItems(crumbs)}
           className="mb-6 max-md:hidden"
         />
 

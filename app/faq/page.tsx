@@ -2,12 +2,15 @@ import type { Metadata } from "next";
 import { HelpCircle } from "lucide-react";
 import { getFaqs } from "@/lib/api";
 import { FaqAccordionItem } from "./FaqAccordionItem";
+import { JsonLd } from "@/components/common/JsonLd";
+import { buildFaqPageJsonLd } from "@/lib/structured-data";
 import type { Faq } from "@/types";
 
 export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Frequently Asked Questions",
+  alternates: { canonical: "/faq" },
   description:
     "Answers to common questions about ordering, artwork, shipping, and payments at Urgent Printers.",
 };
@@ -30,32 +33,11 @@ export default async function FaqPage() {
   const faqs = await getFaqs();
   const grouped = groupByCategory(faqs);
 
-  const faqPageJsonLd =
-    faqs.length > 0
-      ? {
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          mainEntity: faqs.map((faq) => ({
-            "@type": "Question",
-            name: faq.question,
-            acceptedAnswer: {
-              "@type": "Answer",
-              text: faq.answer,
-            },
-          })),
-        }
-      : null;
+  const faqPageJsonLd = buildFaqPageJsonLd(faqs);
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      {faqPageJsonLd && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(faqPageJsonLd).replace(/</g, "\\u003c"),
-          }}
-        />
-      )}
+      {faqPageJsonLd && <JsonLd data={faqPageJsonLd} />}
 
       <div className="mb-8 text-center">
         <h1 className="font-heading font-bold text-2xl lg:text-3xl">Frequently Asked Questions</h1>

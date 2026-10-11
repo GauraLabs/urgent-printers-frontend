@@ -13,12 +13,24 @@ export interface TemplateField {
 
 // ─── Category ────────────────────────────────────────────────────────────────
 
+export interface CategoryRef {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export interface CategoryFaq {
+  question: string;
+  answer: string;
+}
+
 export interface Category {
   id: string;
   slug: string;
   name: string;
   description: string;
-  imageUrl: string;
+  /** Uploaded thumbnail, or null when the category has no image yet (render a letter tile). */
+  imageUrl: string | null;
   productCount: number;
   // Fields populated when fetched from the real backend (absent in mock data)
   thumbnailUrl?: string | null;
@@ -30,8 +42,20 @@ export interface Category {
   metaTitle?: string | null;
   metaDescription?: string | null;
   isActive?: boolean;
-  parentId?: number | null;
+  /** Stringified like `id`, so tree code never compares number to string. */
+  parentId?: string | null;
   sortOrder?: number;
+  /** Root-first, excludes self; [] for a root. Absent on mocks / old backends. */
+  ancestors?: CategoryRef[] | null;
+  /** "Wedding > Wedding Tags" */
+  path?: string | null;
+  /** Rolled up: includes active descendants. See directProductCount for own products only. */
+  directProductCount?: number | null;
+  seoIntro?: string | null;
+  seoBody?: string | null;
+  faqs?: CategoryFaq[];
+  googleProductCategory?: string | null;
+  noindex?: boolean;
 }
 
 // ─── Print Specifications ─────────────────────────────────────────────────────
@@ -120,6 +144,9 @@ export interface Product {
   categoryId: string;
   categorySlug: string;
   categoryName: string;
+  /** Root-first, excludes the product's own category. */
+  categoryAncestors?: CategoryRef[] | null;
+  categoryPath?: string | null;
   description: string;
   shortDescription: string;
   images: string[];
@@ -166,6 +193,10 @@ export interface Product {
   // PDP query string of the configuration listingPrice was computed for (qty + cheapest options).
   listingQuery?: string;
   listingOffer?: ListingOffer | null;
+  // Admin-entered SEO overrides (PDP detail only; each may be null/absent).
+  seo?: { title: string | null; description: string | null; canonicalUrl: string | null };
+  // ISO timestamp when the backend exposes it; used for sitemap lastmod only.
+  updatedAt?: string | null;
   customizationMode: CustomizationMode;
   templateFields: TemplateField[];
 }

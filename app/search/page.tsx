@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Search, TrendingUp } from "lucide-react";
+import { getRootCategories } from "@/lib/seo/category";
 import { searchProductsPaged, getCategories, getPopularSearches } from "@/lib/api";
 import { ProductCard } from "@/features/products/ProductCard";
 import { EmptyState } from "@/components/common/EmptyState";
-import { SafeImage } from "@/components/common/SafeImage";
+import { CategoryTile } from "@/features/navigation/CategoryTile";
+import { getRealCategoryImage } from "@/features/navigation/categoryImage";
 import { Breadcrumb } from "@/components/common/Breadcrumb";
 import { SearchPageProvider, SearchPageForm, SearchResultsFrame } from "@/features/products/SearchPageClient";
 import { ROUTES } from "@/lib/constants/routes";
@@ -19,6 +21,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   const title = q ? `Results for "${q}"` : "Search";
   return {
     title,
+    robots: { index: false, follow: true },
     description: q
       ? `Find wedding and celebration products matching "${q}" — cards, envelopes, welcome boards, and more.`
       : "Search wedding cards, shagun envelopes, welcome boards and more.",
@@ -116,21 +119,18 @@ export default async function SearchPage({ searchParams }: PageProps) {
         <section>
           <h2 className="font-heading font-semibold text-base mb-4">Browse by Category</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {categories.map((cat) => (
+            {getRootCategories(categories).map((cat) => (
               <Link
                 key={cat.id}
                 href={ROUTES.category(cat.slug)}
                 className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border bg-card hover:border-primary/40 shadow-sm hover:shadow-md transition-all text-center group"
               >
-                <div className="relative w-10 h-10 rounded-full overflow-hidden bg-muted shrink-0">
-                  <SafeImage
-                    src={cat.thumbnailUrl ?? cat.imageUrl}
-                    alt=""
-                    fill
-                    className="object-cover"
-                    sizes="40px"
-                  />
-                </div>
+                <CategoryTile
+                  name={cat.name}
+                  imageUrl={getRealCategoryImage(cat)}
+                  className="w-10 h-10 rounded-full text-base"
+                  sizes="40px"
+                />
                 <span className="text-xs font-semibold group-hover:text-primary transition-colors leading-tight">
                   {cat.name}
                 </span>

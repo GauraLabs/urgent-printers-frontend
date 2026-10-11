@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-export const metadata: Metadata = { title: "Shipping Info" };
+export const metadata: Metadata = { title: "Shipping Info", alternates: { canonical: "/policies/shipping" } };
 export default function ShippingPage() {
   return (
     <article>

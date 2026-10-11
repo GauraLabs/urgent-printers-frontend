@@ -37,7 +37,7 @@ yarn-error.log*
 # vercel
 .vercel
 
-# next-sitemap (generated on every build)
+# Static files here would shadow app/sitemap.ts and app/robots.ts; `prebuild` also deletes them.
 /public/sitemap*.xml
 /public/robots.txt
 

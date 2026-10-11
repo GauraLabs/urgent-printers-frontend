@@ -13,7 +13,7 @@ import { mockProducts } from "@/lib/mock-data";
 import { getDisplayPricePerUnit, minOptionMultiplier, round2, slugify } from "@/lib/utils";
 import { delay } from "./delay";
 import { apiFetch, apiFetchPage, ApiError } from "./client";
-import { getCategories } from "./categories";
+import { getCategories, mapCategoryRefs } from "./categories";
 import { logApiError } from "./logApiError";
 
 // ─── Backend shapes ───────────────────────────────────────────────────────────
@@ -26,6 +26,8 @@ export interface BackendProductCard {
   category_id: number | null;
   category_slug: string | null;
   category_name: string | null;
+  category_ancestors?: { id: number; name: string; slug: string }[] | null;
+  category_path?: string | null;
   badge: string;
   is_featured: boolean;
   tags: string[];
@@ -50,6 +52,8 @@ export interface BackendProductCard {
   listing_query?: string | null;
   rating: number;
   review_count: number;
+  // Not exposed by the public API yet; sitemap lastmod uses it once present.
+  updated_at?: string | null;
 }
 
 export interface BackendListingOffer {
@@ -84,7 +88,7 @@ export interface BackendProductDetail extends BackendProductCard {
   discount_ends_at?: string | null;
   listing_offer?: BackendListingOffer | null;
   turnaround_options: { type: string; days: number; extra_cost: number; is_active: boolean }[];
-  seo: { title: string | null; description: string | null; canonical_url: string | null };
+  seo?: { title: string | null; description: string | null; canonical_url: string | null } | null;
   customization_mode: string;
   template_fields: {
     id: string;
@@ -215,6 +219,8 @@ export function mapCard(c: BackendProductCard): Product {
     categoryId: String(c.category_id ?? ""),
     categorySlug: c.category_slug ?? "",
     categoryName: c.category_name ?? "",
+    categoryAncestors: mapCategoryRefs(c.category_ancestors),
+    categoryPath: c.category_path ?? null,
     description: "",
     shortDescription: c.short_description ?? "",
     images: [imageUrl],
@@ -233,6 +239,7 @@ export function mapCard(c: BackendProductCard): Product {
     priceFrom: c.price_from ?? undefined,
     ...discountFields({ mrp: c.mrp_from, percent: c.discount_percent, amount: c.discount_amount, onSale: c.on_sale }),
     ...quantityFields(c),
+    updatedAt: c.updated_at ?? null,
     customizationMode: "none" as CustomizationMode,
     templateFields: [],
   };
@@ -314,6 +321,8 @@ export function mapDetail(d: BackendProductDetail): Product {
     categoryId: String(d.category_id ?? ""),
     categorySlug: d.category_slug ?? "",
     categoryName: d.category_name ?? "",
+    categoryAncestors: mapCategoryRefs(d.category_ancestors),
+    categoryPath: d.category_path ?? null,
     description: d.description ?? "",
     shortDescription: d.short_description ?? "",
     images,
@@ -337,6 +346,10 @@ export function mapDetail(d: BackendProductDetail): Product {
     ...quantityFields(d),
     listingOffer: mapListingOffer(d.listing_offer),
     discountEndsAt: d.discount_ends_at ?? undefined,
+    seo: d.seo
+      ? { title: d.seo.title, description: d.seo.description, canonicalUrl: d.seo.canonical_url }
+      : undefined,
+    updatedAt: d.updated_at ?? null,
     customizationMode: (d.customization_mode ?? "none") as CustomizationMode,
     templateFields: (d.template_fields ?? []).map((f) => ({
       id: f.id,
@@ -395,6 +408,21 @@ const SORT_MAP: Record<NonNullable<ProductFilters["sort"]>, string> = {
   newest: "newest",
   popular: "featured",
 };
+
+export function parseSortParam(value: string): ProductFilters["sort"] {
+  return Object.hasOwn(SORT_MAP, value) ? (value as ProductFilters["sort"]) : undefined;
+}
+
+const BADGE_FILTERS: Record<NonNullable<ProductFilters["badge"]>, true> = {
+  bestseller: true,
+  new: true,
+  sale: true,
+  popular: true,
+};
+
+export function parseBadgeParam(value: string): ProductFilters["badge"] {
+  return Object.hasOwn(BADGE_FILTERS, value) ? (value as ProductFilters["badge"]) : undefined;
+}
 
 // Sort/filter in mock mode mirrors the server: the display ("From") price is
 // the best-value tier x the product's min active option multipliers.
@@ -475,9 +503,11 @@ export async function getProducts(
     if (filters.maxPrice !== undefined) params.set("max_price", String(filters.maxPrice));
     if (filters.tags?.length) params.set("tags", filters.tags.join(","));
     // "On Sale" is derived from live pricing (on_sale), not the stored badge.
-    if (filters.badge === "sale") params.set("on_sale", "true");
-    else if (filters.badge) params.set("badge", filters.badge);
-    if (filters.sort) params.set("sort_by", SORT_MAP[filters.sort]);
+    const badge = filters.badge ? parseBadgeParam(filters.badge) : undefined;
+    if (badge === "sale") params.set("on_sale", "true");
+    else if (badge) params.set("badge", badge);
+    const sortBy = filters.sort ? SORT_MAP[filters.sort] : undefined;
+    if (sortBy) params.set("sort_by", sortBy);
     params.set("page", String(filters.page ?? 1));
     params.set("page_size", String(filters.pageSize ?? 12));
 

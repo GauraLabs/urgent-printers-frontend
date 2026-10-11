@@ -1,0 +1,390 @@
+{
+  "feature_found": true,
+  "feature_name": "Subcategories and category SEO (storefront)",
+  "source_files": [
+    "urgent-printers-frontend/project.config.json",
+    "urgent-printers-frontend/CLAUDE.md",
+    "urgent-printers-frontend/app/products/[categorySlug]/page.tsx",
+    "urgent-printers-frontend/app/products/[categorySlug]/[productSlug]/page.tsx",
+    "urgent-printers-frontend/app/products/page.tsx",
+    "urgent-printers-frontend/app/page.tsx",
+    "urgent-printers-frontend/app/search/page.tsx",
+    "urgent-printers-frontend/app/sitemap.ts",
+    "urgent-printers-frontend/app/robots.ts",
+    "urgent-printers-frontend/app/llms.txt/route.ts",
+    "urgent-printers-frontend/lib/seo/category.ts",
+    "urgent-printers-frontend/lib/seo/metadata.ts",
+    "urgent-printers-frontend/lib/seo/sitemap.ts",
+    "urgent-printers-frontend/lib/seo/robots.ts",
+    "urgent-printers-frontend/lib/seo/llms.ts",
+    "urgent-printers-frontend/lib/seo/site.ts",
+    "urgent-printers-frontend/lib/seo/jsonld.ts",
+    "urgent-printers-frontend/lib/structured-data.ts",
+    "urgent-printers-frontend/lib/api/categories.ts",
+    "urgent-printers-frontend/features/categories/SubcategoryTiles.tsx",
+    "urgent-printers-frontend/features/categories/RelatedSubcategories.tsx",
+    "urgent-printers-frontend/features/categories/CategorySeoContent.tsx",
+    "urgent-printers-frontend/features/categories/CategoryHero.tsx",
+    "urgent-printers-frontend/features/navigation/buildCategoryTree.ts",
+    "urgent-printers-frontend/features/navigation/MegaMenu.tsx",
+    "urgent-printers-frontend/features/products/CategoryChipBar.tsx",
+    "urgent-printers-frontend/features/products/FilterControls.tsx",
+    "urgent-printers-frontend/features/home/shelfBuckets.ts",
+    "urgent-printers-frontend/features/home/CategoryRail.tsx",
+    "urgent-printers-frontend/components/layout/MobileNavDrawer.tsx",
+    "urgent-printers-frontend/components/layout/Footer.tsx",
+    "urgent-printers-frontend/components/common/ProductListingSkeleton.tsx",
+    "urgent-printers-frontend/components/common/JsonLd.tsx",
+    "urgent-printers-backend/app/api/v1/routes/categories.py",
+    "urgent-printers-backend/app/schemas/category.py",
+    "plans/subcategories-seo-plan.md"
+  ],
+  "user_goal": "Browse a two-level category tree — land on a parent category, see what types sit under it, drill into a subcategory, and still reach a product whose category moved via its old link.",
+  "business_goal": "Make the catalog's hierarchy crawlable and answerable (breadcrumbs, canonical, FAQ/CollectionPage markup, sitemap, llms.txt) while never 404ing an indexed or shared product URL after a re-parent.",
+  "user_journey": [
+    { "step": "Open the parent category page", "route_or_state": "/products/marketing-prints" },
+    { "step": "See subcategory tiles with rolled-up counts and answer-first intro copy", "route_or_state": "/products/marketing-prints (above the grid)" },
+    { "step": "Read the category FAQ accordion below the grid", "route_or_state": "/products/marketing-prints (below the grid)" },
+    { "step": "Drill into a thin child category", "route_or_state": "/products/posters" },
+    { "step": "Jump back up or across via the sibling row", "route_or_state": "/products/posters (More from Marketing Prints)" },
+    { "step": "Follow an old product link whose category moved", "route_or_state": "/products/stickers-labels/custom-diecut-stickers -> 308" },
+    { "step": "Land on the product at its canonical URL with a 4-level breadcrumb", "route_or_state": "/products/die-cut-stickers/custom-diecut-stickers" },
+    { "step": "Discover the tree from the header mega-menu or the mobile drawer", "route_or_state": "Header 'Shop' panel / mobile drawer at 375px" },
+    { "step": "Machine surfaces expose the same tree", "route_or_state": "/sitemap.xml, /robots.txt, /llms.txt" }
+  ],
+  "happy_path": [
+    {
+      "step_id": "hp-01",
+      "action": "Navigate to the parent category page /products/marketing-prints",
+      "selector": "route /products/marketing-prints",
+      "expected_result": "HTTP 200; h1 'Marketing Prints' renders even though direct_product_count is 0"
+    },
+    {
+      "step_id": "hp-02",
+      "action": "Read the document title, meta description and canonical link",
+      "selector": "head > title, meta[name=description], link[rel=canonical]",
+      "expected_result": "title 'Marketing Prints – Flyers, Posters & More | Urgent Printers' (from meta_title); description equals the category's meta_description; canonical is <SITE_URL>/products/marketing-prints; no robots meta (indexable)"
+    },
+    {
+      "step_id": "hp-03",
+      "action": "Read the answer-first intro paragraph under the h1",
+      "selector": "text 'Marketing prints are printed promotional materials'",
+      "expected_result": "seo_intro renders above the product grid as prose, not the plain category description"
+    },
+    {
+      "step_id": "hp-04",
+      "action": "Check the UI breadcrumb trail",
+      "selector": "nav[aria-label=Breadcrumb]",
+      "expected_result": "Home (sr-only label) > All Products > Marketing Prints, with 'Marketing Prints' as the non-linked current page"
+    },
+    {
+      "step_id": "hp-05",
+      "action": "Read the BreadcrumbList JSON-LD",
+      "selector": "script[type='application/ld+json'] with @type BreadcrumbList",
+      "expected_result": "3 ListItems: Home, All Products, Marketing Prints — names and order identical to the visible breadcrumb, items absolute on SITE_URL"
+    },
+    {
+      "step_id": "hp-06",
+      "action": "Check the subcategory tiles block above the product grid",
+      "selector": "nav[aria-label='Marketing Prints subcategories'] containing heading 'Shop Marketing Prints by type'",
+      "expected_result": "Two tiles — 'Flyers & Leaflets' linking /products/flyers-leaflets and 'Posters' linking /products/posters — each with its rolled-up count rendered as '1 product' (singular)"
+    },
+    {
+      "step_id": "hp-07",
+      "action": "Check the product grid rolls descendants up into the parent",
+      "selector": "product grid cards within ProductsPageShell",
+      "expected_result": "Both descendant products are listed — 'A5 Flyers' (child flyers-leaflets) and 'A2 Posters' (child posters) — despite the parent owning no products directly"
+    },
+    {
+      "step_id": "hp-08",
+      "action": "Read the CollectionPage/ItemList JSON-LD",
+      "selector": "script[type='application/ld+json'] with @type CollectionPage",
+      "expected_result": "numberOfItems 2; itemListElement URLs are the products' own canonical child-category paths (/products/posters/a2-posters, /products/flyers-leaflets/a5-flyers); description equals the meta description"
+    },
+    {
+      "step_id": "hp-09",
+      "action": "Scroll to the category FAQ accordion below the grid and expand the first question",
+      "selector": "h2#category-faq-heading 'Marketing Prints FAQs'; details > summary 'What sizes do you print?'",
+      "expected_result": "Accordion renders 2 questions; expanding the first reveals the answer 'Sizes < 5 inch and > 3 inch are available as custom cuts, alongside standard A6 to A3.' — the raw '<' and '>' survive as prose and are not stripped as markup"
+    },
+    {
+      "step_id": "hp-10",
+      "action": "Read the FAQPage JSON-LD and compare to the visible accordion",
+      "selector": "script[type='application/ld+json'] with @type FAQPage",
+      "expected_result": "2 Question entries whose name/acceptedAnswer.text match the visible summary/answer text exactly, including the '< 5 inch and > 3 inch' clause (no markup-only FAQ)"
+    },
+    {
+      "step_id": "hp-11",
+      "action": "Click the 'Posters' subcategory tile",
+      "selector": "link 'Posters' inside the subcategories nav",
+      "expected_result": "Navigates to /products/posters and the child category page renders"
+    },
+    {
+      "step_id": "hp-12",
+      "action": "On the child page, check the breadcrumb includes the parent and the sibling row renders",
+      "selector": "nav[aria-label=Breadcrumb]; nav[aria-label='Related categories'] heading 'More from Marketing Prints'",
+      "expected_result": "Breadcrumb Home > All Products > Marketing Prints > Posters; a 'Shop all Marketing Prints' pill plus a 'Flyers & Leaflets' sibling pill"
+    }
+  ],
+  "alternate_paths": [
+    {
+      "path_name": "Thin child category is crawlable but not indexable",
+      "steps": [
+        {
+          "step_id": "alt-01",
+          "action": "Load /products/posters and read its robots meta and canonical",
+          "selector": "meta[name=robots], link[rel=canonical]",
+          "expected_result": "robots content 'noindex, follow' (1 rolled-up product < MIN_INDEXABLE_SUBCATEGORY_PRODUCTS = 3); canonical still self-referential <SITE_URL>/products/posters; title 'Posters | Urgent Printers'"
+        },
+        {
+          "step_id": "alt-02",
+          "action": "Read the child page's BreadcrumbList JSON-LD",
+          "selector": "script[type='application/ld+json'] with @type BreadcrumbList",
+          "expected_result": "4 ListItems: Home, All Products, Marketing Prints, Posters — i.e. the ancestor chain comes from the API's ancestors array, not from the URL (which is flat)"
+        },
+        {
+          "step_id": "alt-03",
+          "action": "Click 'Shop all Marketing Prints' in the sibling row",
+          "selector": "link 'Shop all Marketing Prints'",
+          "expected_result": "Returns to /products/marketing-prints"
+        }
+      ]
+    },
+    {
+      "path_name": "Parent that also owns a direct product shows both levels",
+      "steps": [
+        {
+          "step_id": "alt-04",
+          "action": "Load /products/stickers-labels (1 direct product + 1 child)",
+          "selector": "route /products/stickers-labels",
+          "expected_result": "HTTP 200; h1 'Stickers & Labels'; no robots noindex (root categories are never 'thin')"
+        },
+        {
+          "step_id": "alt-05",
+          "action": "Check the subcategory tile and the grid together",
+          "selector": "nav[aria-label='Stickers & Labels subcategories']; product grid",
+          "expected_result": "A 'Die-cut Stickers' tile is present AND the grid lists both the direct product 'test' and the descendant 'Custom Die-Cut Stickers' — rollup does not hide the parent's own product"
+        }
+      ]
+    },
+    {
+      "path_name": "A moved product's old URL 308s to its canonical path",
+      "steps": [
+        {
+          "step_id": "alt-06",
+          "action": "Request the old URL /products/stickers-labels/custom-diecut-stickers without following redirects",
+          "selector": "route /products/stickers-labels/custom-diecut-stickers",
+          "expected_result": "HTTP 308 with Location /products/die-cut-stickers/custom-diecut-stickers (permanentRedirect, not a 200-then-client-redirect)"
+        },
+        {
+          "step_id": "alt-07",
+          "action": "Follow to the canonical PDP and read the breadcrumb",
+          "selector": "nav[aria-label=Breadcrumb]",
+          "expected_result": "Home > All Products > Stickers & Labels > Die-cut Stickers > Custom Die-Cut Stickers; BreadcrumbList JSON-LD has the same 5 names in the same order"
+        },
+        {
+          "step_id": "alt-08",
+          "action": "Read the Product JSON-LD on the canonical PDP",
+          "selector": "script[type='application/ld+json'] with @type Product",
+          "expected_result": "category is the full path string 'Stickers & Labels > Die-cut Stickers'; sku 16; url on the die-cut-stickers segment"
+        },
+        {
+          "step_id": "alt-09",
+          "action": "Read the PDP canonical link",
+          "selector": "link[rel=canonical]",
+          "expected_result": "<SITE_URL>/products/die-cut-stickers/custom-diecut-stickers — the new segment, so the 308 target and the canonical agree"
+        }
+      ]
+    },
+    {
+      "path_name": "Header mega-menu and mobile drawer expose the 2-level tree",
+      "steps": [
+        {
+          "step_id": "alt-10",
+          "action": "At desktop width, open the header 'Shop' panel",
+          "selector": "button 'Shop' (aria-expanded) inside nav[aria-label='Main navigation']",
+          "expected_result": "Panel opens (aria-expanded true) showing 'Shop by occasion'; 'Marketing Prints' appears as a top-level entry with 'Flyers & Leaflets' and 'Posters' nested beneath it, and 'Stickers & Labels' with 'Die-cut Stickers' nested"
+        },
+        {
+          "step_id": "alt-11",
+          "action": "At 375px width, open the mobile drawer and expand a parent row",
+          "selector": "button[aria-label='Open menu']; button[aria-label='Show Marketing Prints subcategories']",
+          "expected_result": "Drawer opens; the toggle flips to aria-label 'Hide Marketing Prints subcategories' and reveals indented child rows 'Flyers & Leaflets' and 'Posters'"
+        }
+      ]
+    },
+    {
+      "path_name": "Discovery surfaces that must stay top-level only",
+      "steps": [
+        {
+          "step_id": "alt-12",
+          "action": "On the homepage, inspect the 'All Categories' rail",
+          "selector": "section[aria-labelledby=category-rail-heading]",
+          "expected_result": "Only the 6 root categories appear (Banners & Flex, Business Cards, Mugs & Promotional, Stickers & Labels, T-Shirts & Apparel, Marketing Prints); no child tile for Flyers & Leaflets, Posters or Die-cut Stickers"
+        },
+        {
+          "step_id": "alt-13",
+          "action": "On /search with no query, inspect the 'Browse by Category' grid",
+          "selector": "h2 'Browse by Category' and the link grid under it",
+          "expected_result": "Same 6 root categories only — getRootCategories filters children out"
+        },
+        {
+          "step_id": "alt-14",
+          "action": "On a listing page, inspect the sidebar Category filter",
+          "selector": "FilterControls 'Category' radio group",
+          "expected_result": "Children appear under their parent with visual indentation (nestCategories depth 1), e.g. Flyers & Leaflets and Posters immediately after Marketing Prints"
+        },
+        {
+          "step_id": "alt-15",
+          "action": "Scan every product card on the homepage for repeats",
+          "selector": "all product-card links on /",
+          "expected_result": "No product appears in two shelves — a rolled-up parent shelf and a child shelf never both carry the same product (dedupeShelfProducts)"
+        }
+      ]
+    },
+    {
+      "path_name": "Machine-readable SEO surfaces",
+      "steps": [
+        {
+          "step_id": "alt-16",
+          "action": "Fetch /sitemap.xml and inspect the <loc> set",
+          "selector": "route /sitemap.xml",
+          "expected_result": "Includes /products/marketing-prints; EXCLUDES the thin subcategories /products/flyers-leaflets, /products/posters, /products/die-cut-stickers; but still lists their products /products/flyers-leaflets/a5-flyers, /products/posters/a2-posters, /products/die-cut-stickers/custom-diecut-stickers"
+        },
+        {
+          "step_id": "alt-17",
+          "action": "Fetch /robots.txt",
+          "selector": "route /robots.txt",
+          "expected_result": "HTTP 200 text/plain; allows / for '*' and for the AI crawlers (GPTBot, ClaudeBot, PerplexityBot, Google-Extended); disallows /cart, /checkout, /account, /auth, /api/, /proof-approval/; declares the sitemap URL"
+        },
+        {
+          "step_id": "alt-18",
+          "action": "Fetch /llms.txt",
+          "selector": "route /llms.txt",
+          "expected_result": "HTTP 200 text/plain starting '# Urgent Printers'; lists Marketing Prints with its description under '## Shop'; omits the thin subcategories; '- Phone: +91 95281 91807' under '## Contact'; ends with the Sitemap line"
+        },
+        {
+          "step_id": "alt-19",
+          "action": "Check the footer and /contact phone numbers against the SEO constant",
+          "selector": "footer tel link; /contact 'Phone' row",
+          "expected_result": "Both render '+91 95281 91807' (CONTACT_PHONE_DISPLAY) with the footer anchor href 'tel:+919528191807' — same number llms.txt and the Organization JSON-LD advertise"
+        }
+      ]
+    },
+    {
+      "path_name": "Suspense skeleton replaces the deleted loading.tsx files",
+      "steps": [
+        {
+          "step_id": "alt-20",
+          "action": "Confirm no loading.tsx exists anywhere under app/products/ and the listing skeleton comes from the page's own Suspense boundary",
+          "selector": "filesystem app/products/**/loading.tsx; ProductListingBodySkeleton inside <Suspense> in app/products/[categorySlug]/page.tsx",
+          "expected_result": "Zero loading.tsx files under app/products/ (deliberate — a route-level loading shell flushes HTTP 200 before notFound()/permanentRedirect() can set the status); the skeleton renders inside the page instead, which is what keeps alt-06's 308 and err-01/err-02's 404 real status codes"
+        }
+      ]
+    }
+  ],
+  "error_paths": [
+    {
+      "step_id": "err-01",
+      "trigger": "Request a category slug that does not exist: /products/nope-category",
+      "expected_ui_response": "Real HTTP 404 (not a soft 404 with status 200) and the not-found page; notFound() runs in CategoryPage before the Suspense boundary",
+      "selector": "route /products/nope-category"
+    },
+    {
+      "step_id": "err-02",
+      "trigger": "Request a valid product under a category segment that is not a known category: /products/bogus-cat/custom-diecut-stickers",
+      "expected_ui_response": "Real HTTP 404 — isKnownCategorySlug rejects the junk segment so it cannot mint a cached 308 for every random prefix",
+      "selector": "route /products/bogus-cat/custom-diecut-stickers"
+    },
+    {
+      "step_id": "err-03",
+      "trigger": "Add a facet param to an indexable category URL: /products/marketing-prints?sort=price_asc",
+      "expected_ui_response": "robots 'noindex, follow' and canonical collapsing back to the bare <SITE_URL>/products/marketing-prints",
+      "selector": "meta[name=robots], link[rel=canonical]"
+    },
+    {
+      "step_id": "err-04",
+      "trigger": "Submit a search from a category page: /products/marketing-prints?q=flyers",
+      "expected_ui_response": "Redirect to /products?q=flyers (the Typesense endpoint cannot be category-scoped, so the page hands off rather than silently ignoring the category)",
+      "selector": "route /products/marketing-prints?q=flyers"
+    },
+    {
+      "step_id": "err-05",
+      "trigger": "Apply an unrecognised value to the sort facet: /products/marketing-prints?sort=bogus (and ?sort=price_asc, the underscore spelling of a real value)",
+      "expected_ui_response": "The invalid value is ignored and the listing renders the same products as the bare category page — NOT 'No products found'. Regression guard for a real defect found by this run: lib/api/products.ts forwarded an unmapped sort as the literal string sort_by=undefined, the backend 422'd, getProducts swallowed it and the page served an empty grid at HTTP 200. Fixed with parseSortParam.",
+      "selector": "route /products/marketing-prints?sort=bogus; product grid within ProductsPageShell"
+    },
+    {
+      "step_id": "err-06",
+      "trigger": "Apply an unrecognised value to the badge facet: /products/marketing-prints?badge=bogus (and ?badge=toString, to check the prototype-chain case)",
+      "expected_ui_response": "The invalid value is ignored and the listing renders the same products as the bare category page. Same defect class as err-05 on the other first-class facet in FACET_PARAMS; fixed with parseBadgeParam. ?badge=sale must still reach the backend as on_sale=true, so its empty result on this category stays legitimate rather than being papered over.",
+      "selector": "route /products/marketing-prints?badge=bogus; product grid within ProductsPageShell"
+    }
+  ],
+  "edge_cases": [
+    {
+      "case": "Parent category with zero direct products still renders a full page",
+      "existing_validation": "CategoryPage only notFound()s on a missing/inactive category, never on an empty one; getProducts is called with categorySlug and the backend rolls descendants up",
+      "risk_note": "Marketing Prints (direct_product_count 0, product_count 2) is exactly this case — a regression to exact-match filtering would render an empty parent page that still looks 200 OK"
+    },
+    {
+      "case": "Thin-subcategory noindex is computed client-side from productCount, not read from the API's noindex flag",
+      "existing_validation": "isCategoryIndexable in lib/seo/category.ts: isActive !== false && noindex !== true && productCount > 0 && !isThinCategory",
+      "risk_note": "The API returns noindex:false for Posters, yet the page must still emit noindex because its rolled-up count is 1 (< 3). The two mechanisms are independent and both must hold; asserting only the API field would pass while the page was wrong"
+    },
+    {
+      "case": "FAQ answer prose contains bare '<' and '>' characters",
+      "existing_validation": "toPlainText strips only real tags via /<\\/?[a-zA-Z][^>]*>/g and block breaks; bare comparison operators are preserved",
+      "risk_note": "A naive strip-all-angle-brackets sanitiser would silently mangle 'Sizes < 5 inch and > 3 inch' in both the visible answer and the FAQPage JSON-LD; the two must still match each other exactly or the markup is non-compliant"
+    },
+    {
+      "case": "SSR text interpolation splits heading strings with HTML comments",
+      "existing_validation": "None needed — React streaming emits 'Shop <!-- -->Marketing Prints<!-- --> by type' and 'Marketing Prints<!-- --> FAQs' in the raw HTML",
+      "risk_note": "A raw-HTML substring assertion on those headings fails even though the page is correct; assert via the DOM/accessible text (Playwright getByRole/getByText), not against the HTTP response body"
+    },
+    {
+      "case": "Two <nav> landmarks on a parent page share the accessible name '<Parent> subcategories'",
+      "existing_validation": "None at plan time — CategoryChipBar's row nav used aria-label={row.label} and SubcategoryTiles used aria-label={`${parent.name} subcategories`}, producing the same string",
+      "risk_note": "Confirmed live and FIXED during this run: axe 'landmark-unique' (moderate, 1 node on each of /products/marketing-prints and /products/stickers-labels, and on no other page). The tiles nav now uses aria-labelledby pointing at its own 'Shop <Parent> by type' heading and the chip row reads '<Parent> subcategory filters'. The specs still locate the tiles block by its heading rather than its aria-label, so they are label-rename-proof either way"
+    },
+    {
+      "case": "No loading.tsx under app/products/ by design",
+      "existing_validation": "Guarded by tests/subcategories.test.ts and documented in the frontend CLAUDE.md 'Key known fixes' table",
+      "risk_note": "Re-adding one flushes a 200 shell before notFound()/permanentRedirect(), turning alt-06's 308 and err-01/err-02's 404 into soft-200s — the exact regression the deletion of three loading.tsx files was meant to prevent"
+    },
+    {
+      "case": "Canonical/JSON-LD origin comes from NEXT_PUBLIC_SITE_URL, which is http://localhost:3000 in this dev environment",
+      "existing_validation": "resolveSiteUrl in lib/seo/site.ts falls back to https://urgentprinters.com only when the env var is not a valid http(s) origin",
+      "risk_note": "Assertions must compare against the running origin, not a hardcoded production host, or they fail for the wrong reason locally and pass for the wrong reason in prod"
+    },
+    {
+      "case": "Moving a product back to its old category can create a redirect loop for visitors who cached the 308",
+      "existing_validation": "Documented in a code comment in app/products/[categorySlug]/[productSlug]/page.tsx; canonicalProductPath returns null when segments already match so the server itself cannot loop",
+      "risk_note": "Server-side is loop-safe, but browser-cached 308s are not revocable — product 16 must not be moved back. This is why this run is read-only against the category/product data"
+    },
+    {
+      "case": "getCategories() swallows backend errors into an empty array",
+      "existing_validation": "The PDP throws 'Categories unavailable; cannot validate stale category slug' rather than 404ing, and app/sitemap.ts throws 'catalog unavailable' and falls back to static entries",
+      "risk_note": "Correct handling, but it means a backend outage during capture surfaces as a 500 / short sitemap rather than an obvious API failure — check the backend is up before treating either as an app defect"
+    },
+    {
+      "case": "Homepage shelf splitting activates only when a root holds >= 60% of the catalog",
+      "existing_validation": "DOMINANT_SHARE = 0.6 with a >= 2 non-empty children requirement in planShelfCategories; dedupeShelfProducts is the defensive backstop",
+      "risk_note": "With this dev catalog (9 products spread over 6 roots) no root is dominant, so the child-promotion branch is latent and only dedupeShelfProducts is actually exercised by alt-15"
+    },
+    {
+      "case": "Category pages are ISR-cached (revalidate = 60) and generateStaticParams pre-enumerates every category slug",
+      "existing_validation": "export const revalidate = 60 on both the category page and the PDP; the PDP returns [] from generateStaticParams deliberately to avoid bursting the backend rate limiter in dev",
+      "risk_note": "A capture run immediately after a data change can read up to 60s-stale HTML; first visits to a PDP compile and fetch on demand, so the first navigation is slow enough to need a generous timeout"
+    }
+  ],
+  "gaps": [
+    "The feature's own plan document (plans/subcategories-seo-plan.md) describes the PRODUCTION taxonomy (Wedding > Wedding Tags etc.). The dev catalog this run tests is a different, smaller tree (Marketing Prints > Flyers & Leaflets / Posters; Stickers & Labels > Die-cut Stickers). Plan steps are grounded in the live dev data, not that document.",
+    "Admin-side authoring of parent_id, seo_intro, seo_body and faqs is out of scope for this --app=frontend run; the storefront is tested against data already present in the dev DB and makes no writes.",
+    "Only one of the plan document's two depth levels exists in dev data — there is no depth-3 category, so buildCategoryTree's MAX_NAV_DEPTH = 3 headroom and the depth-2-cap enforcement are not exercised end to end here.",
+    "No category in the dev catalog has seo_body set, so CategorySeoBody's long-form prose branch renders only its FAQ half; the paragraphs branch is covered by unit tests only.",
+    "No category has google_product_category set or noindex = true in dev, so the admin-flagged-noindex branch of isCategoryIndexable and the feed's google_product_category passthrough are not covered by this run.",
+    "No indexable subcategory exists in dev data (all three children have 1 rolled-up product, below the threshold of 3), so 'a child category that IS in the sitemap' has no live fixture — creating one would mean re-parenting real products, which this run is explicitly forbidden from doing.",
+    "Pagination of a rolled-up parent listing (?page=2, and the isFirstPage suppression of seo_body/FAQs) cannot be exercised: the largest category holds 3 products against a PAGE_SIZE of 12."
+  ]
+}

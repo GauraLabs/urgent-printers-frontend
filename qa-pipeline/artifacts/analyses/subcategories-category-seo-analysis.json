@@ -1,0 +1,92 @@
+{
+  "feature_name": "Subcategories and Category SEO (Storefront)",
+  "pass_count": 38,
+  "fail_count": 0,
+  "failures": [],
+  "accessibility_summary": {
+    "critical": [],
+    "serious": [
+      "color-contrast — 39 node-instances across the whole run, attributed by route (axe runs per navigation, so each finding belongs to the page the step landed on, not to that step's element): / (21), /products/die-cut-stickers/custom-diecut-stickers (6), /products (5), /products/marketing-prints (4 across four separate visits, i.e. 1 per page view), /products/posters (2), /products/stickers-labels (1), /contact (1). This is site-wide, not owned by this feature: it is present on pages carrying none of this feature's UI (the homepage accounts for over half of it) and is the fourth consecutive run on this storefront to report it at a similar density. The two pages this feature actually introduced UI to — a parent category page and a thin child category page — contribute 1-2 nodes each, the same as before the feature existed. Worth one dedicated token-level pass on the shared palette rather than per-feature patching."
+    ],
+    "moderate": [
+      "heading-order — 3 node-instances, on the not-found page (/products/nope-category, /products/bogus-cat/custom-diecut-stickers) and /contact. Pre-existing and unrelated to the category tree: the two 404 hits are the shared app/not-found.tsx heading structure rendered inside the root layout, which this feature did not touch, and /contact is its own page. Not a blocker, but it is the one remaining moderate finding with no owner assigned.",
+      "landmark-unique — FOUND AND FIXED during this run. 5 node-instances on the first capture pass, appearing only on parent category pages (/products/marketing-prints and /products/stickers-labels) and on no other route, because CategoryChipBar's row <nav> and SubcategoryTiles' <nav> both resolved to the accessible name '<Parent> subcategories'. Two landmarks with one name and genuinely different contents (an image tile grid vs. a quick-filter chip row) left a screen-reader user no way to tell them apart in a landmarks list. frontend-developer pointed the tiles <nav> at its existing visible 'Shop <Parent> by type' heading via aria-labelledby and relabelled the chip row '<Parent> subcategory filters'. Re-captured clean: 0 node-instances. Visible copy unchanged."
+    ],
+    "coverage_caveat": "automated scan only — manual/screen-reader review still needed"
+  },
+  "performance_summary": {
+    "initial_load": "/products/marketing-prints (the parent category page): performance 0.60, accessibility 0.93, best-practices 0.96. FCP 1122ms, LCP 2080ms, Speed Index 1327ms, CLS 0, TBT 842ms, TTI 5735ms. Both checkpoints report url_mismatch: false and session_seeded: true, so unlike every prior storefront run in this registry these numbers genuinely describe the routes under test rather than a redirect target.",
+    "final_state": "/products/posters (the thin child category page): performance 0.64, accessibility 0.93, best-practices 0.96. FCP 1099ms, LCP 1823ms, Speed Index 1099ms, CLS 0, TBT 684ms, TTI 2646ms. warm_cache: true, so this is an in-session, warm measurement and is not comparable to the cold initial_load figure; the apparent improvement is at least partly the warm cache, not the page being lighter.",
+    "concerns": [
+      "These are Next.js DEV-SERVER numbers, not a production build. They are a run-over-run baseline only and must not be read as a shippable score — dev-mode React, unminified bundles and on-demand compilation dominate TBT and TTI here.",
+      "CLS is 0 on both category pages, which is the number that actually matters for this feature: the subcategory tile block and the seo_intro paragraph are both inserted above the product grid, and either could have pushed the grid down after paint. They do not.",
+      "TBT 842ms / TTI 5735ms on the parent page is high even allowing for dev mode, and the parent page is the one that renders the most: hero, breadcrumb, chip bar, tile grid, filter sidebar and the Suspense-streamed listing. Worth re-measuring against a production build before deciding whether any of it is real, since no production baseline for this route exists yet.",
+      "The category page is ISR-cached (revalidate = 60) and the PDP returns an empty generateStaticParams by design, so a first visit to any product page compiles and fetches on demand. That is a correctness-preserving choice (it was made to stop generateStaticParams bursting the backend's rate limiter in dev) but it makes first-visit timings on PDPs unrepresentative.",
+      "Lighthouse's own accessibility score of 0.93 is consistent with axe finding no criticals, but the two tools disagree in scope — treat the axe breakdown above as the actionable list."
+    ]
+  },
+  "ux_gaps": [
+    {
+      "issue": "An unrecognised value on an SEO facet used to serve a crawlable, empty category page at HTTP 200. lib/api/products.ts forwarded an unmapped ?sort= as the literal string 'sort_by=undefined'; the backend correctly 422'd, getProducts swallowed the error into an empty result, and the page rendered a complete shell with 'No products found' — while this feature's own facet rules stamped it noindex,follow with a canonical back to the bare listing. Confirmed live on /products/marketing-prints and /products, for both ?sort=bogus and ?sort=price_asc (the underscore misspelling of a real value). ?badge= had the identical shape, on the other first-class entry in FACET_PARAMS. Both are now fixed (parseSortParam / parseBadgeParam, prototype-safe, applied where the value enters from the URL) and both are covered by new capture steps err-05 and err-06 plus 22 new Vitest cases. Worth noting the detection path: no assertion caught this — it surfaced only as a console error attached to step err-03, which is exactly why console_errors are recorded per step.",
+      "related_edge_case": null
+    },
+    {
+      "issue": "Two <nav> landmarks on a parent category page shared one accessible name. This was predicted in the plan's edge cases with existing_validation: null, confirmed by axe as landmark-unique, and fixed in this run. Recording it as a UX gap as well as an a11y one because the ambiguity was also a test-authoring hazard: the specs deliberately locate the tiles block by its visible heading rather than its aria-label, which is why the relabelling did not break them.",
+      "related_edge_case": "Two <nav> landmarks on a parent page share the accessible name '<Parent> subcategories'"
+    },
+    {
+      "issue": "Four product images on the homepage 404 at the image optimiser (/_next/image?url=https://cdn.urgentprinters.com/product/<key>_md.webp). The dev database references CDN keys that do not exist on the CDN. This is dev content drift, not a code defect, and it appears on no category page — but it is the source of the '404 (Not Found)' console entries on the two homepage steps, so it is recorded here rather than left looking like a feature failure.",
+      "related_edge_case": null
+    },
+    {
+      "issue": "No indexable subcategory exists in the dev catalog, so the positive half of the thin-category rule is unverified end to end. All three children hold exactly 1 rolled-up product against MIN_INDEXABLE_SUBCATEGORY_PRODUCTS = 3, so the run proves a thin child IS excluded from the sitemap and llms.txt and IS stamped noindex, but never proves a healthy child is included. Creating the fixture would mean re-parenting real products, which this run was explicitly scoped not to do. Covered by Vitest only.",
+      "related_edge_case": "Thin-subcategory noindex is computed client-side from productCount, not read from the API's noindex flag"
+    },
+    {
+      "issue": "Pagination of a rolled-up parent listing was not exercised: the largest category holds 3 products against a PAGE_SIZE of 12, so ?page=2 is unreachable. That leaves the isFirstPage suppression of seo_body and the FAQ accordion on paginated pages — a deliberate design decision in the page component, since long-form copy belongs to the category and not to each page of it — asserted nowhere in the browser.",
+      "related_edge_case": "Category pages are ISR-cached (revalidate = 60) and generateStaticParams pre-enumerates every category slug"
+    },
+    {
+      "issue": "seo_body, google_product_category and the admin-set noindex flag are null/false on every category in the dev catalog, so three branches that this feature added are unexercised live: CategorySeoBody's long-form prose half (only its FAQ half rendered), the feed's google_product_category passthrough, and the admin-flagged-noindex arm of isCategoryIndexable. The thin-count arm of that same function IS covered, which is worth stating precisely because the two mechanisms are independent: the API returns noindex: false for Posters and the page still correctly emits noindex, follow from the rolled-up count alone.",
+      "related_edge_case": "Thin-subcategory noindex is computed client-side from productCount, not read from the API's noindex flag"
+    },
+    {
+      "issue": "Homepage dominant-root shelf splitting (DOMINANT_SHARE = 0.6) is latent on this catalog. 9 products spread over 6 roots means no root holds 60% of the catalog, so the branch that promotes second-level categories to shelves for a dominant parent never ran. Only dedupeShelfProducts was exercised (alt-15, which confirmed 10 distinct product cards and no repeats). This is the single largest untested behaviour in the feature, and it is the one that matters most on production, where one category is expected to hold the bulk of the catalog.",
+      "related_edge_case": "Homepage shelf splitting activates only when a root holds >= 60% of the catalog"
+    },
+    {
+      "issue": "The feature's own planning document (plans/subcategories-seo-plan.md) describes a production taxonomy (Wedding > Wedding Tags, etc.) that does not exist in the dev catalog this run tested (Marketing Prints > Flyers & Leaflets / Posters; Stickers & Labels > Die-cut Stickers). Everything here is grounded in live dev data. Nothing in this analysis should be read as having verified the production rollout plan, the redirect map in its section 3, or the 20-product move it proposes.",
+      "related_edge_case": null
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": "high",
+      "action": "Before the production rollout, build the missing indexable-subcategory fixture and the dominant-root homepage case on a rehearsal database copy (the plan document's section 3.4 already calls for one) and re-run this spec set against it. Those are the two behaviours this run could not reach, and both only become load-bearing once real products are re-parented — i.e. exactly at the moment they would first be exercised in production, with no prior evidence."
+    },
+    {
+      "priority": "high",
+      "action": "Audit the remaining URL-to-API parameter casts for the same empty-200 class of defect now that two instances have been found and fixed. ProductFilters is populated from searchParams with unchecked `as` casts in more than one place; min/max/tags/page went unexamined this run, and `features/products/useProductFilters.ts` still casts `sort` on the client (harmless today because it only drives the dropdown label and the URL, per frontend-developer's report, but it is the same pattern one refactor away from mattering). A shared validated parser for the whole filter object would close the class rather than the instances."
+    },
+    {
+      "priority": "medium",
+      "action": "Re-measure both category routes against a production build before treating the 0.60/0.64 performance scores or the 842ms TBT as real. No production baseline exists for these routes, and these dev-server numbers cannot distinguish a genuine cost of the new tile grid and SEO content blocks from dev-mode overhead. CLS being 0 is the one number that is already trustworthy and already good."
+    },
+    {
+      "priority": "medium",
+      "action": "Give the site-wide color-contrast finding (39 node-instances, 4th consecutive run) one dedicated pass at the theme-token level rather than continuing to re-report it per feature. It is worth separating in that pass: this feature's own surfaces contribute 1-2 nodes per page view, so the bulk of the debt is in shared components and the homepage, and fixing it per feature will never converge."
+    },
+    {
+      "priority": "medium",
+      "action": "Assign the heading-order finding on the shared not-found page. It is pre-existing and this feature merely routes to that page more deliberately than before (two of the six error-path steps land on it, and err-01/err-02 exist precisely to prove it returns a real 404), so the feature has made it more reachable without owning it."
+    },
+    {
+      "priority": "low",
+      "action": "Reconcile the dev catalog's four broken CDN product-image keys, or accept them as known dev drift and stop reading the resulting /_next/image 404s as findings. They cost two misleading console entries per homepage capture on every run of every feature."
+    },
+    {
+      "priority": "low",
+      "action": "Treat the recurring hydration-mismatch console warning as closed, with evidence, rather than re-triaging it next run. It was reproduced here with the React diff visible — `- style={{caret-color:\"transparent\"}}` on the header search <input type=\"search\"> and on the in-catalog SearchField — and `grep -rn 'caret-color|caretColor'` across app/, components/, features/, hooks/, lib/ and types/ still returns 0 matches, so no app code sets it. It appears only under Playwright and is absent from a plain browser load of the same URLs. This is the third independent confirmation of pipeline/README.md finding #10. The separate 'Encountered a script tag while rendering React component' warning on the two 404 steps is also pre-existing and unrelated to this feature: it comes from the two intentional inline bootstrap scripts in app/layout.tsx (colour-mode and consent init), which exist specifically because calling cookies() in a layout would kill static generation."
+    }
+  ]
+}

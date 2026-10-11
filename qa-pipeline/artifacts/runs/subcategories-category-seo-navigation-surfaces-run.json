@@ -1,0 +1,180 @@
+{
+  "feature_name": "Subcategories Category SEO Navigation Surfaces",
+  "plan_path": "qa-pipeline/artifacts/plans/subcategories-category-seo-plan.json",
+  "run_timestamp": "2026-10-10T19:54:50.478Z",
+  "trace_path": "qa-pipeline/artifacts/traces/subcategories-category-seo-navigation-surfaces-trace.zip",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "alt-10",
+      "action": "Open the header Shop mega-menu panel",
+      "selector": "locator('nav[aria-label=\"Main navigation\"]').getByRole('button', { name: 'Shop' })",
+      "route": "/",
+      "bounding_box": {
+        "x": 150,
+        "y": 12,
+        "width": 76,
+        "height": 32
+      },
+      "timestamp_ms": 2076,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/subcategories-category-seo-navigation-surfaces/alt-10.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "image-redundant-alt",
+          "impact": "minor",
+          "description": "Ensure image alternative is not repeated as text",
+          "nodes": 6
+        }
+      ],
+      "console_errors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    {
+      "step_id": "alt-11",
+      "action": "Expand the Marketing Prints row in the mobile drawer",
+      "selector": "locator('button[aria-controls=\"mobile-cat-marketing-prints\"]')",
+      "route": "/",
+      "bounding_box": {
+        "x": 228,
+        "y": 321,
+        "width": 44,
+        "height": 44
+      },
+      "timestamp_ms": 3885,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/subcategories-category-seo-navigation-surfaces/alt-11.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 2
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-12",
+      "action": "Inspect the homepage All Categories rail",
+      "selector": "locator('section[aria-labelledby=\"category-rail-heading\"]')",
+      "route": "/",
+      "bounding_box": {
+        "x": 0,
+        "y": 20,
+        "width": 1280,
+        "height": 681
+      },
+      "timestamp_ms": 5811,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/subcategories-category-seo-navigation-surfaces/alt-12.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 4
+        },
+        {
+          "id": "image-redundant-alt",
+          "impact": "minor",
+          "description": "Ensure image alternative is not repeated as text",
+          "nodes": 7
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-15",
+      "action": "Scan every homepage product card for repeats",
+      "selector": null,
+      "route": "/",
+      "bounding_box": null,
+      "timestamp_ms": 7975,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/subcategories-category-seo-navigation-surfaces/alt-15.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 13
+        },
+        {
+          "id": "image-redundant-alt",
+          "impact": "minor",
+          "description": "Ensure image alternative is not repeated as text",
+          "nodes": 7
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-13",
+      "action": "Inspect the search page Browse by Category grid",
+      "selector": "locator('section').filter({ has: getByRole('heading', { name: 'Browse by Category' }) }).first()",
+      "route": "/search",
+      "bounding_box": {
+        "x": 32,
+        "y": 439,
+        "width": 1216,
+        "height": 137
+      },
+      "timestamp_ms": 8981,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/subcategories-category-seo-navigation-surfaces/alt-13.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-14",
+      "action": "Expand the sidebar Category filter and check child indentation",
+      "selector": "locator('aside').first().getByRole('button', { name: /Show all 9 categories/ })",
+      "route": "/products",
+      "bounding_box": {
+        "x": 32,
+        "y": 663,
+        "width": 142,
+        "height": 16
+      },
+      "timestamp_ms": 10378,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/subcategories-category-seo-navigation-surfaces/alt-14.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 4
+        }
+      ],
+      "console_errors": []
+    }
+  ],
+  "lighthouse": {
+    "initial_load": null,
+    "final_state": null
+  }
+}

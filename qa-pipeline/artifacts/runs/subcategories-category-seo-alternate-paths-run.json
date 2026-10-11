@@ -1,0 +1,193 @@
+{
+  "feature_name": "Subcategories Category SEO Alternate Paths",
+  "plan_path": "qa-pipeline/artifacts/plans/subcategories-category-seo-plan.json",
+  "run_timestamp": "2026-10-10T19:53:47.447Z",
+  "trace_path": "qa-pipeline/artifacts/traces/subcategories-category-seo-alternate-paths-trace.zip",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "steps": [
+    {
+      "step_id": "alt-01",
+      "action": "Load the thin child category and read robots + canonical",
+      "selector": null,
+      "route": "/products/posters",
+      "bounding_box": null,
+      "timestamp_ms": 1404,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/subcategories-category-seo-alternate-paths/alt-01.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 1
+        }
+      ],
+      "console_errors": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <InnerLayoutRouter url=\"/products/...\" tree={[...]} params={{...}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>\n      <SegmentViewNode type=\"page\" pagePath=\"products/[...\">\n        <SegmentTrieNode>\n        <CategoryPage>\n          <script>\n          <section>\n            <div>\n            <div>\n            <CategoryChipBar>\n            <Suspense fallback={<div>}>\n              <script>\n              <ProductsPageShell products={[...]} total={1} categories={[...]} categoryName=\"Posters\" ...>\n                <Suspense fallback={<div>}>\n                  <ShellInner products={[...]} total={1} categories={[...]} categoryName=\"Posters\" ...>\n                    <div className=\"max-w-7xl ...\">\n                      <SearchField value=\"\" onChange={function bound dispatchSetState} onClear={function onClear} ...>\n                        <div className=\"relative m...\">\n                          <Search>\n                          <input\n                            ref={{current:null}}\n                            type=\"search\"\n                            name={undefined}\n                            value=\"\"\n                            onChange={function onChange}\n                            placeholder=\"Search this catalog…\"\n                            aria-label=\"Search this catalog\"\n                            autoComplete=\"off\"\n                            autoFocus={undefined}\n                            className={\"[&::-webkit-search-cancel-button]:hidden [&::-webkit-search-cancel-button]:ap...\"}\n-                           style={{caret-color:\"transparent\"}}\n                          >\n                          ...\n                      <div>\n                      <div>\n                      ...\n                        <div className=\"sticky top-20\">\n                          <FilterControls categories={[...]} showCategoryFilter={undefined} disabled={false}>\n                            <div className=\"flex flex-...\">\n                              <div>\n                              <div>\n                                <p>\n                                <div className=\"flex flex-...\">\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  ...\n                              ...\n                              <div>\n                                <p>\n                                <div className=\"flex items...\">\n                                  <input\n                                    type=\"number\"\n                                    placeholder=\"Min\"\n                                    value=\"\"\n                                    onChange={function onChange}\n                                    onBlur={function applyPrice}\n                                    onKeyDown={function onKeyDown}\n                                    min={0}\n                                    className=\"w-full h-8 rounded-md border border-border bg-background px-3 text-sm f...\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  <span>\n                                  <input\n                                    type=\"number\"\n                                    placeholder=\"Max\"\n                                    value=\"\"\n                                    onChange={function onChange}\n                                    onBlur={function applyPrice}\n                                    onKeyDown={function onKeyDown}\n                                    min={0}\n                                    className=\"w-full h-8 rounded-md border border-border bg-background px-3 text-sm f...\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                              <Separator>\n                              <div>\n                                <p>\n                                <div className=\"flex flex-...\">\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                              <Separator>\n                              <div>\n                                <p>\n                                <div className=\"flex flex-...\">\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n            ...\n      ...\n"
+      ]
+    },
+    {
+      "step_id": "alt-02",
+      "action": "Read the child BreadcrumbList JSON-LD",
+      "selector": null,
+      "route": "/products/posters",
+      "bounding_box": null,
+      "timestamp_ms": 1576,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/subcategories-category-seo-alternate-paths/alt-02.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-03",
+      "action": "Click \"Shop all Marketing Prints\" in the sibling row",
+      "selector": "locator('nav[aria-label=\"Related categories\"]').getByRole('link', { name: 'Shop all Marketing Prints' })",
+      "route": "/products/marketing-prints",
+      "bounding_box": {
+        "x": 32,
+        "y": 338,
+        "width": 197,
+        "height": 44
+      },
+      "timestamp_ms": 2201,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/subcategories-category-seo-alternate-paths/alt-03.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 1
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-04",
+      "action": "Load the parent that also owns a direct product",
+      "selector": null,
+      "route": "/products/stickers-labels",
+      "bounding_box": null,
+      "timestamp_ms": 3249,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/subcategories-category-seo-alternate-paths/alt-04.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 1
+        }
+      ],
+      "console_errors": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <InnerLayoutRouter url=\"/products/...\" tree={[...]} params={{...}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>\n      <SegmentViewNode type=\"page\" pagePath=\"products/[...\">\n        <SegmentTrieNode>\n        <CategoryPage>\n          <script>\n          <section>\n            <div>\n            <CategoryChipBar>\n            <Suspense fallback={<div>}>\n              <script>\n              <nav>\n              <ProductsPageShell products={[...]} total={2} categories={[...]} categoryName={\"Stickers...\"} ...>\n                <Suspense fallback={<div>}>\n                  <ShellInner products={[...]} total={2} categories={[...]} categoryName={\"Stickers...\"} ...>\n                    <div className=\"max-w-7xl ...\">\n                      <SearchField value=\"\" onChange={function bound dispatchSetState} onClear={function onClear} ...>\n                        <div className=\"relative m...\">\n                          <Search>\n                          <input\n                            ref={{current:null}}\n                            type=\"search\"\n                            name={undefined}\n                            value=\"\"\n                            onChange={function onChange}\n                            placeholder=\"Search this catalog…\"\n                            aria-label=\"Search this catalog\"\n                            autoComplete=\"off\"\n                            autoFocus={undefined}\n                            className={\"[&::-webkit-search-cancel-button]:hidden [&::-webkit-search-cancel-button]:ap...\"}\n-                           style={{caret-color:\"transparent\"}}\n                          >\n                          ...\n                      <div>\n                      <div>\n                      ...\n                        <div className=\"sticky top-20\">\n                          <FilterControls categories={[...]} showCategoryFilter={undefined} disabled={false}>\n                            <div className=\"flex flex-...\">\n                              <div>\n                              <div>\n                                <p>\n                                <div className=\"flex flex-...\">\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={true}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"radio\"\n                                      name=\"category\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  ...\n                              ...\n                              <div>\n                                <p>\n                                <div className=\"flex items...\">\n                                  <input\n                                    type=\"number\"\n                                    placeholder=\"Min\"\n                                    value=\"\"\n                                    onChange={function onChange}\n                                    onBlur={function applyPrice}\n                                    onKeyDown={function onKeyDown}\n                                    min={0}\n                                    className=\"w-full h-8 rounded-md border border-border bg-background px-3 text-sm f...\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  <span>\n                                  <input\n                                    type=\"number\"\n                                    placeholder=\"Max\"\n                                    value=\"\"\n                                    onChange={function onChange}\n                                    onBlur={function applyPrice}\n                                    onKeyDown={function onKeyDown}\n                                    min={0}\n                                    className=\"w-full h-8 rounded-md border border-border bg-background px-3 text-sm f...\"\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                              <Separator>\n                              <div>\n                                <p>\n                                <div className=\"flex flex-...\">\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                              <Separator>\n                              <div>\n                                <p>\n                                <div className=\"flex flex-...\">\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n                                  <label className=\"flex items...\">\n                                    <input\n                                      type=\"checkbox\"\n                                      checked={false}\n                                      onChange={function onChange}\n                                      className=\"accent-primary w-3.5 h-3.5 rounded\"\n-                                     style={{caret-color:\"transparent\"}}\n                                    >\n                                    ...\n      ...\n"
+      ]
+    },
+    {
+      "step_id": "alt-05",
+      "action": "Check the Die-cut tile and both products in the grid",
+      "selector": "locator('article').filter({ has: locator('a[aria-label=\"Custom Die-Cut Stickers\"]') }).first()",
+      "route": "/products/stickers-labels",
+      "bounding_box": {
+        "x": 615,
+        "y": 141,
+        "width": 307,
+        "height": 579
+      },
+      "timestamp_ms": 3490,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/subcategories-category-seo-alternate-paths/alt-05.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-06",
+      "action": "Request the moved product at its old URL without following redirects",
+      "selector": null,
+      "route": "/products/stickers-labels",
+      "bounding_box": null,
+      "timestamp_ms": 3964,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/subcategories-category-seo-alternate-paths/alt-06.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-07",
+      "action": "Follow to the canonical PDP and read the breadcrumb",
+      "selector": null,
+      "route": "/products/die-cut-stickers/custom-diecut-stickers",
+      "bounding_box": null,
+      "timestamp_ms": 5270,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/subcategories-category-seo-alternate-paths/alt-07.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+          "nodes": 6
+        }
+      ],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-08",
+      "action": "Read the Product JSON-LD on the canonical PDP",
+      "selector": null,
+      "route": "/products/die-cut-stickers/custom-diecut-stickers",
+      "bounding_box": null,
+      "timestamp_ms": 5463,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/subcategories-category-seo-alternate-paths/alt-08.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    },
+    {
+      "step_id": "alt-09",
+      "action": "Read the PDP canonical link",
+      "selector": null,
+      "route": "/products/die-cut-stickers/custom-diecut-stickers",
+      "bounding_box": null,
+      "timestamp_ms": 5634,
+      "screenshot_path": "qa-pipeline/artifacts/screenshots/subcategories-category-seo-alternate-paths/alt-09.png",
+      "status": "pass",
+      "error": null,
+      "typed_text": null,
+      "typed_masked": false,
+      "axe_violations": [],
+      "console_errors": []
+    }
+  ],
+  "lighthouse": {
+    "initial_load": null,
+    "final_state": null
+  }
+}

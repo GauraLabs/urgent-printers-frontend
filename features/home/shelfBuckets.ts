@@ -60,14 +60,78 @@ export function bucketShelves(shelves: CategoryShelf[]): ShelfBuckets {
   return { rails, quads };
 }
 
+/** A root holding at least this share of all products is "most of the catalog" and gets split into its children. */
+export const DOMINANT_SHARE = 0.6;
+
+/** Counts are rolled up, so only roots are summed: adding children would count every product twice. */
+export function totalCatalogProducts(categories: Category[]): number {
+  const rootSlugs = new Set(buildCategoryTree(categories).map((c) => c.slug));
+  return categories.filter((c) => rootSlugs.has(c.slug)).reduce((sum, c) => sum + c.productCount, 0);
+}
+
 /**
- * Categories that get a homepage shelf: active, top-level (the same roots the
- * menu uses, so sub-categories never repeat their parent), non-empty, in the
- * backend's order, capped.
+ * Categories that get a homepage shelf: active, non-empty, in the backend's
+ * order, capped. Each product belongs to exactly one shelf: a root's shelf is
+ * rolled up (it already contains its descendants), so a root is either shown
+ * itself or, when it holds most of the catalog and has 2+ non-empty children,
+ * replaced by those children. A parent and its child are never both shelves.
  */
 export function selectShelfCategories(categories: Category[], max: number): Category[] {
-  const rootSlugs = new Set(buildCategoryTree(categories).map((c) => c.slug));
-  return categories.filter((c) => rootSlugs.has(c.slug) && c.productCount > 0).slice(0, max);
+  return planShelfCategories(categories, max).shelves;
+}
+
+/**
+ * Same selection as selectShelfCategories, plus the dominant roots that were
+ * replaced by their children: products attached directly to such a root belong
+ * to none of the child shelves and need their own shelf (see directRootShelves).
+ */
+export function planShelfCategories(
+  categories: Category[],
+  max: number,
+): { shelves: Category[]; splitRoots: Category[] } {
+  const tree = buildCategoryTree(categories);
+  const bySlug = new Map(categories.map((c) => [c.slug, c]));
+  const total = tree.reduce((sum, n) => sum + n.productCount, 0);
+
+  const out: Category[] = [];
+  const splitRoots: Category[] = [];
+  for (const node of tree) {
+    const children = node.children.filter((child) => child.productCount > 0);
+    const dominant = total > 0 && node.productCount / total >= DOMINANT_SHARE && children.length >= 2;
+    const slugs = dominant ? children.map((child) => child.slug) : [node.slug];
+    const root = bySlug.get(node.slug);
+    if (dominant && root) splitRoots.push(root);
+    for (const slug of slugs) {
+      const category = bySlug.get(slug);
+      if (category && category.productCount > 0) out.push(category);
+    }
+  }
+  return { shelves: out.slice(0, max), splitRoots };
+}
+
+/**
+ * A rolled-up root fetch also returns its descendants' products; keep only the
+ * ones attached to the root itself. Shelves for these go after the child shelves,
+ * and dedupeShelfProducts guarantees nothing repeats.
+ */
+export function directRootShelves(splitRoots: Category[], results: Product[][]): CategoryShelf[] {
+  return splitRoots.map((category, i) => ({
+    category,
+    products: (results[i] ?? []).filter((p) => p.categorySlug === category.slug),
+  }));
+}
+
+/** Defensive: drops a product already shown by an earlier shelf so no card repeats on the page. */
+export function dedupeShelfProducts(shelves: CategoryShelf[]): CategoryShelf[] {
+  const seen = new Set<string>();
+  return shelves.map((shelf) => ({
+    ...shelf,
+    products: shelf.products.filter((p) => {
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    }),
+  }));
 }
 
 /**

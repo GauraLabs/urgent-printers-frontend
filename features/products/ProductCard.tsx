@@ -133,7 +133,7 @@ export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: Produ
         className="origin-top relative aspect-[19/20] overflow-hidden rounded-2xl mb-2 md:mb-3 bg-muted transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform motion-reduce:transition-none">
         <SafeImage
           src={product.mediumUrl ?? product.images[0]}
-          alt={product.name}
+          alt={product.categoryName ? `${product.name} - ${product.categoryName}` : product.name}
           fill
           className={cn(
             "object-cover transition-opacity duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",

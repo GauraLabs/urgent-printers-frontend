@@ -25,7 +25,7 @@ export function buildCategoryTree(categories: Category[]): NavCategory[] {
   const byParent = new Map<string | null, Category[]>();
 
   for (const c of active) {
-    const parentKey = c.parentId != null && ids.has(String(c.parentId)) ? String(c.parentId) : null;
+    const parentKey = c.parentId != null && ids.has(c.parentId) ? c.parentId : null;
     const list = byParent.get(parentKey) ?? [];
     list.push(c);
     byParent.set(parentKey, list);

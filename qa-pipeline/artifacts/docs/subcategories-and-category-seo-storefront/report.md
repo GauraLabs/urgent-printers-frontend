@@ -1,0 +1,199 @@
+# Subcategories and Category SEO (Storefront)
+**Project:** Urgent Printers — Storefront  
+**Generated:** 2026-10-11T02:30:00Z  
+**Run:** 2026-10-10T19:54:16.283Z — 38 steps, viewport 1280×720  
+---
+## Overview and objectives
+
+A customer should be able to land on a broad category, see at a glance which kinds of product sit underneath it, drill into one, and still arrive at the right product page when they follow an old link that was written before the catalog was reorganised. That is the user goal this feature serves.
+
+The business goal is narrower and sharper: make the catalog's hierarchy **crawlable and answerable** — real breadcrumbs, self-referential canonicals, FAQ and collection markup, a dynamic sitemap, a `robots.txt` and an `llms.txt` — while **never 404ing an indexed or shared product URL after a category move**. Those two halves are in tension, and the resolution is the design decision this whole feature rests on.
+
+This document covers the **storefront half only**. The admin-panel half (authoring a parent, writing `seo_intro`, `seo_body` and FAQs, re-parenting a category) is a separate run against a separate app.
+
+
+## Feature description and business logic
+
+### One level of nesting, flat URLs
+
+Categories can have one parent level. A category page's URL stays flat at `/products/[categorySlug]` at every level, and a product stays at `/products/[leafCategorySlug]/[productSlug]`. The hierarchy is expressed in breadcrumbs and `BreadcrumbList` markup rather than in the path.
+
+This is deliberate and worth stating plainly, because nesting the path would read as the more obvious choice. A nested `/products/[parent]/[child]` scheme **collides with the product route** — `/products/wedding/stickers` is ambiguous between a child category named `stickers` and a product slugged `stickers`, and that exact clash already exists in the real catalog. Flat URLs also mean no existing category URL needs a redirect. The hierarchy is communicated to crawlers through markup, which is what they key on.
+
+### Parents roll their descendants up
+
+A parent category lists its own products **plus** every active descendant's. `Marketing Prints` owns no products directly and still renders a populated page, because its two children do. `Stickers & Labels` owns one product directly and has one child, and shows both — rollup adds, it does not replace.
+
+Each rolled-up product card still links through **its own** category, not the parent's, so there is exactly one canonical URL per product no matter which listing a customer found it in.
+
+### A moved product redirects rather than 404ing
+
+Product slugs are globally unique, so the product page resolves by slug and treats a mismatched category segment as a stale link: it issues an HTTP **308** to the product's current canonical path. That one rule preserves search equity, saved carts, wishlists, shopping-feed URLs and shared links across any number of category moves, with no redirect table to maintain.
+
+It is guarded on both sides. Only a **known** category slug redirects — a junk segment 404s instead, so a crawler cannot mint one cached redirect entry per random prefix. And the redirect is only computed when the segments actually differ, so it cannot loop. One operational caveat follows from the 308 being permanent: browsers cache it hard, so moving a product A→B and later back to A can loop for anyone who cached the first move. Products should not be moved back.
+
+### Thin subcategories are crawlable but not indexed
+
+A subcategory below three rolled-up products is treated as too thin to deserve an index entry: it renders normally and is stamped `noindex, follow`, and it is left out of both the sitemap and `llms.txt`. `follow` matters — the page's links still pass equity to the products on it, and those products remain indexable in their own right.
+
+This is computed from the live rolled-up product count, **independently** of the separate admin-set `noindex` flag. Both mechanisms are checked, and either one is enough to exclude a page.
+
+### Facets are not landing pages
+
+Any of `sort`, `min`, `max`, `tags`, `badge` or `q` on a listing URL marks it `noindex, follow` with the canonical collapsing back to the bare listing. Plain `?page=N` is different — it stays indexable and self-canonical, because a page of results is a real destination in a way that a sort order is not.
+
+### A note on how the status code is protected
+
+There is deliberately **no `loading.tsx` anywhere under `app/products/`**. A route-level loading shell flushes HTTP 200 before the page body can call `notFound()` or `permanentRedirect()`, which would silently turn every 404 and 308 above into a soft 200 — the single worst outcome for a feature whose whole point is correct status codes. The loading skeleton is instead rendered by the page's own `Suspense` boundary, placed *after* everything that can change the status. Three `loading.tsx` files were removed to achieve this, and both a unit test and a capture step now guard their absence.
+
+
+## User flow
+
+A customer arrives at **Marketing Prints**. The page opens with the category hero, then a breadcrumb reading Home › All Products › Marketing Prints, then the heading, then a short answer-first paragraph explaining what marketing prints actually are — admin-authored copy, not the bare category description.
+
+Below that sits the thing the page exists for: a block headed *Shop Marketing Prints by type*, with an image tile for **Flyers & Leaflets** and one for **Posters**, each showing its product count. Underneath, the product grid lists both descendant products — *A5 Flyers* and *A2 Posters* — even though Marketing Prints owns neither of them directly. Further down, an FAQ accordion answers the questions a customer would otherwise have to ask, including one whose answer contains the literal text "Sizes < 5 inch and > 3 inch" — a detail that matters because those bare angle brackets have to survive the markup-stripping that protects this admin-authored field, in both the visible answer and the structured data derived from it.
+
+Clicking the **Posters** tile goes to `/products/posters`. The breadcrumb there is four levels — Home › All Products › Marketing Prints › Posters — even though the URL has only one segment, because the ancestry comes from the API rather than from the path. Because Posters holds a single product it is marked `noindex, follow`. At the foot of the page a *More from Marketing Prints* row offers one tap back up to the parent and one across to the sibling, Flyers & Leaflets.
+
+Separately, a customer follows an old link to `/products/stickers-labels/custom-diecut-stickers` — a URL that was correct before that product moved into a subcategory. They are redirected (308) to `/products/die-cut-stickers/custom-diecut-stickers` and land on the product with a five-level breadcrumb and `Product` structured data naming its full category path, `Stickers & Labels > Die-cut Stickers`.
+
+The same tree is reachable without visiting a category page at all: the header's **Shop** mega-menu nests children under their parents, and on a phone the drawer gives each parent row a disclosure button whose label flips between "Show" and "Hide … subcategories". Two surfaces deliberately stay **top-level only** — the homepage *All Categories* rail and the search page's *Browse by Category* grid — because they are for orientation, not for drilling. The listing sidebar's category filter does the opposite, showing children indented under their parents.
+
+Finally the machine-facing surfaces: `/sitemap.xml` lists the parent and every product but omits the thin children, `/robots.txt` sets an explicit policy for AI crawlers alongside the usual rules, and `/llms.txt` renders the indexable tree, the policy pages and the contact number as plain text.
+
+
+## Annotated screenshots
+
+Screenshots below are keyed to the step IDs in the run log and span all five specs: the happy path through a parent category, the alternate paths (thin child, direct-product parent, moved product), the navigation and discovery surfaces, the machine-readable SEO surfaces, and the error paths.
+
+The screenshots themselves are gitignored, so a reader without the local artifacts will see a filename note instead of an image — that is expected. Captions are given for the steps that carry meaning rather than for all thirty-eight; several consecutive steps on a parent category page differ only in which part of the same rendered page is being read.
+
+| Step | Screenshot | What it shows |
+| --- | --- | --- |
+| `hp-01` | ![hp-01](../../screenshots/subcategories-category-seo-happy-path/hp-01.png) | The parent category page Marketing Prints renders a complete, populated page despite owning no products directly — the entry state for the whole feature. |
+| `hp-03` | ![hp-03](../../screenshots/subcategories-category-seo-happy-path/hp-03.png) | The admin-authored answer-first intro paragraph sits under the heading, replacing the bare category description rather than appearing alongside it. |
+| `hp-04` | ![hp-04](../../screenshots/subcategories-category-seo-happy-path/hp-04.png) | The visible breadcrumb trail: Home › All Products › Marketing Prints, with the current page rendered as text rather than a link. |
+| `hp-06` | ![hp-06](../../screenshots/subcategories-category-seo-happy-path/hp-06.png) | The subcategory tiles — Flyers & Leaflets and Posters, each with its rolled-up product count correctly pluralised as "1 product". |
+| `hp-07` | ![hp-07](../../screenshots/subcategories-category-seo-happy-path/hp-07.png) | Both descendant products appear in the parent's grid, each card linking through its own child category rather than the parent's. |
+| `hp-09` | ![hp-09](../../screenshots/subcategories-category-seo-happy-path/hp-09.png) | The category FAQ accordion expanded, showing the answer whose "Sizes < 5 inch and > 3 inch" text has to survive markup stripping intact. |
+| `hp-11` | ![hp-11](../../screenshots/subcategories-category-seo-happy-path/hp-11.png) | After clicking the Posters tile: the thin child category page, reached in one tap from its parent. |
+| `hp-12` | ![hp-12](../../screenshots/subcategories-category-seo-happy-path/hp-12.png) | The child page's "More from Marketing Prints" row — one pill back up to the parent, one across to the sibling, and no self-link. |
+| `alt-01` | ![alt-01](../../screenshots/subcategories-category-seo-alternate-paths/alt-01.png) | The thin child category, which renders normally for a customer while being marked noindex, follow for crawlers. |
+| `alt-05` | ![alt-05](../../screenshots/subcategories-category-seo-alternate-paths/alt-05.png) | A parent that also owns a product directly: the Die-cut Stickers tile plus both the direct product and the rolled-up descendant in one grid. |
+| `alt-06` | ![alt-06](../../screenshots/subcategories-category-seo-alternate-paths/alt-06.png) | The state immediately before following the moved product's old URL, which answers with a real HTTP 308 rather than a client-side redirect. |
+| `alt-07` | ![alt-07](../../screenshots/subcategories-category-seo-alternate-paths/alt-07.png) | The redirect target: the product at its canonical path, with the full five-level breadcrumb ending in Custom Die-Cut Stickers. |
+| `alt-10` | ![alt-10](../../screenshots/subcategories-category-seo-navigation-surfaces/alt-10.png) | The header Shop mega-menu open, nesting each parent's children beneath it with per-category counts. |
+| `alt-11` | ![alt-11](../../screenshots/subcategories-category-seo-navigation-surfaces/alt-11.png) | The mobile drawer at 375px with a parent row expanded, showing indented children and the disclosure button whose label flips to "Hide". |
+| `alt-12` | ![alt-12](../../screenshots/subcategories-category-seo-navigation-surfaces/alt-12.png) | The homepage All Categories rail, deliberately top-level only — no child category earns a tile here. |
+| `alt-13` | ![alt-13](../../screenshots/subcategories-category-seo-navigation-surfaces/alt-13.png) | The search page's Browse by Category grid, likewise showing the six roots and none of their children. |
+| `alt-14` | ![alt-14](../../screenshots/subcategories-category-seo-navigation-surfaces/alt-14.png) | The listing sidebar's category filter fully expanded — the opposite choice from the rail, with each child indented directly under its parent. |
+| `alt-15` | ![alt-15](../../screenshots/subcategories-category-seo-navigation-surfaces/alt-15.png) | The homepage scanned end to end for repeated product cards: ten distinct products, none appearing in two shelves. |
+| `alt-18` | ![alt-18](../../screenshots/subcategories-category-seo-machine-surfaces/alt-18.png) | The page state while the machine-readable surfaces were fetched — sitemap, robots.txt and llms.txt are plain-text responses with no visual form of their own. |
+| `alt-19` | ![alt-19](../../screenshots/subcategories-category-seo-machine-surfaces/alt-19.png) | The contact page, confirming the same phone number the footer, llms.txt and the Organization markup all render from one shared constant. |
+| `err-01` | ![err-01](../../screenshots/subcategories-category-seo-error-paths/err-01.png) | An unknown category slug: the not-found page, served with a genuine HTTP 404 rather than a soft 200. |
+| `err-02` | ![err-02](../../screenshots/subcategories-category-seo-error-paths/err-02.png) | A real product under a junk category segment also 404s — a junk prefix must not be able to mint a cached redirect. |
+| `err-03` | ![err-03](../../screenshots/subcategories-category-seo-error-paths/err-03.png) | A facet-filtered listing: still fully rendered for the customer, but marked noindex with the canonical collapsed back to the bare category. The console error recorded at this step is what exposed the first of the two defects fixed in this run. |
+| `err-05` | ![err-05](../../screenshots/subcategories-category-seo-error-paths/err-05.png) | After the fix: an unrecognised sort value is ignored and the listing shows the same products as the bare category page, instead of an empty grid at HTTP 200. |
+| `err-06` | ![err-06](../../screenshots/subcategories-category-seo-error-paths/err-06.png) | The same regression guard on the badge facet, while ?badge=sale is still allowed to return its legitimately empty result. |
+
+
+## Test results and coverage
+
+**38 capture steps, 38 passing, 0 failing**, across five hand-authored Playwright specs (happy path 12, alternate paths 9, navigation and discovery 6, machine-readable surfaces 5, error paths 6).
+
+Test generation used the pipeline's documented hand-authoring fallback rather than the MCP-driven generator agent: the single `playwright-test` MCP server is pinned to the admin panel's working directory and three orphaned server processes were live on the host, a combination that fails in a way that looks like a random infra error. Switching it needs a config edit plus a session restart, which is a human decision. Every locator was therefore grounded in the component source instead of a live DOM — this is the fifth consecutive storefront run to take that path.
+
+### Two real defects were found and fixed
+
+Neither was caught by an assertion. Both surfaced as a **console error recorded against a passing step**, which is the clearest argument this run produced for capturing console output per step rather than only per test.
+
+1. **An unrecognised `?sort=` value served a crawlable, empty category page at HTTP 200.** The data layer forwarded an unmapped sort value to the backend as the literal string `sort_by=undefined`; the backend correctly rejected it with a 422; the error was swallowed into an empty result; and the page rendered a complete shell reading "No products found" — while this feature's own facet rules stamped that page `noindex, follow`. Reproduced on both `/products/marketing-prints` and `/products`, for `?sort=bogus` and for `?sort=price_asc`, the underscore misspelling of a real value. Fixed with a prototype-safe `parseSortParam` applied where the value enters from the URL.
+2. **`?badge=` had the identical defect** on the other first-class facet. Found while fixing the first, deliberately left open at that point, then confirmed in scope and fixed in a second pass with `parseBadgeParam`. The legitimate-empty case is preserved and asserted: `?badge=sale` maps to "currently discounted" and correctly still returns nothing for a category whose products are not on sale, which is what proves only *unrecognised* values were dropped rather than the filter being neutered.
+
+Both now have dedicated regression steps in the capture suite (`err-05`, `err-06`) plus 22 new unit tests. One accessibility defect introduced by this feature was also found and fixed — see the next section.
+
+### What was NOT exercised
+
+"All tests passed" is misleading without this list.
+
+- **No indexable subcategory exists in the test catalog.** All three children hold exactly one product against a threshold of three, so the run proves a thin child *is* excluded and *is* marked `noindex`, and never proves a healthy child is included. Building the fixture would mean re-parenting real products, which this run was scoped not to do.
+- **Homepage shelf-splitting for a dominant parent never ran.** The branch that promotes second-level categories to homepage shelves needs one root to hold 60% of the catalog; nine products over six roots means none does. This is the largest untested behaviour in the feature, and the one most likely to matter in production, where one category is expected to hold the bulk of the catalog. Only the de-duplication backstop was exercised, which confirmed ten distinct product cards and no repeats.
+- **Pagination of a rolled-up parent** is unreachable — the largest category has three products against a page size of twelve — so the suppression of long-form copy and FAQs on paginated pages is asserted nowhere in a browser.
+- **`seo_body`, `google_product_category` and the admin-set `noindex` flag** are unset on every test category, so three branches this feature added are covered by unit tests only.
+- **The feature's own planning document describes a production taxonomy that does not exist in the test catalog.** Nothing here verifies that document's rollout plan, its redirect map, or the twenty-product move it proposes.
+
+No database rows were created, modified or deleted at any point: the entire storefront run is read-only against the catalog.
+
+
+## Accessibility
+
+**automated scan only — manual/screen-reader review still needed**
+
+That caveat is load-bearing here, not boilerplate: automated scanning typically catches only 30-40% of real accessibility problems, so a clean critical count is not a compliance claim.
+
+**No critical violations** anywhere in thirty-eight steps.
+
+### Moderate — one found and fixed, one still unowned
+
+**`landmark-unique`, found and fixed in this run.** On the first capture pass this appeared five times, and only on parent category pages — nowhere else in the run. Two different `<nav>` landmarks resolved to the same accessible name, "*&lt;Parent&gt;* subcategories": the subcategory image-tile grid and the quick-filter chip row. Two landmarks with one name and genuinely different contents leave a screen-reader user no way to tell them apart in a landmarks list. The tiles block now takes its name from its own visible "Shop *&lt;Parent&gt;* by type" heading, and the chip row reads "*&lt;Parent&gt;* subcategory filters". Re-captured clean at zero, with no change to visible copy.
+
+**`heading-order`, 3 instances, unowned.** On the shared not-found page and on `/contact`. Pre-existing and not introduced here, but this feature makes the not-found page considerably more reachable — two of its six error-path steps land on it deliberately, to prove a real 404 is returned — so it is worth assigning rather than continuing to inherit.
+
+### Serious — site-wide, not this feature's
+
+**`color-contrast`, 39 instances.** Attributed by route: the homepage accounts for 21, the product page 6, the all-products listing 5, and the pages this feature actually added UI to contribute 1-2 each per view. It is present on pages carrying none of this feature's UI and this is the fourth consecutive run on this storefront to report it at similar density. It needs one pass at the shared theme tokens; patching it per feature will never converge.
+
+### Minor
+
+**`image-redundant-alt`, 26 instances**, on homepage product cards whose image alt text repeats the card's own link text. Pre-existing and not related to the category tree.
+
+### A recurring warning, now closed with evidence
+
+The hydration-mismatch console warning that previous runs flagged as "possibly environment noise, unconfirmed" was reproduced here with the React diff visible: it is `caret-color: transparent` being applied to the header search input and the in-catalog search field. A search of the entire source tree for that property returns zero matches, and the warning is absent from a plain browser load of the same URLs — it appears only under browser automation. This is the third independent confirmation that it is test tooling, not app code. It should not be re-triaged next run.
+
+
+## Performance
+
+**These are Next.js dev-server measurements, not a production build.** Dev-mode React, unminified bundles and on-demand compilation dominate the interactivity figures. Their value is as a run-over-run baseline, and no figure here should be read as a shippable score.
+
+One thing is genuinely better than on previous storefront runs: **both checkpoints are valid.** Each reports no URL mismatch and a successfully seeded session, so the numbers describe the routes actually under test rather than a redirect target — unlike every prior run in this registry, where the storefront audit was either switched off or void.
+
+**Initial load — `/products/marketing-prints`, the parent category page.** Performance 0.60, accessibility 0.93, best-practices 0.96. First contentful paint 1122 ms, largest contentful paint 2080 ms, speed index 1327 ms, total blocking time 842 ms, time to interactive 5735 ms, **cumulative layout shift 0**.
+
+**Final state — `/products/posters`, the thin child category page.** Performance 0.64, accessibility 0.93, best-practices 0.96. First contentful paint 1099 ms, largest contentful paint 1823 ms, speed index 1099 ms, total blocking time 684 ms, time to interactive 2646 ms, **cumulative layout shift 0**. This is a warm, in-session measurement and is **not** comparable to the cold initial-load figure — the apparent improvement is at least partly the warm cache rather than the page being lighter.
+
+### What to make of it
+
+**The zero CLS is the number that matters for this feature, and it is good.** The subcategory tile block and the intro paragraph are both inserted *above* the product grid, and either could plausibly have pushed the grid down after paint. Neither does.
+
+**The blocking time on the parent page is high even allowing for dev mode.** That page renders the most of any route here — hero, breadcrumb, chip bar, tile grid, filter sidebar, and a streamed product listing. Whether any of it is real cost or all of it is dev overhead cannot be told from these numbers, because no production baseline exists for this route yet. That measurement is owed before anyone treats 0.60 as a finding.
+
+Two caching behaviours shape these timings and are both intentional: category pages are revalidated on a 60-second window, and product pages deliberately pre-render no paths at build time, so a first visit to any product page compiles and fetches on demand. The second was done specifically to stop path enumeration overwhelming the backend's rate limiter, and it makes first-visit product timings unrepresentative by design.
+
+Lighthouse's own accessibility score of 0.93 is consistent with the axe results, but the two tools differ in scope — the accessibility section above is the actionable list.
+
+
+## Recommendations and future improvements
+
+Ordered by severity, highest first.
+
+### High
+
+**1. Build the two missing fixtures on a rehearsal database copy and re-run this spec set against it, before the production rollout.** The indexable-subcategory case and the dominant-root homepage case are the two behaviours this run could not reach, and both only become load-bearing at the exact moment real products are re-parented — i.e. they would first be exercised in production, with no prior evidence. The feature's own rollout plan already calls for a rehearsal copy; this is what it is for.
+
+**2. Audit the remaining URL-to-API parameter casts for the same empty-200 defect class.** Two instances were found and fixed in this run. The filter object is still populated from URL parameters through unchecked casts in more than one place; `min`, `max`, `tags` and `page` went unexamined, and the client-side filter hook still casts `sort` (harmless today, since it only drives a label and the URL, but it is the same pattern one refactor away from mattering). A single validated parser for the whole filter object would close the class rather than the two instances.
+
+### Medium
+
+**3. Re-measure both category routes against a production build** before treating the 0.60/0.64 performance scores or the 842 ms blocking time as real findings. No production baseline exists for these routes.
+
+**4. Give the site-wide contrast debt one pass at the theme-token level.** 39 instances, fourth consecutive run. Worth separating the shared-component and homepage debt from this feature's 1-2 nodes per page during that pass.
+
+**5. Assign the `heading-order` finding on the shared not-found page.** This feature did not introduce it but has made it materially more reachable.
+
+### Low
+
+**6. Fix or formally accept the four broken product-image references in the development catalog.** They produce two misleading "404 (Not Found)" console entries on every homepage capture, for every feature, forever.
+
+**7. Treat the hydration-mismatch warning as closed.** The evidence is in the accessibility section above and in the pipeline's own known-findings log. Re-triaging it costs real time each run. The separate "script tag while rendering React component" warning on the two 404 steps is likewise pre-existing and unrelated: it comes from two intentional inline bootstrap scripts in the root layout, which exist precisely because reading cookies in a layout would disable static generation.
+
