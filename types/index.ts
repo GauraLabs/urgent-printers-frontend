@@ -262,6 +262,9 @@ export interface User {
   phone?: string;      // null for email/google users before phone linking
   avatarUrl?: string;
   createdAt: string;
+  // Undefined when the backend predates password/Google linking; treat as unknown.
+  hasPassword?: boolean;
+  googleLinked?: boolean;
 }
 
 export interface AuthState {

@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { buildSecurityHeaders, RESET_PASSWORD_HEADERS } from "./lib/security/headers";
 
 function cdnRemotePattern(): { protocol: "https" | "http"; hostname: string; pathname: string } | null {
   const cdnUrl = process.env.NEXT_PUBLIC_CDN_URL;
@@ -14,6 +15,19 @@ function cdnRemotePattern(): { protocol: "https" | "http"; hostname: string; pat
 const cdnPattern = cdnRemotePattern();
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: buildSecurityHeaders({
+          apiUrl: process.env.NEXT_PUBLIC_API_URL,
+          cdnUrl: process.env.NEXT_PUBLIC_CDN_URL,
+        }),
+      },
+      { source: "/auth/reset-password", headers: RESET_PASSWORD_HEADERS },
+    ];
+  },
   allowedDevOrigins: ['192.168.20.120'],
   // Pin explicitly: the orchestrator root (../) has its own package.json/package-lock.json
   // for the QA pipeline's playwright-test MCP server (see ../pipeline/README.md), and

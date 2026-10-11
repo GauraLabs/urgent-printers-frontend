@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
-export const metadata: Metadata = { title: "Shipping Info", alternates: { canonical: "/policies/shipping" } };
+export const metadata: Metadata = {
+  title: "Shipping Info",
+  description:
+    "Delivery options, charges and timelines for Urgent Printers orders across India: standard, rush and overnight shipping, production time and tracking.",
+  alternates: { canonical: "/policies/shipping" },
+};
 export default function ShippingPage() {
   return (
     <article>

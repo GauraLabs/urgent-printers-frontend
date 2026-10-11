@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
-export const metadata: Metadata = { title: "Privacy Policy", alternates: { canonical: "/policies/privacy" } };
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description:
+    "How Urgent Printers collects, uses and protects your personal data under the IT Act 2000 and the DPDP Act 2023, and the choices and rights you have.",
+  alternates: { canonical: "/policies/privacy" },
+};
 export default function PrivacyPage() {
   return (
     <article>

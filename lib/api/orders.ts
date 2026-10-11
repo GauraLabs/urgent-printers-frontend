@@ -400,15 +400,21 @@ export function buildOrderBody(data: CreateOrderRequest) {
 
 export async function createOrder(
   data: CreateOrderRequest,
-  token: string
+  token: string,
+  options?: { idempotencyKey?: string }
 ): Promise<CreatedOrder> {
   // REAL API: POST /api/v1/orders
   // Backend recomputes all prices — never trusts client prices. A 409 with
   // code price_changed (see isPriceChangedError) means data.expectedTotal no
   // longer matches; no order or payment session was created.
+  // Idempotency-Key: replaying the same key + body returns the same order
+  // (409 idempotency_key_reused if the body differs).
   const raw = await apiFetch<BackendOrderDetail>(`/orders`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(options?.idempotencyKey && { "Idempotency-Key": options.idempotencyKey }),
+    },
     body: JSON.stringify(buildOrderBody(data)),
   });
   return mapOrderDetail(raw);
@@ -526,4 +532,35 @@ export async function submitOrderItemProofDecision(
       rejection_reason: rejectionReason ?? null,
     }),
   });
+}
+
+export interface PreviousPaymentInfo {
+  kind: "completed" | "pending";
+  orderId: string;
+  orderNumber: string;
+}
+
+function readField(source: unknown, ...names: string[]): string | undefined {
+  if (source === null || typeof source !== "object") return undefined;
+  for (const name of names) {
+    const v = (source as Record<string, unknown>)[name];
+    if (typeof v === "string" || typeof v === "number") return String(v);
+  }
+  return undefined;
+}
+
+/** 409 previous_payment_completed / previous_payment_pending; the order ids may sit at the top level or inside detail/data. */
+export function getPreviousPaymentInfo(err: unknown): PreviousPaymentInfo | null {
+  if (!(err instanceof ApiError)) return null;
+  if (err.code !== "previous_payment_completed" && err.code !== "previous_payment_pending") return null;
+  const body = err.body as Record<string, unknown> | undefined;
+  const sources = [body, body?.detail, body?.data];
+  const orderId = sources.map((s) => readField(s, "order_id", "orderId")).find(Boolean);
+  const orderNumber = sources.map((s) => readField(s, "order_number", "orderNumber")).find(Boolean);
+  if (!orderId) return null;
+  return {
+    kind: err.code === "previous_payment_completed" ? "completed" : "pending",
+    orderId,
+    orderNumber: orderNumber ?? orderId,
+  };
 }

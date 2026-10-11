@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
-export const metadata: Metadata = { title: "Returns Policy", alternates: { canonical: "/policies/returns" } };
+export const metadata: Metadata = {
+  title: "Returns Policy",
+  description:
+    "How Urgent Printers handles damaged or defective prints, artwork errors, order cancellations and refunds, and how to raise a quality issue within 7 days.",
+  alternates: { canonical: "/policies/returns" },
+};
 export default function ReturnsPage() {
   return (
     <article>

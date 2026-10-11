@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { CookiePreferencesManager } from "./CookiePreferencesManager";
 
-export const metadata: Metadata = { title: "Cookie Policy", alternates: { canonical: "/policies/cookies" } };
+export const metadata: Metadata = {
+  title: "Cookie Policy",
+  description:
+    "The cookies Urgent Printers uses, what each is for, and how to accept, reject or change your analytics cookie preferences at any time.",
+  alternates: { canonical: "/policies/cookies" },
+};
 
 export default function CookiesPage() {
   return (

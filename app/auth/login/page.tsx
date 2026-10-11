@@ -14,8 +14,10 @@ import { FormField } from "@/components/common/FormField";
 import { OTPInputs } from "@/features/auth/OTPInputs";
 import { useAuthStore } from "@/features/auth/store";
 import { useCountdown } from "@/hooks/useCountdown";
+import { googleLoginErrorMessage } from "@/lib/api/auth";
 import { login, loginErrorMessage, firebaseVerifyPhone, firebaseVerifyPhoneLink, loginWithGoogle, completeProfile } from "@/lib/api";
 import { ROUTES } from "@/lib/constants/routes";
+import { safeRedirect } from "@/lib/safeRedirect";
 import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -364,7 +366,7 @@ function GoogleButton({ onDone }: { onDone: () => void }) {
             onDone();
           }
         } catch (err) {
-          toast.error(err instanceof Error ? err.message : "Google sign-in failed");
+          toast.error(googleLoginErrorMessage(err));
         } finally {
           setLoading(false);
         }
@@ -601,7 +603,7 @@ function EmailForm({ onDone }: { onDone: () => void }) {
           {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
         </button>
       </div>
-      <Link href="#" className="text-xs text-primary hover:underline self-end -mt-2">
+      <Link href={ROUTES.forgotPassword} className="text-xs text-primary hover:underline self-end -mt-2">
         Forgot password?
       </Link>
       <button
@@ -616,10 +618,7 @@ function EmailForm({ onDone }: { onDone: () => void }) {
         {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : "Sign In"}
       </button>
       <p className="text-xs text-muted-foreground text-center">
-        No account?{" "}
-        <Link href={ROUTES.register} className="text-primary font-medium hover:underline">
-          Create one with email
-        </Link>
+        New customer? Sign in with Mobile or Google to create your account.
       </p>
     </form>
   );
@@ -633,8 +632,7 @@ function LoginContent() {
   const [method, setMethod] = useState<AuthMethod>("phone");
 
   function handleDone() {
-    const redirect = searchParams.get("redirect") ?? ROUTES.account;
-    router.replace(redirect);
+    router.replace(safeRedirect(searchParams.get("redirect")));
   }
 
   return (

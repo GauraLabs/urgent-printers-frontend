@@ -85,10 +85,18 @@ export async function getProducts(filters: ProductFilters): Promise<PaginatedRes
 - `app/api/revalidate/products/route.ts` revalidates pages by path (page-level product fetches have no tags), and on every call also revalidates the `categories` and `products` tags (`products` tags only the SEO listing) plus `/sitemap.xml` and `/llms.txt`. Never call `cookies()` in a layout (kills static generation).
 - Tests: `npm test` (Vitest 3 + jsdom + Testing Library, `tests/`; same stack as the admin panel). Vitest 5 conflicts with the repo's `@types/node ^20` pin, so stay on 3.x.
 
+## Security headers, Razorpay, idempotency
+
+- `next.config.ts` -> `lib/security/headers.ts`: nosniff, referrer, X-Frame-Options, Permissions-Policy, enforcing `frame-ancestors 'self'` CSP, and the full CSP as **Report-Only**. Add any new third-party origin there before flipping it to enforcing.
+- Razorpay `checkout.js` is NOT in the root layout: call `await loadRazorpay()` (`lib/razorpay.ts`) before `new window.Razorpay`.
+- `createOrder(data, token, { idempotencyKey })`: checkout keeps one key per request body (reused only after a network error/5xx, reset on 4xx or body change).
+- Default OG/Twitter image: `app/opengraph-image.tsx` / `app/twitter-image.tsx` (via `lib/seo/ogImage.tsx`).
+
 ## Key known fixes (do not regress)
 
 | Issue | Fix |
 |---|---|
+| New customers could not sign up (2026-10-12) | Prod backend runs `SMS_PROVIDER=fake`, so backend-SMS OTP never arrives. All phone verification goes through Firebase (`firebaseVerifyPhone*`); `/auth/register` just redirects to `/auth/login` (keeps `?redirect=`). Do not reintroduce `sendOtp`/`register/initiate` flows |
 | Hydration mismatch on cart count / auth | `useMounted` in `HeaderActions` + `MobileBottomNav` |
 | Moved-product 308 and 404s returned HTTP 200 | No `loading.tsx` anywhere under `app/products/` (its Suspense shell flushes 200 before `notFound()`/`permanentRedirect()`); guarded by `tests/subcategories.test.ts` |
 | Subcategories never reached the storefront | Backend `GET /categories` returns top-level only; `getCategories()` uses `?include_children=true` and `flattenCategoryTree` |

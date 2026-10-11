@@ -43,6 +43,7 @@ const CODED_MESSAGES: Record<string, string> = {
   invalid_option: "A selected print option is no longer available. Please reselect your options.",
   invalid_turnaround: "The selected turnaround option is no longer available. Please reselect your options.",
   product_unavailable: "One of the products in your order is no longer available. Please remove it from your cart and try again.",
+  idempotency_key_reused: "Your order details changed since your last attempt. Please review and tap Place Order again.",
   invalid_order_total: "We couldn't calculate a valid total for this order. Please review your cart and coupon, then try again.",
 };
 

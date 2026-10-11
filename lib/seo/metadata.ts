@@ -5,6 +5,8 @@ import { absoluteUrl, SITE_URL } from "./site";
 import { isCategoryIndexable } from "./category";
 import { getRealCampaignImage } from "@/features/navigation/categoryImage";
 
+const DEFAULT_OG_IMAGE_PATH = "/opengraph-image";
+
 type SearchParams = { [key: string]: string | string[] | undefined };
 
 // Any of these changes what the listing shows without being its own landing page.
@@ -90,8 +92,8 @@ export function buildCategoryMetadata(
   const canonical = listing.canonical;
   const title = categoryTitle(category);
   const description = categoryDescription(category);
-  // No site-default OG image exists, so an image-less category omits og:image rather than inventing one.
-  const ogImage = getRealCampaignImage(category);
+  // Image-less categories fall back to the site-wide default card (app/opengraph-image.tsx).
+  const ogImage = getRealCampaignImage(category) ?? absoluteUrl(DEFAULT_OG_IMAGE_PATH, siteUrl);
   return {
     title,
     description,
@@ -101,8 +103,10 @@ export function buildCategoryMetadata(
       title: `${title} | Urgent Printers`,
       description,
       url: canonical,
-      ...(ogImage && { images: [{ url: ogImage, alt: category.name }] }),
+      images: [{ url: ogImage, alt: category.name }],
     },
+    // The default twitter-image file would otherwise win over the OG image.
+    twitter: { card: "summary_large_image", images: [ogImage] },
   };
 }
 
@@ -141,5 +145,8 @@ export function buildProductMetadata(product: Product, siteUrl: string = SITE_UR
       url: canonical,
       images: product.images.map((url) => ({ url, alt: product.name })),
     },
+    ...(product.images.length > 0 && {
+      twitter: { card: "summary_large_image" as const, title, description, images: product.images },
+    }),
   };
 }

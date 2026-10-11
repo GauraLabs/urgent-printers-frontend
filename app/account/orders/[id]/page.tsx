@@ -20,6 +20,7 @@ import { orderLinePrice } from "@/features/cart/savings";
 import { ORDER_STATUS_LABELS, SHIPMENT_STATUS_LABELS } from "@/lib/constants/print-specs";
 import { SHIPMENT_STATUS_COLORS } from "@/lib/constants/order-status";
 import { RAZORPAY_THEME_COLOR } from "@/lib/constants/payment";
+import { loadRazorpay } from "@/lib/razorpay";
 import { toast } from "sonner";
 import type { Order } from "@/types";
 
@@ -85,19 +86,24 @@ export default function OrderDetailPage() {
     }
   }, [order, token]);
 
-  const handleRetryPayment = useCallback(() => {
+  const awaitingPayment = order?.paymentStatus === "awaiting_payment" && !!order.payment?.razorpayOrderId;
+  useEffect(() => {
+    if (awaitingPayment) void loadRazorpay();
+  }, [awaitingPayment]);
+
+  const handleRetryPayment = useCallback(async () => {
     if (!order || !token) return;
     const { razorpayOrderId, razorpayKeyId, amount } = order.payment ?? {};
     if (!razorpayOrderId || !razorpayKeyId) {
       toast.error("Payment details not available. Please contact support.");
       return;
     }
-    if (!window.Razorpay) {
+    setRetrying(true);
+    if (!(await loadRazorpay()) || !window.Razorpay) {
       toast.error("Payment gateway failed to load. Please refresh and try again.");
+      setRetrying(false);
       return;
     }
-
-    setRetrying(true);
     let paymentHandled = false;
 
     const rzp = new window.Razorpay({
