@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useAppPathname } from "@/hooks/useAppPathname";
 import { HeaderSearch } from "./HeaderSearch";
 
 // Home and the product listings get an Amazon-style full-width bar under the
@@ -13,7 +13,7 @@ export function showsMobileSearchBar(pathname: string): boolean {
 }
 
 export function MobileSearchBar({ popularSearches }: { popularSearches: string[] }) {
-  const pathname = usePathname();
+  const pathname = useAppPathname();
   if (!showsMobileSearchBar(pathname)) return null;
   return (
     <div className="md:hidden pb-2">

@@ -17,7 +17,9 @@ import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
 import { ConsentedScripts } from "@/components/analytics/ConsentedScripts";
 import { CartDrawer } from "@/features/cart/CartDrawer";
 import { getSiteTheme } from "@/lib/api/theme";
-import { DEFAULT_THEME, COLOR_MODE_STORAGE_KEY } from "@/lib/themes";
+import { DEFAULT_THEME } from "@/lib/themes";
+import { COLOR_MODE_INIT_SCRIPT } from "@/lib/colorMode";
+import { ColorModeSync } from "@/features/theme/ColorModeSync";
 import { COOKIE_CONSENT_STORAGE_KEY } from "@/lib/consent";
 import { cn } from "@/lib/utils";
 import { SITE_URL } from "@/lib/seo/site";
@@ -34,17 +36,10 @@ export const metadata: Metadata = {
   other: { "facebook-domain-verification": "u044je9nha35ro4pu7mbsxyxop4kfw" },
 };
 
-// Blocking (no async/defer, no src) so it runs before the browser paints
-// anything — the same next-themes-style technique used to avoid a
-// dark/light flash without forcing the whole site into dynamic rendering.
-// next/headers `cookies()` would do that (see git history on app/layout.tsx
-// for the earlier, reverted approach): reading a cookie in the shared root
-// layout opts every route out of static generation. This inline script
-// reads localStorage instead, entirely client-side, so brand-theme fetching
-// below remains the only server-side data dependency of this layout.
-const COLOR_MODE_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem(${JSON.stringify(COLOR_MODE_STORAGE_KEY)});var d=s?s==="dark":window.matchMedia("(prefers-color-scheme: dark)").matches;var h=document.documentElement;h.classList.toggle("dark",d);h.classList.toggle("light",!d);}catch(e){}})();`;
+// Blocking inline script (see lib/colorMode.ts) instead of cookies(), which
+// would opt every route out of static generation.
 
-// Same technique as COLOR_MODE_INIT_SCRIPT above, applied to the cookie
+// Same technique as COLOR_MODE_INIT_SCRIPT, applied to the cookie
 // consent banner: useConsent (hooks/useConsent.ts) can't tell "accepted" or
 // "rejected" apart from "undecided" until after mount, so without this the
 // banner flashes visible for one frame on every reload, even for visitors
@@ -65,6 +60,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body className="min-h-full flex flex-col antialiased">
         <script dangerouslySetInnerHTML={{ __html: COLOR_MODE_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: CONSENT_INIT_SCRIPT }} />
+        <ColorModeSync />
         <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
         <ConsentedScripts />
