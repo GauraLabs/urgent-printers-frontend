@@ -1,9 +1,10 @@
 import { timingSafeEqual, createHash } from "crypto";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { CATEGORIES_CACHE_TAG } from "@/lib/api/categories";
+import { PRODUCTS_CACHE_TAG } from "@/lib/api/products";
 import { NextResponse, type NextRequest } from "next/server";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
-import { planProductRevalidation } from "@/lib/revalidate-products";
+import { planProductRevalidation, SEO_CATALOG_PATHS } from "@/lib/revalidate-products";
 
 const RATE_LIMIT = 30;
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -43,10 +44,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ message: plan.error }, { status: 400 });
   }
 
-  // Product fetches carry no cache tags — freshness comes from page-level
-  // `revalidate = 60` — so this must invalidate by path, not by tag.
-  // Any product change can move a category's productCount, which the header menu shows.
+  // Page-level product fetches carry no cache tags (freshness comes from page-level
+  // `revalidate = 60`), so pages are invalidated by path. Any product change can move a
+  // category's productCount, which the header menu shows.
   revalidateTag(CATEGORIES_CACHE_TAG, { expire: 0 });
+  revalidateTag(PRODUCTS_CACHE_TAG, { expire: 0 });
+  for (const path of SEO_CATALOG_PATHS) revalidatePath(path);
 
   if (plan.all) {
     revalidatePath("/", "layout");

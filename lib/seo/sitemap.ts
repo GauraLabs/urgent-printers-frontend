@@ -78,3 +78,34 @@ export function buildSitemapEntries(
 export function fallbackSitemapEntries(siteUrl: string = SITE_URL): MetadataRoute.Sitemap {
   return buildSitemapEntries([], [], siteUrl);
 }
+
+function escapeXml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+/** Same document shape as Next's metadata-route serializer, but XML-escaped (Next's is not). */
+export function renderSitemapXml(entries: MetadataRoute.Sitemap): string {
+  const hasImages = entries.some((e) => (e.images?.length ?? 0) > 0);
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"';
+  xml += hasImages ? ' xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n' : ">\n";
+  for (const e of entries) {
+    xml += `<url>\n<loc>${escapeXml(e.url)}</loc>\n`;
+    for (const image of e.images ?? []) {
+      xml += `<image:image>\n<image:loc>${escapeXml(image)}</image:loc>\n</image:image>\n`;
+    }
+    if (e.lastModified) {
+      const lastmod = e.lastModified instanceof Date ? e.lastModified.toISOString() : e.lastModified;
+      xml += `<lastmod>${escapeXml(lastmod)}</lastmod>\n`;
+    }
+    if (e.changeFrequency) xml += `<changefreq>${e.changeFrequency}</changefreq>\n`;
+    if (typeof e.priority === "number") xml += `<priority>${e.priority}</priority>\n`;
+    xml += "</url>\n";
+  }
+  return `${xml}</urlset>\n`;
+}

@@ -32,7 +32,7 @@ const productsPage = (page: number, totalPages: number, ids: number[]): Response
 
 type Route = (url: string) => Response | Promise<Response>;
 let routes: Route[];
-const fetchMock = vi.fn(async (input: RequestInfo | URL): Promise<Response> => {
+const fetchMock = vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>(async (input) => {
   const next = routes.shift();
   if (!next) throw new Error(`unexpected fetch ${String(input)}`);
   return next(String(input));
@@ -41,9 +41,13 @@ const fetchMock = vi.fn(async (input: RequestInfo | URL): Promise<Response> => {
 async function load() {
   vi.resetModules();
   const api = await import("@/lib/api/seoCatalog");
-  const sitemapRoute = await import("@/app/sitemap");
+  const sitemapRoute = await import("@/app/sitemap.xml/route");
   const llmsRoute = await import("@/app/llms.txt/route");
-  return { api, sitemap: sitemapRoute.default, llmsGet: llmsRoute.GET };
+  const sitemap = async (): Promise<{ url: string }[]> => {
+    const xml = await (await sitemapRoute.GET()).text();
+    return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => ({ url: m[1] }));
+  };
+  return { api, sitemap, sitemapGet: sitemapRoute.GET, llmsGet: llmsRoute.GET };
 }
 
 beforeEach(() => {
@@ -167,6 +171,39 @@ describe("sitemap never caches a degraded catalog", () => {
     expect(entries.length).toBeGreaterThan(5);
     expect(entries.some((e) => e.url.includes("/products/wedding"))).toBe(false);
     expect(unstableCacheRevalidates).toEqual([60]);
+  });
+});
+
+describe("SEO catalog fetches are tag-cached so /api/revalidate/products can bust them", () => {
+  it("products pages use a 300s revalidate and the products tag; categories share getCategories' entry", async () => {
+    routes = [categoriesOk, () => productsPage(1, 2, [1]), () => productsPage(2, 2, [2])];
+    const { api } = await load();
+    await api.getSeoCatalog();
+    const inits = fetchMock.mock.calls.map((c) => c[1]?.next);
+    expect(inits).toEqual([
+      { revalidate: 300, tags: ["categories"] },
+      { revalidate: 300, tags: ["products"] },
+      { revalidate: 300, tags: ["products"] },
+    ]);
+    expect(api.SEO_PRODUCTS_FETCH_INIT.next?.tags).toEqual([(await import("@/lib/api/products")).PRODUCTS_CACHE_TAG]);
+  });
+
+  it("sitemap and llms.txt routes revalidate every 300s, matching their fetches", async () => {
+    const sitemapRoute = await import("@/app/sitemap.xml/route");
+    const llmsRoute = await import("@/app/llms.txt/route");
+    expect(sitemapRoute.revalidate).toBe(300);
+    expect(llmsRoute.revalidate).toBe(300);
+  });
+
+  it("sitemap.xml is served as escaped XML", async () => {
+    routes = [categoriesOk, () => productsPage(1, 1, [1])];
+    const { sitemapGet } = await load();
+    const res = await sitemapGet();
+    expect(res.headers.get("Content-Type")).toBe("application/xml; charset=utf-8");
+    const xml = await res.text();
+    expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"')).toBe(true);
+    expect(xml).toContain("<loc>https://www.urgentprinters.com/products/wedding/p-1</loc>");
+    expect(xml.trimEnd().endsWith("</urlset>")).toBe(true);
   });
 });
 

@@ -4,7 +4,7 @@ import {
   clampDescription, hasFacetParams, listingSeo, productCanonical, productDescription,
 } from "@/lib/seo/metadata";
 import { absoluteUrl, resolveSiteUrl, DEFAULT_SITE_URL } from "@/lib/seo/site";
-import { buildSitemapEntries, fallbackSitemapEntries } from "@/lib/seo/sitemap";
+import { buildSitemapEntries, fallbackSitemapEntries, renderSitemapXml } from "@/lib/seo/sitemap";
 import { buildRobots } from "@/lib/seo/robots";
 import { buildLlmsTxt } from "@/lib/seo/llms";
 import { buildBreadcrumbJsonLd, buildCollectionPageJsonLd, buildOrganizationJsonLd, buildProductJsonLd } from "@/lib/structured-data";
@@ -157,6 +157,18 @@ describe("sitemap", () => {
     expect(fallbackSitemapEntries(SITE).length).toBeGreaterThan(5);
     const e = buildSitemapEntries(cats, [product(), product()], SITE);
     expect(e.filter((x) => x.url.endsWith("/haldi-tag"))).toHaveLength(1);
+  });
+  it("renders Next's sitemap XML shape, XML-escaped, image namespace only when needed", () => {
+    const xml = renderSitemapXml([
+      { url: `${SITE}/a`, lastModified: new Date("2026-09-01T00:00:00Z"), changeFrequency: "weekly", priority: 0.7, images: ["https://cdn/x.webp?w=1&h=2"] },
+    ]);
+    expect(xml).toBe(
+      '<?xml version="1.0" encoding="UTF-8"?>\n' +
+      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n' +
+      `<url>\n<loc>${SITE}/a</loc>\n<image:image>\n<image:loc>https://cdn/x.webp?w=1&amp;h=2</image:loc>\n</image:image>\n` +
+      "<lastmod>2026-09-01T00:00:00.000Z</lastmod>\n<changefreq>weekly</changefreq>\n<priority>0.7</priority>\n</url>\n</urlset>\n",
+    );
+    expect(renderSitemapXml(fallbackSitemapEntries(SITE))).not.toContain("xmlns:image");
   });
 });
 

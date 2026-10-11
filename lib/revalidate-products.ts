@@ -1,6 +1,10 @@
 export const SLUG_RE = /^[a-z0-9-]+$/;
 export const MAX_ITEMS = 200;
 
+// Both list the whole catalog, so any targeted change (move, rename, new category) can
+// change them; they are revalidated on every call, `all` or not.
+export const SEO_CATALOG_PATHS: readonly string[] = ["/sitemap.xml", "/llms.txt"];
+
 export type RevalidatePlan =
   | { ok: true; all: true; paths: [] }
   | { ok: true; all: false; paths: string[] }
