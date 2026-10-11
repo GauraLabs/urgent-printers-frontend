@@ -7,7 +7,7 @@ import {
   mapCategory,
   type BackendCategoryWithChildren,
 } from "./categories";
-import { mapCard, type BackendProductCard } from "./products";
+import { mapCard, PRODUCTS_CACHE_TAG, type BackendProductCard } from "./products";
 
 // Strict (non-swallowing) catalog reads for routes that are ISR-cached for a long time
 // (sitemap.xml, llms.txt). Any failure throws so Next keeps serving the previous good
@@ -25,6 +25,13 @@ export const SEO_PRODUCTS_MAX_PAGES = 50;
 const MAX_ATTEMPTS = 3;
 const BASE_BACKOFF_MS = 500;
 export const DEFAULT_RETRY_BUDGET_MS = 4000;
+
+// Explicit, so the entry is purgeable by tag; without it the fetch silently inherited the
+// route's revalidate and could only be busted via the route's implicit path tags.
+// Only 200s enter the data cache, so a failed page is never cached.
+export const SEO_PRODUCTS_FETCH_INIT: RequestInit = {
+  next: { revalidate: 300, tags: [PRODUCTS_CACHE_TAG] },
+};
 
 export interface RetryBudget {
   remainingMs: number;
@@ -97,7 +104,7 @@ export async function getAllProductsStrict(budget: RetryBudget = createRetryBudg
   for (let page = 1; page <= SEO_PRODUCTS_MAX_PAGES; page++) {
     const body = await fetchJsonStrict<Partial<BackendPage<BackendProductCard>>>(
       `/products?page=${page}&page_size=${SEO_PRODUCTS_PAGE_SIZE}`,
-      {},
+      SEO_PRODUCTS_FETCH_INIT,
       budget,
     );
     if (!Array.isArray(body.data) || !body.meta) {

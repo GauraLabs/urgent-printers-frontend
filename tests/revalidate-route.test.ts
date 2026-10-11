@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { NextRequest } from "next/server";
 import { POST } from "@/app/api/revalidate/products/route";
 import { planProductRevalidation } from "@/lib/revalidate-products";
-import { revalidated } from "./stubs/next-cache";
+import { revalidated, revalidatedTags } from "./stubs/next-cache";
 
 const SECRET = "s3cret-value";
 let ipCounter = 0;
@@ -23,12 +23,14 @@ describe("POST /api/revalidate/products", () => {
   beforeEach(() => {
     process.env.REVALIDATE_SECRET = SECRET;
     revalidated.length = 0;
+    revalidatedTags.length = 0;
   });
 
   it("401 without or with a wrong secret, and nothing is revalidated", async () => {
     assert.equal((await POST(req({ all: true }, { secret: null }))).status, 401);
     assert.equal((await POST(req({ all: true }, { secret: "nope" }))).status, 401);
     assert.equal(revalidated.length, 0);
+    assert.equal(revalidatedTags.length, 0);
   });
 
   it("401 when REVALIDATE_SECRET is unset", async () => {
@@ -36,19 +38,25 @@ describe("POST /api/revalidate/products", () => {
     assert.equal((await POST(req({ all: true }))).status, 401);
   });
 
-  it("revalidates product, category and home paths (not tags)", async () => {
+  it("revalidates product, category, home, sitemap and llms.txt paths plus the catalog tags", async () => {
     const res = await POST(req({ products: [{ category_slug: "business-cards", slug: "standard-cards" }], category_slugs: ["flyers"], all: false }));
     assert.equal(res.status, 200);
     assert.deepEqual(revalidated.map((r) => r.path).sort(), [
-      "/", "/products/business-cards", "/products/business-cards/standard-cards", "/products/flyers",
+      "/", "/llms.txt", "/products/business-cards", "/products/business-cards/standard-cards", "/products/flyers", "/sitemap.xml",
     ]);
     assert.ok(revalidated.every((r) => r.type === undefined));
+    assert.deepEqual(revalidatedTags.sort(), ["categories", "products"]);
   });
 
-  it("all=true revalidates the root layout", async () => {
+  it("all=true revalidates the root layout and, explicitly, sitemap.xml and llms.txt", async () => {
     const res = await POST(req({ all: true }));
     assert.equal(res.status, 200);
-    assert.deepEqual(revalidated, [{ path: "/", type: "layout" }]);
+    assert.deepEqual(revalidated, [
+      { path: "/sitemap.xml", type: undefined },
+      { path: "/llms.txt", type: undefined },
+      { path: "/", type: "layout" },
+    ]);
+    assert.deepEqual(revalidatedTags.sort(), ["categories", "products"]);
   });
 
   it("400 on bad JSON, bad slugs, non-boolean all, oversize arrays", async () => {
@@ -59,6 +67,7 @@ describe("POST /api/revalidate/products", () => {
     assert.equal((await POST(req({ all: "yes" }))).status, 400);
     assert.equal((await POST(req({ category_slugs: Array.from({ length: 201 }, () => "a") }))).status, 400);
     assert.equal(revalidated.length, 0);
+    assert.equal(revalidatedTags.length, 0);
   });
 
   it("accepts exactly 200 items", async () => {

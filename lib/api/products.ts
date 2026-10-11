@@ -424,6 +424,9 @@ export function parseBadgeParam(value: string): ProductFilters["badge"] {
   return Object.hasOwn(BADGE_FILTERS, value) ? (value as ProductFilters["badge"]) : undefined;
 }
 
+/** Busted by /api/revalidate/products on every catalog change (currently tags the SEO catalog listing only). */
+export const PRODUCTS_CACHE_TAG = "products";
+
 // Sort/filter in mock mode mirrors the server: the display ("From") price is
 // the best-value tier x the product's min active option multipliers.
 // ─── API functions ────────────────────────────────────────────────────────────
