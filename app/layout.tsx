@@ -20,6 +20,7 @@ import { getSiteTheme } from "@/lib/api/theme";
 import { DEFAULT_THEME, COLOR_MODE_STORAGE_KEY } from "@/lib/themes";
 import { COOKIE_CONSENT_STORAGE_KEY } from "@/lib/consent";
 import { cn } from "@/lib/utils";
+import { SITE_URL } from "@/lib/seo/site";
 import "./globals.css";
 
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans", display: "swap" });
@@ -27,7 +28,7 @@ const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans", display
 export const metadata: Metadata = {
   title: { default: "Urgent Printers — Wedding Cards, Invitations & Celebration Printing", template: "%s | Urgent Printers" },
   description: "Wedding cards and invitations, shagun envelopes, wedding essentials, welcome boards, and birthday and anniversary printing. Premium quality, delivered across India.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://urgentprinters.com"),
+  metadataBase: new URL(SITE_URL),
   openGraph: { siteName: "Urgent Printers", type: "website", locale: "en_IN" },
   twitter: { card: "summary_large_image" },
   other: { "facebook-domain-verification": "u044je9nha35ro4pu7mbsxyxop4kfw" },

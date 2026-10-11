@@ -90,6 +90,8 @@ export async function getProducts(filters: ProductFilters): Promise<PaginatedRes
 | Issue | Fix |
 |---|---|
 | Hydration mismatch on cart count / auth | `useMounted` in `HeaderActions` + `MobileBottomNav` |
+| Moved-product 308 and 404s returned HTTP 200 | No `loading.tsx` anywhere under `app/products/` (its Suspense shell flushes 200 before `notFound()`/`permanentRedirect()`); guarded by `tests/subcategories.test.ts` |
+| Subcategories never reached the storefront | Backend `GET /categories` returns top-level only; `getCategories()` uses `?include_children=true` and `flattenCategoryTree` |
 | Theme dropdown crash | `DropdownMenuLabel` must be inside `DropdownMenuGroup` |
 | LCP image warning | `loading="eager"` on hero banner and first product gallery slide |
 | `node-domexception` warning | `shadcn` is in `devDependencies` — do not move it to `dependencies` |
@@ -103,7 +105,7 @@ export async function getProducts(filters: ProductFilters): Promise<PaginatedRes
 
 ```bash
 npm run dev          # local development
-npm run build        # next build + next-sitemap (generates sitemap.xml + robots.txt)
+npm run build        # next build (sitemap/robots/llms.txt are runtime routes: app/sitemap.ts, app/robots.ts, app/llms.txt/route.ts)
 ```
 
-One required env var for production: `NEXT_PUBLIC_SITE_URL=https://urgentprinters.com`
+One required env var for production: `NEXT_PUBLIC_SITE_URL` (canonical origin for metadata, JSON-LD, sitemap, robots; read only via `lib/seo/site.ts`; recommended prod value `https://www.urgentprinters.com`). SEO builders live in `lib/seo/` and `lib/structured-data.ts`.

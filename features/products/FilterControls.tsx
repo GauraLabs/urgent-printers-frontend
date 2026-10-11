@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useProductFilters } from "./useProductFilters";
 import { cn } from "@/lib/utils";
+import { nestCategories } from "@/lib/seo/category";
 import type { Category, ProductBadgeFilter } from "@/types";
 
 // These tag values are cross-checked against real product tags in
@@ -56,8 +57,9 @@ export function FilterControls({ categories, showCategoryFilter = true, onClose,
     );
   }
 
-  const visibleCategories = showAllCategories ? categories : categories.slice(0, CATEGORY_VISIBLE_LIMIT);
-  const hasMoreCategories = categories.length > CATEGORY_VISIBLE_LIMIT;
+  const nested = nestCategories(categories);
+  const visibleCategories = showAllCategories ? nested : nested.slice(0, CATEGORY_VISIBLE_LIMIT);
+  const hasMoreCategories = nested.length > CATEGORY_VISIBLE_LIMIT;
 
   return (
     <div className="flex flex-col gap-5">
@@ -92,8 +94,8 @@ export function FilterControls({ categories, showCategoryFilter = true, onClose,
                 />
                 <span className="text-sm">All Products</span>
               </label>
-              {visibleCategories.map((cat) => (
-                <label key={cat.id} className="flex items-center gap-2 cursor-pointer">
+              {visibleCategories.map(({ category: cat, depth }) => (
+                <label key={cat.id} className={cn("flex items-center gap-2 cursor-pointer", depth > 0 && "pl-5")}>
                   <input
                     type="radio"
                     name="category"
@@ -113,7 +115,7 @@ export function FilterControls({ categories, showCategoryFilter = true, onClose,
                   {showAllCategories ? (
                     <>Show less <ChevronUp size={12} /></>
                   ) : (
-                    <>Show all {categories.length} categories <ChevronDown size={12} /></>
+                    <>Show all {nested.length} categories <ChevronDown size={12} /></>
                   )}
                 </button>
               )}

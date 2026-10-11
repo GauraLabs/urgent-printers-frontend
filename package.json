@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && next-sitemap",
+    "prebuild": "node -e \"for (const f of ['public/sitemap.xml','public/sitemap-0.xml','public/robots.txt']) require('fs').rmSync(f,{force:true}); for (const f of require('fs').readdirSync('public')) if (/^sitemap.*\\.xml$/.test(f)) require('fs').rmSync('public/'+f,{force:true})\"",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
@@ -27,7 +28,6 @@
     "lucide-react": "^1.11.0",
     "motion": "^12.38.0",
     "next": "16.2.4",
-    "next-sitemap": "^4.2.3",
     "next-themes": "^0.4.6",
     "react": "19.2.4",
     "react-dom": "19.2.4",

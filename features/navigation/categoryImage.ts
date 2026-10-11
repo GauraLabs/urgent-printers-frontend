@@ -1,9 +1,7 @@
 import type { Category } from "@/types";
 
-// categories.ts fills imageUrl and mediumUrl with a seeded picsum.photos
-// placeholder when no image was uploaded, so those two fields can never prove
-// a real image exists. Only the raw backend fields (thumbnailUrl, bannerUrl)
-// are null when nothing was uploaded.
+// Mock data (and older cached shapes) still carry seeded picsum.photos URLs, so
+// every category image goes through this guard rather than trusting truthiness.
 function isRealUrl(url: string | null | undefined): url is string {
   return typeof url === "string" && url.trim() !== "" && !/(^|\/\/)picsum\.photos\//.test(url);
 }
@@ -18,6 +16,16 @@ export function getRealCategoryImage(category: Pick<Category, "thumbnailUrl" | "
 export function categoryInitial(name: string): string {
   const ch = name.trim().charAt(0);
   return ch ? ch.toUpperCase() : "•";
+}
+
+/** Larger card image (800px medium first), or null when the category has no uploaded image. */
+export function getRealCategoryCardImage(
+  category: Pick<Category, "bannerUrl" | "mediumUrl" | "thumbnailUrl">
+): string | null {
+  if (isRealUrl(category.mediumUrl)) return category.mediumUrl;
+  if (isRealUrl(category.thumbnailUrl)) return category.thumbnailUrl;
+  if (isRealUrl(category.bannerUrl)) return category.bannerUrl;
+  return null;
 }
 
 /** Wide image for a campaign banner: banner, then the 800px medium, then the thumbnail; null when only placeholders exist. */

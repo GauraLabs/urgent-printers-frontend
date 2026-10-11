@@ -35,7 +35,7 @@ export function CategoryHero({ category }: CategoryHeroProps) {
       />
       <SafeImage
         src={posterSrc}
-        alt={name}
+        alt={`${name} collection`}
         fill
         priority
         loading="eager"

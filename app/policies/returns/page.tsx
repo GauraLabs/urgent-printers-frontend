@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-export const metadata: Metadata = { title: "Returns Policy" };
+export const metadata: Metadata = { title: "Returns Policy", alternates: { canonical: "/policies/returns" } };
 export default function ReturnsPage() {
   return (
     <article>

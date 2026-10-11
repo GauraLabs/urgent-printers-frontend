@@ -14,3 +14,4 @@ export * from "./wishlist";
 export * from "./theme";
 export * from "./siteStatus";
 export * from "./search";
+export * from "./seoCatalog";

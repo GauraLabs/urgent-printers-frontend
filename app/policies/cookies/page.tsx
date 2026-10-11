@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CookiePreferencesManager } from "./CookiePreferencesManager";
 
-export const metadata: Metadata = { title: "Cookie Policy" };
+export const metadata: Metadata = { title: "Cookie Policy", alternates: { canonical: "/policies/cookies" } };
 
 export default function CookiesPage() {
   return (

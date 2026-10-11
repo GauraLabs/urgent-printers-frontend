@@ -10,7 +10,7 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { ROUTES } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils";
 import { CategoryTile } from "@/features/navigation/CategoryTile";
-import { getRealCategoryImage } from "@/features/navigation/categoryImage";
+import { getRealCategoryCardImage, getRealCategoryImage } from "@/features/navigation/categoryImage";
 import { useScrollRail } from "./useScrollRail";
 import { ScrollRailButtons } from "./ScrollRailButtons";
 import type { Category } from "@/types";
@@ -103,6 +103,7 @@ export function CategoryRail({ categories }: CategoryRailProps) {
       >
         {categories.map((cat, index) => {
           const inverted = index % 2 === 1;
+          const cardImage = getRealCategoryCardImage(cat);
           return (
             <MotionLink
               key={cat.id}
@@ -151,17 +152,25 @@ export function CategoryRail({ categories }: CategoryRailProps) {
                   inverted ? "bg-foreground" : "bg-card"
                 )}
               >
-                <SafeImage
-                  src={cat.mediumUrl ?? cat.imageUrl}
-                  alt={cat.name}
-                  fill
-                  className={cn(
-                    "object-cover scale-[1.02] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform",
-                    "group-hover:scale-105",
-                    "motion-reduce:transition-none motion-reduce:scale-100 motion-reduce:group-hover:scale-100"
-                  )}
-                  sizes="(max-width: 640px) 240px, (max-width: 1024px) 260px, 280px"
-                />
+                {cardImage ? (
+                  <SafeImage
+                    src={cardImage}
+                    alt={cat.name}
+                    fill
+                    className={cn(
+                      "object-cover scale-[1.02] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform",
+                      "group-hover:scale-105",
+                      "motion-reduce:transition-none motion-reduce:scale-100 motion-reduce:group-hover:scale-100"
+                    )}
+                    sizes="(max-width: 640px) 240px, (max-width: 1024px) 260px, 280px"
+                  />
+                ) : (
+                  <CategoryTile
+                    name={cat.name}
+                    imageUrl={null}
+                    className="absolute inset-0 h-full w-full rounded-xl text-7xl"
+                  />
+                )}
               </div>
             </MotionLink>
           );

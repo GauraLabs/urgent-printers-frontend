@@ -9,7 +9,7 @@ const offer: ListingOffer = {
 };
 
 const base = {
-  name: "Matte Vinyl Stickers", description: "d", images: ["https://cdn/x.webp"], slug: "matte-vinyl-stickers",
+  id: "7", categoryName: "Stickers", shortDescription: "", name: "Matte Vinyl Stickers", description: "d", images: ["https://cdn/x.webp"], slug: "matte-vinyl-stickers",
   categorySlug: "stickers", unitLabel: "pcs", reviewCount: 0, averageRating: 0, listingOffer: offer,
 };
 const now = new Date("2026-10-07T00:00:00Z");

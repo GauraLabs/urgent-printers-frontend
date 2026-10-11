@@ -9,6 +9,7 @@ import { Phone, Mail, MapPin, Clock, Loader2, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner";
 import { FormField } from "@/components/common/FormField";
 import { cn } from "@/lib/utils";
+import { CONTACT_PHONE_DISPLAY } from "@/lib/seo/site";
 
 const schema = z.object({
   name:    z.string().min(2, "Name required"),
@@ -20,7 +21,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 const CONTACT_INFO = [
-  { icon: Phone,  label: "Toll Free",   value: "1800-123-4567",               sub: "Mon – Sat, 9 AM – 6 PM IST" },
+  { icon: Phone,  label: "Phone",       value: CONTACT_PHONE_DISPLAY,              sub: "Mon – Sat, 9 AM – 6 PM IST" },
   { icon: Mail,   label: "Email",       value: "hello@urgentprinters.com",      sub: "We reply within 4 business hours" },
   { icon: MapPin, label: "Head Office", value: "Kotwali Rd, Tilak Dwar, Mathura, UP 281001", sub: "Opp. Punjab National Bank" },
   { icon: Clock,  label: "Order Support",value: "support@urgentprinters.com",  sub: "For order queries and artwork help" },

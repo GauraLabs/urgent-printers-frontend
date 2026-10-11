@@ -6,6 +6,7 @@ import { FooterLinkGroup } from "./FooterLinkGroup";
 import { Separator } from "@/components/ui/separator";
 import { getNavLinks } from "@/lib/api";
 import { ROUTES } from "@/lib/constants/routes";
+import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_HREF } from "@/lib/seo/site";
 
 const SOCIAL_LINKS = [
   { label: "Instagram", href: "https://www.instagram.com/urgent_printers_2026", icon: InstagramIcon },
@@ -53,8 +54,8 @@ export async function Footer() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li className="flex items-center gap-2">
                 <Phone size={13} className="shrink-0" />
-                <a href="tel:+911800123456" className="hover:text-foreground transition-colors">
-                  1800-123-4567 (Toll Free)
+                <a href={CONTACT_PHONE_HREF} className="hover:text-foreground transition-colors">
+                  {CONTACT_PHONE_DISPLAY}
                 </a>
               </li>
               <li className="flex items-center gap-2">

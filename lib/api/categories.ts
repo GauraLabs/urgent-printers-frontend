@@ -1,4 +1,4 @@
-import type { Category } from "@/types";
+import type { Category, CategoryRef } from "@/types";
 import { mockCategories } from "@/lib/mock-data";
 import { delay } from "./delay";
 import { apiFetch } from "./client";
@@ -6,7 +6,13 @@ import { logApiError } from "./logApiError";
 
 // ─── Backend shape ────────────────────────────────────────────────────────────
 
-interface BackendCategory {
+export interface BackendCategoryRef {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+export interface BackendCategory {
   id: number;
   name: string;
   slug: string;
@@ -23,21 +29,34 @@ interface BackendCategory {
   banner_url: string | null;
   video_url: string | null;
   video_thumbnail_url: string | null;
+  // Added with subcategories/SEO; absent on an older backend or stale cache.
+  ancestors?: BackendCategoryRef[] | null;
+  path?: string | null;
+  direct_product_count?: number | null;
+  seo_intro?: string | null;
+  seo_body?: string | null;
+  faqs?: { question: string; answer: string }[] | null;
+  google_product_category?: string | null;
+  noindex?: boolean;
 }
 
-function mapCategory(c: BackendCategory): Category {
+export function mapCategoryRefs(refs: BackendCategoryRef[] | null | undefined): CategoryRef[] | null {
+  return refs ? refs.map((r) => ({ id: String(r.id), name: r.name, slug: r.slug })) : null;
+}
+
+export function mapCategory(c: BackendCategory): Category {
   return {
     id: String(c.id),
     slug: c.slug,
     name: c.name,
     description: c.description ?? "",
-    // Fall back to a seeded picsum image when no thumbnail has been uploaded yet
-    imageUrl: c.thumbnail_url ?? `https://picsum.photos/seed/${c.slug}/600/400`,
+    // null (never a stock photo) when nothing was uploaded; consumers render a letter tile.
+    imageUrl: c.thumbnail_url ?? null,
     productCount: c.product_count,
     thumbnailUrl: c.thumbnail_url,
     // 800px, aspect-preserving — sized for the home category grid tiles (thumbnail_url is a
     // 300x300 hard crop that blurs when stretched to fill ~475px+ tiles)
-    mediumUrl: c.medium_url ?? c.banner_url ?? `https://picsum.photos/seed/${c.slug}/800/600`,
+    mediumUrl: c.medium_url ?? c.banner_url ?? null,
     bannerUrl: c.banner_url,
     // Optional on the backend response (absent from stale cached Redis dicts) — coalesce defensively
     videoUrl: c.video_url ?? null,
@@ -46,9 +65,39 @@ function mapCategory(c: BackendCategory): Category {
     metaTitle: c.meta_title,
     metaDescription: c.meta_description,
     isActive: c.is_active,
-    parentId: c.parent_id,
+    parentId: c.parent_id == null ? null : String(c.parent_id),
     sortOrder: c.sort_order,
+    ancestors: mapCategoryRefs(c.ancestors),
+    path: c.path ?? null,
+    directProductCount: c.direct_product_count ?? null,
+    seoIntro: c.seo_intro ?? null,
+    seoBody: c.seo_body ?? null,
+    faqs: (c.faqs ?? []).map((f) => ({ question: f.question, answer: f.answer })),
+    googleProductCategory: c.google_product_category ?? null,
+    noindex: c.noindex ?? false,
   };
+}
+
+export interface BackendCategoryWithChildren extends BackendCategory {
+  children?: BackendCategory[] | null;
+}
+
+/** GET /categories returns top-level rows only; subcategories arrive nested under `children` (backend max depth is 2). */
+export function flattenCategoryTree(rows: BackendCategoryWithChildren[]): BackendCategory[] {
+  const out: BackendCategory[] = [];
+  const seen = new Set<number>();
+  for (const { children, ...top } of rows) {
+    if (!seen.has(top.id)) {
+      seen.add(top.id);
+      out.push(top);
+    }
+    for (const child of children ?? []) {
+      if (seen.has(child.id)) continue;
+      seen.add(child.id);
+      out.push(child);
+    }
+  }
+  return out;
 }
 
 export const CATEGORIES_CACHE_TAG = "categories";
@@ -64,10 +113,10 @@ export async function getCategories(): Promise<Category[]> {
   try {
     // The root-layout Header calls this on every page, so it must be cached; the tag
     // lets /api/revalidate/products bust it when a catalog change moves product counts.
-    const data = await apiFetch<BackendCategory[]>("/categories", {
+    const data = await apiFetch<BackendCategoryWithChildren[]>("/categories?include_children=true", {
       next: { revalidate: 300, tags: [CATEGORIES_CACHE_TAG] },
     });
-    return data.map(mapCategory);
+    return flattenCategoryTree(data).map(mapCategory);
   } catch (err) {
     logApiError("getCategories", err);
     return [];

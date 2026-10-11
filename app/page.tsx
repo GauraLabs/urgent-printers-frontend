@@ -13,12 +13,16 @@ import { CategoryQuadCards } from "@/features/home/CategoryQuadCards";
 import { RecentlyViewedRail } from "@/features/home/RecentlyViewedRail";
 import {
   bucketShelves,
+  dedupeShelfProducts,
+  totalCatalogProducts,
   MIN_BADGE_RAIL_PRODUCTS,
   pickCampaignCategory,
-  selectShelfCategories,
+  planShelfCategories,
+  directRootShelves,
   type CategoryShelf,
 } from "@/features/home/shelfBuckets";
 import { toCardProduct } from "@/features/products/cardProduct";
+import { getRootCategories } from "@/lib/seo/category";
 import { CategoryRail } from "@/features/home/CategoryRail";
 import { FeaturedProducts } from "@/features/home/FeaturedProducts";
 import { CampaignBanner } from "@/features/home/CampaignBanner";
@@ -28,6 +32,8 @@ import { PromoBanner } from "@/features/home/PromoBanner";
 import { TrustBadges } from "@/features/home/TrustBadges";
 import { TestimonialsSection } from "@/features/home/TestimonialsSection";
 import { ROUTES } from "@/lib/constants/routes";
+import { JsonLd } from "@/components/common/JsonLd";
+import { buildOrganizationJsonLd } from "@/lib/structured-data";
 
 export const revalidate = 60;
 
@@ -36,6 +42,7 @@ const MAX_SHELVES = 10;
 const BADGE_RAIL_SIZE = 10;
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/" },
   title: "Urgent Printers — Wedding Cards, Invitations & Celebration Printing",
   description:
     "Wedding cards and invitations, shagun envelopes, wedding essentials, welcome boards, and birthday and anniversary printing. Premium quality, delivered across India.",
@@ -45,35 +52,7 @@ export const metadata: Metadata = {
   },
 };
 
-const organizationJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "Urgent Printers",
-  url: "https://urgentprinters.com",
-  logo: "https://urgentprinters.com/logo.png",
-  description:
-    "Online printing for weddings and celebrations in India — wedding cards and invitations, shagun envelopes, wedding essentials, welcome boards, and birthday and anniversary printing.",
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: "Kotwali Rd, opposite Punjab National Bank, Tilak Dwar",
-    addressLocality: "Mathura",
-    addressRegion: "Uttar Pradesh",
-    postalCode: "281001",
-    addressCountry: "IN",
-  },
-  contactPoint: {
-    "@type": "ContactPoint",
-    telephone: "1800-123-4567",
-    contactType: "customer service",
-    areaServed: "IN",
-    availableLanguage: ["English", "Hindi"],
-  },
-  sameAs: [
-    "https://www.instagram.com/urgent_printers_2026",
-    "https://www.facebook.com/people/Urgent-Printers/61591832844842/",
-    "https://twitter.com/urgentprinters",
-  ],
-};
+const organizationJsonLd = buildOrganizationJsonLd();
 
 const RECOMMENDED_LIMIT = 10;
 
@@ -92,14 +71,23 @@ export default async function HomePage() {
     ]);
 
   // One request per shelf, all in parallel; the category slugs are the only dependency.
-  const shelfCategories = selectShelfCategories(categories, MAX_SHELVES);
-  const shelfResults = await Promise.all(
-    shelfCategories.map((c) => getProducts({ categorySlug: c.slug, pageSize: SHELF_SIZE, sort: "popular" })),
-  );
-  const shelves: CategoryShelf[] = shelfCategories.map((category, i) => ({
-    category,
-    products: shelfResults[i].data,
-  }));
+  const { shelves: shelfCategories, splitRoots } = planShelfCategories(categories, MAX_SHELVES);
+  const [shelfResults, rootResults] = await Promise.all([
+    Promise.all(
+      shelfCategories.map((c) => getProducts({ categorySlug: c.slug, pageSize: SHELF_SIZE, sort: "popular" })),
+    ),
+    // Wider page: the rolled-up root listing is mostly its children's products, which are filtered out.
+    Promise.all(
+      splitRoots.map((c) => getProducts({ categorySlug: c.slug, pageSize: SHELF_SIZE * 4, sort: "popular" })),
+    ),
+  ]);
+  const shelves: CategoryShelf[] = dedupeShelfProducts([
+    ...shelfCategories.map((category, i) => ({ category, products: shelfResults[i].data })),
+    ...directRootShelves(
+      splitRoots,
+      rootResults.map((r) => r.data),
+    ),
+  ]);
   const { rails, quads } = bucketShelves(shelves);
 
   const bestsellers = bestsellerResult.data;
@@ -124,18 +112,15 @@ export default async function HomePage() {
   const shownIds = new Set([...featured, ...bestsellers].map((p) => p.id));
   const recommended = recommendedPool.filter((p) => !shownIds.has(p.id)).slice(0, RECOMMENDED_LIMIT);
 
-  const totalProducts = categories.reduce((sum, c) => sum + c.productCount, 0);
+  const totalProducts = totalCatalogProducts(categories);
   const campaign = pickCampaignCategory(categories, new Set(rails.map((r) => r.category.slug)));
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
-      />
+      <JsonLd data={organizationJsonLd} />
       <HeroBannerSection banners={banners} />
       <TrustBadges totalProducts={totalProducts > 0 ? totalProducts : undefined} />
-      <CategoryRail categories={categories} />
+      <CategoryRail categories={getRootCategories(categories)} />
       {showBestsellers ? (
         <ProductRailSection
           id="bestsellers"
