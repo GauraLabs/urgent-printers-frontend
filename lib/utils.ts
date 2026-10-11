@@ -17,6 +17,11 @@ export function round2(value: number): number {
   return rounded / 100;
 }
 
+/** GST embedded in a GST-inclusive amount at 18%. Pass items - discount + shipping. */
+export function embeddedGst(inclusiveAmount: number): number {
+  return round2(inclusiveAmount - inclusiveAmount / 1.18);
+}
+
 /**
  * Whole-number percent off, half-up, computed on integer paise so it matches
  * the server's `pct` (1.2 golden vectors: 12/9 -> 25, 3/2 -> 33, 200/199 -> 1).

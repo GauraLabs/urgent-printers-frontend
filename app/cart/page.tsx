@@ -15,7 +15,7 @@ import { ROUTES } from "@/lib/constants/routes";
 import { PriceDisplay } from "@/components/common/PriceDisplay";
 import { SavingsSummary } from "@/components/common/SavingsSummary";
 import { cartLinePrice, cartMrpSavings, cartTotalSavings, eligibleSubtotal } from "@/features/cart/savings";
-import { formatPrice, slugify, cn } from "@/lib/utils";
+import { formatPrice, slugify, cn, embeddedGst } from "@/lib/utils";
 import type { CartItem } from "@/types";
 import { CouponMinNote, CouponScopeNote } from "@/features/cart/CouponScopeNote";
 import { LineRateStatus } from "@/features/cart/LineRateStatus";
@@ -103,7 +103,7 @@ export default function CartPage() {
   const discountedSub     = parseFloat((subtotal - discount).toFixed(2));
   const shipping          = discountedSub >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
   const total             = discountedSub + shipping;
-  const gst               = parseFloat((discountedSub - discountedSub / 1.18).toFixed(2));
+  const gst               = embeddedGst(total);
   // Display-only: checkout replaces this with the server's totalSavings.
   const mrpSavings        = cartMrpSavings(items);
 
