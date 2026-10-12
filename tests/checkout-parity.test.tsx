@@ -10,7 +10,7 @@ import { CouponScopeNote } from "@/features/cart/CouponScopeNote";
 import { cartMrpSavings, cartTotalSavings, eligibleSubtotal, isLineEligible } from "@/features/cart/savings";
 import { ReviewStep, SHIPPING_COST, SHIPPING_THRESHOLD } from "@/features/checkout/ReviewStep";
 import { effectiveBounds, priceForQuantity } from "@/lib/quantity";
-import { discountPercent, formatPrice } from "@/lib/utils";
+import { discountPercent, formatPrice, embeddedGst } from "@/lib/utils";
 import type { AppliedCoupon, CartItem, OrderPreview } from "@/types";
 import { checkoutFixture, mapProducts, paise, pdpConfig, pricingFixture, rateTiers, select, type FxCart } from "./fixtures/parity";
 
@@ -218,7 +218,8 @@ describe("ReviewStep's own fallback maths (shown before the server preview arriv
         />
       );
       const e = cart.e!;
-      const gstText = `Inclusive of GST: ${formatPrice(e.gst / 100)}`;
+      // Fixtures predate GST-on-shipping; embedded GST now covers items - discount + shipping.
+      const gstText = `Inclusive of GST: ${formatPrice(embeddedGst(e.total / 100))}`;
       if (!screen.queryByText(gstText)) bad.push(`${cart.id}: GST text "${gstText}" not shown (${screen.queryByText(/Inclusive of GST/)?.textContent})`);
       if (!screen.queryByText(`Place Order · ${formatPrice(e.total / 100)}`)) bad.push(`${cart.id}: total ${formatPrice(e.total / 100)} not on the button`);
       unmount();

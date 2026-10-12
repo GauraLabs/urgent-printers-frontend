@@ -1,9 +1,18 @@
 "use client";
 
 import Image, { type ImageProps } from "next/image";
-import { useState, type ReactEventHandler, type ImgHTMLAttributes } from "react";
+import { useEffect, useState, type ReactEventHandler, type ImgHTMLAttributes } from "react";
 import { ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// A load that failed while offline gets another try once the connection returns.
+function useRetryOnline(failed: boolean, retry: () => void): void {
+  useEffect(() => {
+    if (!failed) return;
+    window.addEventListener("online", retry);
+    return () => window.removeEventListener("online", retry);
+  }, [failed, retry]);
+}
 
 /**
  * Shared "broken image" fallback box. Rendered in place of the real image
@@ -58,6 +67,7 @@ function BrokenImageFallback({
  */
 export function SafeImage({ alt, className, fill, width, height, onError, "aria-hidden": ariaHidden, ...props }: ImageProps) {
   const [failed, setFailed] = useState(false);
+  useRetryOnline(failed, () => setFailed(false));
 
   if (failed) {
     return (
@@ -101,6 +111,7 @@ interface SafeImgProps extends ImgHTMLAttributes<HTMLImageElement> {
  */
 export function SafeImg({ alt, className, width, height, onError, ...props }: SafeImgProps) {
   const [failed, setFailed] = useState(false);
+  useRetryOnline(failed, () => setFailed(false));
 
   if (failed) {
     return (

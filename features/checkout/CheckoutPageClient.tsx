@@ -18,6 +18,7 @@ import { buildClientPricing } from "./clientPricing";
 import { resolveCod, codBlockApplies, type ServerCodBlock } from "./cod";
 import { applyPreviewPrices, pricesDiffer } from "./repricing";
 import type { SiteStatus } from "@/lib/api/siteStatus";
+import { isInfrastructureFailure } from "@/lib/api/errorClassification";
 import { trackConnectivity } from "@/features/site-status/trackConnectivity";
 import { ROUTES } from "@/lib/constants/routes";
 import { RAZORPAY_THEME_COLOR } from "@/lib/constants/payment";
@@ -27,6 +28,7 @@ import type { Address, OrderPreview, CreateOrderRequest, ClientPricing } from "@
 // Only these answers prove no order was created; anything else (408/425/429, 5xx, ...) may have succeeded.
 const DEFINITIVE_ERROR_STATUSES: ReadonlySet<number> = new Set([400, 401, 403, 404, 409, 422]);
 const IN_PROGRESS_COOLDOWN_MS = 3000;
+export const PREVIEW_OFFLINE_MESSAGE = "Couldn't confirm the latest price — check your connection and tap Retry.";
 
 function newIdempotencyKey(): string {
   if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
@@ -186,7 +188,11 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
       if (isQuantityLimitError(err)) {
         void sendBackToCart(err, token);
       }
-      setPreviewError(err instanceof Error ? err.message : "Could not compute pricing.");
+      setPreviewError(
+        isInfrastructureFailure(err)
+          ? PREVIEW_OFFLINE_MESSAGE
+          : err instanceof Error ? `${err.message.replace(/\.?$/, ".")}` : "Could not compute pricing."
+      );
       return null;
     } finally {
       setPreviewLoading(false);
@@ -194,6 +200,25 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
   }
 
   runPreviewRef.current = runPreview;
+
+  const retryPreview = useCallback(() => {
+    const token = useAuthStore.getState().token;
+    if (!token || !address) return;
+    void runPreviewRef.current(address, token, "Totals below use the latest prices. Review them before placing your order.", false, true);
+  }, [address]);
+
+  const retryPreviewRef = useRef(retryPreview);
+  retryPreviewRef.current = retryPreview;
+  const needsRetryRef = useRef(false);
+  needsRetryRef.current = step === 3 && previewError !== null && !previewLoading && !isPlacing;
+
+  useEffect(() => {
+    function onOnline() {
+      if (needsRetryRef.current) retryPreviewRef.current();
+    }
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+  }, []);
 
   // A stale cart line outside its allowed range: pull the server's clamped cart,
   // then explain on the cart page rather than failing the checkout.
@@ -496,6 +521,7 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
           ordersHalted={siteStatus.orders_halted}
           haltMessage={siteStatus.message}
           priceNotice={priceNotice}
+          onRetryPreview={retryPreview}
         />
       )}
     </div>

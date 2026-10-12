@@ -12,7 +12,7 @@ import { SavingsSummary, savingsFromPricing, type Savings } from "@/components/c
 import { cartLinePrice, cartMrpSavings, cartTotalSavings, isLineEligible } from "@/features/cart/savings";
 import { CouponMinNote, CouponScopeNote } from "@/features/cart/CouponScopeNote";
 import { formatQty } from "@/lib/quantity";
-import { formatPrice, cn } from "@/lib/utils";
+import { formatPrice, cn, embeddedGst } from "@/lib/utils";
 import type { CartItem, Address, OrderPreview } from "@/types";
 import type { PaymentMethod } from "./PaymentStep";
 
@@ -33,6 +33,7 @@ interface ReviewStepProps {
   haltMessage: string | null;
   /** Set when the server's prices differ from what the customer saw in the cart. */
   priceNotice: string | null;
+  onRetryPreview?: () => void;
 }
 
 const PAYMENT_LABELS: Record<PaymentMethod, string> = {
@@ -44,7 +45,7 @@ export function ReviewStep({
   items, address, paymentMethod,
   preview, previewLoading, previewError,
   onPlaceOrder, onBack, isPlacing,
-  ordersHalted, haltMessage, priceNotice,
+  ordersHalted, haltMessage, priceNotice, onRetryPreview,
 }: ReviewStepProps) {
   const appliedCoupon = useCartStore((s) => s.appliedCoupon);
 
@@ -57,7 +58,7 @@ export function ReviewStep({
   const discountedSub = preview ? (preview.pricing.subtotal - preview.pricing.discountAmount) : parseFloat((subtotal - discount).toFixed(2));
   const shipping      = preview?.pricing.shippingCost ?? (discountedSub >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST);
   const total         = preview?.pricing.totalAmount ?? (discountedSub + shipping);
-  const gst           = preview?.pricing.gstAmount ?? parseFloat((discountedSub - discountedSub / 1.18).toFixed(2));
+  const gst           = preview?.pricing.gstAmount ?? embeddedGst(discountedSub + shipping);
   // Server-confirmed totalSavings when the preview is in; otherwise a client
   // estimate (MRP savings + coupon). Either way each part is counted once.
   const savings: Savings = preview
@@ -307,7 +308,17 @@ export function ReviewStep({
           <AlertCircle size={14} className="text-destructive shrink-0 mt-0.5" />
           <div>
             <p className="font-semibold text-destructive">Could not confirm pricing</p>
-            <p className="text-muted-foreground mt-0.5">{previewError} — shown amounts are estimates. You can still place the order.</p>
+            <p className="text-muted-foreground mt-0.5">{previewError} Shown amounts are estimates. You can still place the order.</p>
+            {onRetryPreview && (
+              <button
+                type="button"
+                onClick={onRetryPreview}
+                disabled={previewLoading}
+                className="mt-2 inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border text-xs font-semibold hover:bg-muted transition-colors disabled:opacity-50"
+              >
+                <RefreshCw size={12} className={previewLoading ? "animate-spin" : undefined} aria-hidden="true" /> Retry
+              </button>
+            )}
           </div>
         </div>
       )}

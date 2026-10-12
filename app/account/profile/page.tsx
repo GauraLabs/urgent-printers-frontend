@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -17,7 +18,7 @@ const schema = z.object({
   firstName: z.string().min(1, "First name required"),
   lastName:  z.string().min(1, "Last name required"),
   email:     z.string().email("Enter a valid email").optional().or(z.literal("")),
-  phone:     z.string().regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number").optional().or(z.literal("")),
+  phone:     z.string().optional(),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -25,8 +26,9 @@ export default function ProfilePage() {
   const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
   const token = useAuthStore((s) => s.token);
+  const isHydrated = useAuthStore((s) => s._isHydrated);
 
-  const { register, handleSubmit, formState: { errors, isSubmitting, isDirty } } = useForm<FormValues>({
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting, isDirty } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       firstName: user?.firstName ?? "",
@@ -35,6 +37,18 @@ export default function ProfilePage() {
       phone:     user?.phone?.replace("+91 ", "") ?? "",
     },
   });
+
+  // The persisted store is empty on the first render of a direct load; fill the form once it
+  // hydrates, but never over edits in progress.
+  useEffect(() => {
+    if (!isHydrated || !user || isDirty) return;
+    reset({
+      firstName: user.firstName ?? "",
+      lastName:  user.lastName  ?? "",
+      email:     user.email     ?? "",
+      phone:     user.phone?.replace("+91 ", "") ?? "",
+    });
+  }, [isHydrated, user, isDirty, reset]);
 
   async function onSubmit(data: FormValues) {
     if (!token) return;
@@ -45,6 +59,7 @@ export default function ProfilePage() {
         email: data.email || undefined,
       });
       setUser({ ...updated, phone: user?.phone }, token);
+      reset(data);
       toast.success("Profile updated.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update profile.");
@@ -80,7 +95,7 @@ export default function ProfilePage() {
           <FormField label="Last name"  required error={errors.lastName?.message}  {...register("lastName")}  />
         </div>
         <FormField label="Email address" type="email" error={errors.email?.message} hint="Used for order notifications and receipts." {...register("email")} />
-        <FormField label="Mobile number" type="tel" placeholder="9876543210" hint="10-digit Indian mobile number" error={errors.phone?.message} {...register("phone")} />
+        <FormField label="Mobile number" type="tel" readOnly hint="Your verified mobile number can't be changed here. Contact support to update it." {...register("phone")} />
 
         <button
           type="submit"

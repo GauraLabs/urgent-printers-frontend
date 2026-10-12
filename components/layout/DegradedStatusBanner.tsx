@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useDegradedStore } from "@/features/site-status/degradedStore";
 import { SiteStatusBannerContent } from "./SiteStatusBannerContent";
 
@@ -14,6 +15,13 @@ const DEGRADED_MESSAGE = "We're having trouble connecting right now. Please try 
 
 export function DegradedStatusBanner() {
   const isDegraded = useDegradedStore((s) => s.isDegraded);
+  const reportRecovery = useDegradedStore((s) => s.reportRecovery);
+
+  useEffect(() => {
+    window.addEventListener("online", reportRecovery);
+    return () => window.removeEventListener("online", reportRecovery);
+  }, [reportRecovery]);
+
   if (!isDegraded) return null;
 
   return <SiteStatusBannerContent variant="degraded" message={DEGRADED_MESSAGE} />;
