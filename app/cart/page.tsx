@@ -10,6 +10,7 @@ import { useCartStore } from "@/features/cart/store";
 import { useAuthStore } from "@/features/auth/store";
 import { useMounted } from "@/hooks/useMounted";
 import { validateCoupon } from "@/lib/api";
+import { SHIPPING_COST, SHIPPING_THRESHOLD } from "@/lib/constants/shipping";
 import { trackConnectivity } from "@/features/site-status/trackConnectivity";
 import { ROUTES } from "@/lib/constants/routes";
 import { PriceDisplay } from "@/components/common/PriceDisplay";
@@ -77,8 +78,6 @@ function CartSkeleton() {
   );
 }
 
-const SHIPPING_THRESHOLD = 999;
-const SHIPPING_COST = 99;
 
 export default function CartPage() {
   const mounted           = useMounted();

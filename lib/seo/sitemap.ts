@@ -89,11 +89,13 @@ function escapeXml(value: string): string {
 }
 
 /** Same document shape as Next's metadata-route serializer, but XML-escaped (Next's is not). */
-export function renderSitemapXml(entries: MetadataRoute.Sitemap): string {
+export function renderSitemapXml(entries: MetadataRoute.Sitemap, generatedAt?: Date): string {
   const hasImages = entries.some((e) => (e.images?.length ?? 0) > 0);
   let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
   xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"';
   xml += hasImages ? ' xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n' : ">\n";
+  // A frozen timestamp is the tell that regeneration is failing and a stale copy is being served.
+  if (generatedAt) xml += `<!-- generated ${generatedAt.toISOString()} entries ${entries.length} -->\n`;
   for (const e of entries) {
     xml += `<url>\n<loc>${escapeXml(e.url)}</loc>\n`;
     for (const image of e.images ?? []) {

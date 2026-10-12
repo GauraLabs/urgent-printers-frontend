@@ -9,15 +9,28 @@ import { withDegradedFallback } from "@/lib/seo/degraded";
 export const revalidate = 300;
 
 export async function GET(): Promise<Response> {
+  const state = { degraded: false };
   const entries = await withDegradedFallback(
     "sitemap",
     async () => {
       const { categories, products } = await getSeoCatalog();
       return buildSitemapEntries(categories, products);
     },
-    () => fallbackSitemapEntries(),
+    () => {
+      state.degraded = true;
+      return fallbackSitemapEntries();
+    },
   );
-  return new Response(renderSitemapXml(entries), {
-    headers: { "Content-Type": "application/xml; charset=utf-8" },
+  const generatedAt = new Date();
+  // When a background regeneration throws, Vercel keeps serving the previous response, so
+  // these headers freeze: an old X-Sitemap-Generated-At is how a stuck sitemap is spotted
+  // (the failure itself is logged by withDegradedFallback as "[lib/api] sitemap: ...").
+  return new Response(renderSitemapXml(entries, generatedAt), {
+    headers: {
+      "Content-Type": "application/xml; charset=utf-8",
+      "X-Sitemap-Generated-At": generatedAt.toISOString(),
+      "X-Sitemap-Entries": String(entries.length),
+      ...(state.degraded && { "X-Sitemap-Stale": "degraded-fallback" }),
+    },
   });
 }
