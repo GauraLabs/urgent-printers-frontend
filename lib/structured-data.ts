@@ -1,6 +1,13 @@
 import type { Product } from "@/types";
 import { formatQty } from "@/lib/quantity";
 import { stripHtml } from "@/lib/seo/metadata";
+import {
+  DEFAULT_HANDLING_DAYS,
+  RETURN_WINDOW_DAYS,
+  SHIPPING_COST,
+  SHIPPING_THRESHOLD,
+  STANDARD_TRANSIT_DAYS,
+} from "@/lib/constants/shipping";
 import { SITE_URL, SITE_NAME, absoluteUrl, CONTACT_PHONE_E164_DASHED } from "@/lib/seo/site";
 
 export { SITE_URL };
@@ -15,7 +22,62 @@ type JsonLdProduct = Pick<
   Product,
   | "name" | "description" | "images" | "slug" | "categorySlug" | "unitLabel"
   | "listingOffer" | "reviewCount" | "averageRating"
-> & Partial<Pick<Product, "id" | "shortDescription" | "categoryName" | "categoryPath">>;
+> & Partial<Pick<Product, "id" | "shortDescription" | "categoryName" | "categoryPath" | "turnaroundOptions">>;
+
+function dayRange(range: { min: number; max: number }): Record<string, unknown> {
+  return { "@type": "QuantitativeValue", minValue: range.min, maxValue: range.max, unitCode: "DAY" };
+}
+
+/** Handling = the product's default (cheapest, then fastest) turnaround; the policy's 2-3 business days when unknown. */
+function handlingDays(options: Product["turnaroundOptions"] | undefined): { min: number; max: number } {
+  const usable = (options ?? []).filter((o) => o.businessDays > 0);
+  if (usable.length === 0) return DEFAULT_HANDLING_DAYS;
+  const base = [...usable].sort((a, b) => a.extraCost - b.extraCost || a.businessDays - b.businessDays)[0];
+  return { min: base.businessDays, max: base.businessDays };
+}
+
+/** Same rule as cart/checkout: free at or above SHIPPING_THRESHOLD, else SHIPPING_COST. India only. */
+export function buildShippingDetails(
+  price: number,
+  turnaroundOptions?: Product["turnaroundOptions"],
+): Record<string, unknown> {
+  return {
+    "@type": "OfferShippingDetails",
+    shippingRate: {
+      "@type": "MonetaryAmount",
+      value: price >= SHIPPING_THRESHOLD ? 0 : SHIPPING_COST,
+      currency: "INR",
+    },
+    shippingDestination: { "@type": "DefinedRegion", addressCountry: "IN" },
+    deliveryTime: {
+      "@type": "ShippingDeliveryTime",
+      handlingTime: dayRange(handlingDays(turnaroundOptions)),
+      transitTime: dayRange(STANDARD_TRANSIT_DAYS),
+    },
+  };
+}
+
+/**
+ * /policies/returns: no returns for change of mind (made-to-order), but damaged/defective/
+ * not-as-approved prints are reprinted or refunded in full when reported within 7 days of
+ * delivery. A finite window is the truthful category: MerchantReturnNotPermitted would
+ * deny the defect remedy, and the schema has no "defects only" category, so the
+ * restriction is stated in `description` and the linked policy page. No returnMethod
+ * is given because the policy asks for photos by email, not a mailed return.
+ */
+export function buildMerchantReturnPolicy(siteUrl: string = SITE_URL): Record<string, unknown> {
+  return {
+    "@type": "MerchantReturnPolicy",
+    applicableCountry: "IN",
+    returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+    merchantReturnDays: RETURN_WINDOW_DAYS,
+    returnFees: "https://schema.org/FreeReturn",
+    refundType: "https://schema.org/FullRefund",
+    merchantReturnLink: absoluteUrl("/policies/returns", siteUrl),
+    description:
+      "Personalised prints cannot be returned for change of mind. Damaged, defective or not-as-approved items reported within 7 days of delivery are reprinted or refunded in full.",
+  };
+}
 
 /**
  * A single Offer built from the server's listing_offer, so the advertised price
@@ -41,6 +103,8 @@ export function buildOffer(product: JsonLdProduct, siteUrl: string, now: Date = 
     availability: offer.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
     itemCondition: "https://schema.org/NewCondition",
     seller: { "@type": "Organization", name: "Urgent Printers" },
+    shippingDetails: buildShippingDetails(price, product.turnaroundOptions),
+    hasMerchantReturnPolicy: buildMerchantReturnPolicy(siteUrl),
   };
 }
 
@@ -147,6 +211,7 @@ export function buildOrganizationJsonLd(siteUrl: string = SITE_URL): Record<stri
       postalCode: "281001",
       addressCountry: "IN",
     },
+    hasMerchantReturnPolicy: buildMerchantReturnPolicy(siteUrl),
     contactPoint: {
       "@type": "ContactPoint",
       telephone: CONTACT_PHONE_E164_DASHED,

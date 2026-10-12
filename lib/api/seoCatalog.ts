@@ -2,12 +2,11 @@ import type { Category, Product } from "@/types";
 import { mockCategories, mockProducts } from "@/lib/mock-data";
 import { API_URL, ApiError, type BackendPage } from "./client";
 import {
-  CATEGORIES_CACHE_TAG,
   flattenCategoryTree,
   mapCategory,
   type BackendCategoryWithChildren,
 } from "./categories";
-import { mapCard, PRODUCTS_CACHE_TAG, type BackendProductCard } from "./products";
+import { mapCard, type BackendProductCard } from "./products";
 
 // Strict (non-swallowing) catalog reads for routes that are ISR-cached for a long time
 // (sitemap.xml, llms.txt). Any failure throws so Next keeps serving the previous good
@@ -26,12 +25,21 @@ const MAX_ATTEMPTS = 3;
 const BASE_BACKOFF_MS = 500;
 export const DEFAULT_RETRY_BUDGET_MS = 4000;
 
-// Explicit, so the entry is purgeable by tag; without it the fetch silently inherited the
-// route's revalidate and could only be busted via the route's implicit path tags.
-// Only 200s enter the data cache, so a failed page is never cached.
-export const SEO_PRODUCTS_FETCH_INIT: RequestInit = {
-  next: { revalidate: 300, tags: [PRODUCTS_CACHE_TAG] },
-};
+// The sitemap/llms routes are ISR-cached (revalidate = 300). Their catalog reads also went
+// through the Next data cache with the same 300s lifetime, and in production the sitemap
+// regenerated every ~5 min while still serving a catalog from before the
+// wedding-petal-cones category existed: a regeneration landing on a just-expired data-cache
+// entry is handed that stale entry (stale-while-revalidate) and nothing guarantees the
+// background refresh lands. `cache: "no-store"` is not an option: it turns the routes
+// dynamic and, at `next build`, throws into the degraded fallback. So each regeneration
+// reads under a fresh cache key instead (see freshnessParam): a guaranteed miss, still static.
+export const SEO_FETCH_INIT: RequestInit = { next: { revalidate: 300 } };
+export const FRESHNESS_BUCKET_MS = 300_000;
+
+/** Distinct for every ISR regeneration (they are >= 300s apart); the backend ignores the parameter. */
+export function freshnessParam(now: number = Date.now()): string {
+  return `_r=${Math.floor(now / FRESHNESS_BUCKET_MS)}`;
+}
 
 export interface RetryBudget {
   remainingMs: number;
@@ -87,10 +95,9 @@ async function fetchJsonStrict<T>(path: string, init: RequestInit, budget: Retry
 export async function getCategoriesStrict(budget: RetryBudget = createRetryBudget()): Promise<Category[]> {
   // REAL API: GET /api/v1/categories
   if (!process.env.NEXT_PUBLIC_API_URL) return mockCategories;
-  // Same URL + cache options as getCategories so both share one data-cache entry.
   const body = await fetchJsonStrict<{ data?: BackendCategoryWithChildren[] }>(
-    "/categories?include_children=true",
-    { next: { revalidate: 300, tags: [CATEGORIES_CACHE_TAG] } },
+    `/categories?include_children=true&${freshnessParam()}`,
+    SEO_FETCH_INIT,
     budget,
   );
   if (!Array.isArray(body.data)) throw new CatalogUnavailableError("categories response has no data array");
@@ -103,8 +110,8 @@ export async function getAllProductsStrict(budget: RetryBudget = createRetryBudg
   const all: Product[] = [];
   for (let page = 1; page <= SEO_PRODUCTS_MAX_PAGES; page++) {
     const body = await fetchJsonStrict<Partial<BackendPage<BackendProductCard>>>(
-      `/products?page=${page}&page_size=${SEO_PRODUCTS_PAGE_SIZE}`,
-      SEO_PRODUCTS_FETCH_INIT,
+      `/products?page=${page}&page_size=${SEO_PRODUCTS_PAGE_SIZE}&${freshnessParam()}`,
+      SEO_FETCH_INIT,
       budget,
     );
     if (!Array.isArray(body.data) || !body.meta) {
@@ -119,8 +126,24 @@ export async function getAllProductsStrict(budget: RetryBudget = createRetryBudg
 /** Categories are the only cross-check available: they report how many products exist. */
 export function assertCatalogConsistent(categories: Category[], products: Product[] | null): void {
   if (categories.length === 0) throw new CatalogUnavailableError("categories list is empty");
-  if (products && products.length === 0 && categories.some((c) => c.productCount > 0)) {
+  if (!products) return;
+  if (products.length === 0 && categories.some((c) => c.productCount > 0)) {
     throw new CatalogUnavailableError("product listing is empty while categories report products");
+  }
+  // A category that reports products but has none in the listing means the two reads came
+  // from different snapshots (the stale-sitemap failure mode): refuse to publish that.
+  const listed = new Set(products.map((p) => p.categorySlug));
+  const parents = new Set(categories.map((c) => c.parentId).filter((id): id is string => id != null));
+  const missing = categories.filter((c) => {
+    if (c.isActive === false || listed.has(c.slug)) return false;
+    // Parents may hold products only through children, so without the direct count they are skipped.
+    if (c.directProductCount != null) return c.directProductCount > 0;
+    return !parents.has(c.id) && c.productCount > 0;
+  });
+  if (missing.length > 0) {
+    throw new CatalogUnavailableError(
+      `categories report products but the listing has none for: ${missing.map((c) => c.slug).join(", ")}`,
+    );
   }
 }
 

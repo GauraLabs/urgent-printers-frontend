@@ -105,6 +105,7 @@ export async function getProducts(filters: ProductFilters): Promise<PaginatedRes
 | `node-domexception` warning | `shadcn` is in `devDependencies` — do not move it to `dependencies` |
 | Prod sitemap stayed stale on Vercel (2026-10-11) | Keep `app/sitemap.xml/route.ts`; never go back to `app/sitemap.ts` (Next 16's generated handler hard-codes `Cache-Control: public, max-age=0, must-revalidate`, suppressing ISR s-maxage) |
 | Theme reverted to dark after reload on `/` (2026-10-11) | Vercel re-renders `/` with pathname `/index`; use `useAppPathname()` (maps `/index`→`/`) for pathname-conditional UI; `ColorModeSync` re-applies the stored mode after hydration recovery; default is light, no OS-dark CSS fallback |
+| Sitemap missed a whole new category + its products for days (2026-10-12) | The sitemap-only catalog fetches (`getSeoCatalog`) served a stale Next data-cache entry on every ISR regeneration. They now use a per-window cache-buster (`freshnessParam()`), not `revalidate`/tags; never use `cache: "no-store"` there (makes the route dynamic and the build falls back to a 10-URL sitemap). Check `X-Sitemap-Generated-At`/`X-Sitemap-Entries` |
 
 ## Branch strategy
 

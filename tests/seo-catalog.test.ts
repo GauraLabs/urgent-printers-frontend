@@ -85,14 +85,15 @@ describe("sitemap never caches a degraded catalog", () => {
       () => productsPage(1, 2, [1, 2]),
       () => productsPage(2, 2, [3]),
     ];
-    const { sitemap } = await load();
+    const { sitemap, api } = await load();
+    const key = api.freshnessParam();
     const urls = (await sitemap()).map((e) => e.url);
     expect(urls).toContain("https://www.urgentprinters.com/products/wedding");
     for (const id of [1, 2, 3]) expect(urls).toContain(`https://www.urgentprinters.com/products/wedding/p-${id}`);
     expect(fetchMock.mock.calls.map((c) => String(c[0]))).toEqual([
-      `${API}/categories?include_children=true`,
-      `${API}/products?page=1&page_size=100`,
-      `${API}/products?page=2&page_size=100`,
+      `${API}/categories?include_children=true&${key}`,
+      `${API}/products?page=1&page_size=100&${key}`,
+      `${API}/products?page=2&page_size=100&${key}`,
     ]);
     expect(unstableCacheRevalidates).toEqual([]);
   });
@@ -174,18 +175,61 @@ describe("sitemap never caches a degraded catalog", () => {
   });
 });
 
-describe("SEO catalog fetches are tag-cached so /api/revalidate/products can bust them", () => {
-  it("products pages use a 300s revalidate and the products tag; categories share getCategories' entry", async () => {
+describe("SEO catalog fetches never reuse a stale data-cache entry", () => {
+  it("every read carries the per-regeneration freshness key and stays statically cacheable", async () => {
     routes = [categoriesOk, () => productsPage(1, 2, [1]), () => productsPage(2, 2, [2])];
     const { api } = await load();
     await api.getSeoCatalog();
-    const inits = fetchMock.mock.calls.map((c) => c[1]?.next);
-    expect(inits).toEqual([
-      { revalidate: 300, tags: ["categories"] },
-      { revalidate: 300, tags: ["products"] },
-      { revalidate: 300, tags: ["products"] },
+    const key = api.freshnessParam();
+    expect(fetchMock.mock.calls.map((c) => String(c[0]))).toEqual([
+      `${API}/categories?include_children=true&${key}`,
+      `${API}/products?page=1&page_size=100&${key}`,
+      `${API}/products?page=2&page_size=100&${key}`,
     ]);
-    expect(api.SEO_PRODUCTS_FETCH_INIT.next?.tags).toEqual([(await import("@/lib/api/products")).PRODUCTS_CACHE_TAG]);
+    expect(fetchMock.mock.calls.every((c) => c[1]?.cache === undefined)).toBe(true);
+  });
+
+  it("the key changes between regenerations that are 300s apart", async () => {
+    const { api } = await load();
+    const t = 1_800_000_000_000;
+    expect(api.freshnessParam(t)).not.toBe(api.freshnessParam(t + 300_000));
+    expect(api.freshnessParam(t)).toBe(api.freshnessParam(t + 1_000));
+  });
+
+  it("a category that reports products but is absent from the listing fails the regeneration", async () => {
+    const stale = () => json({ data: [category(1, "wedding", 3), category(9, "wedding-petal-cones", 15)], message: "" });
+    routes = [stale, () => productsPage(1, 1, [1])];
+    const { api } = await load();
+    await expect(api.getSeoCatalog()).rejects.toThrow(/wedding-petal-cones/);
+  });
+
+  it("parents that only hold products through children are not flagged", async () => {
+    const parent = { ...category(2, "wedding", 5), children: [{ ...category(9, "petals", 5), parent_id: 2 }] };
+    routes = [() => json({ data: [parent], message: "" }), () => json({
+      data: [{ ...card(1, "petals") }], message: "", meta: { page: 1, page_size: 100, total: 1, total_pages: 1 },
+    })];
+    const { api } = await load();
+    await expect(api.getSeoCatalog()).resolves.toBeDefined();
+  });
+
+  it("sitemap carries a generation timestamp in the XML and headers so a frozen copy is detectable", async () => {
+    routes = [categoriesOk, () => productsPage(1, 1, [1])];
+    const { sitemapGet } = await load();
+    const res = await sitemapGet();
+    const xml = await res.text();
+    const at = res.headers.get("X-Sitemap-Generated-At");
+    expect(at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(xml).toContain(`<!-- generated ${at} entries `);
+    expect(res.headers.get("X-Sitemap-Stale")).toBeNull();
+  });
+
+  it("the build-time degraded fallback is flagged X-Sitemap-Stale and logged", async () => {
+    vi.stubEnv("NEXT_PHASE", "phase-production-build");
+    routes = [categoriesOk, () => json({ detail: "boom" }, 500)];
+    const { sitemapGet } = await load();
+    const res = await sitemapGet();
+    expect(res.headers.get("X-Sitemap-Stale")).toBe("degraded-fallback");
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining("sitemap"), expect.anything());
   });
 
   it("sitemap and llms.txt routes revalidate every 300s, matching their fetches", async () => {
