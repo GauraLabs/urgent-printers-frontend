@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   Loader2, MapPin, CreditCard, Tag,
   Banknote, AlertCircle, Lock, RefreshCw,
@@ -11,6 +12,7 @@ import { PriceDisplay } from "@/components/common/PriceDisplay";
 import { SavingsSummary, savingsFromPricing, type Savings } from "@/components/common/SavingsSummary";
 import { cartLinePrice, cartMrpSavings, cartTotalSavings, isLineEligible } from "@/features/cart/savings";
 import { CouponMinNote, CouponScopeNote } from "@/features/cart/CouponScopeNote";
+import { ROUTES } from "@/lib/constants/routes";
 import { formatQty } from "@/lib/quantity";
 import { formatPrice, cn, embeddedGst } from "@/lib/utils";
 import type { CartItem, Address, OrderPreview } from "@/types";
@@ -33,6 +35,8 @@ interface ReviewStepProps {
   haltMessage: string | null;
   /** Set when the server's prices differ from what the customer saw in the cart. */
   priceNotice: string | null;
+  /** Server rejected the personalisation details: blocks paying until the customer fixes them on the product page. */
+  personalisationNotice?: { message: string; href: string | null } | null;
   onRetryPreview?: () => void;
 }
 
@@ -45,7 +49,7 @@ export function ReviewStep({
   items, address, paymentMethod,
   preview, previewLoading, previewError,
   onPlaceOrder, onBack, isPlacing,
-  ordersHalted, haltMessage, priceNotice, onRetryPreview,
+  ordersHalted, haltMessage, priceNotice, personalisationNotice, onRetryPreview,
 }: ReviewStepProps) {
   const appliedCoupon = useCartStore((s) => s.appliedCoupon);
 
@@ -302,6 +306,37 @@ export function ReviewStep({
         </div>
       </div>
 
+      {personalisationNotice && (
+        <div role="alert" className="flex items-start gap-2 p-3 rounded-xl bg-destructive/5 border border-destructive/20 text-xs">
+          <AlertCircle size={14} className="text-destructive shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-destructive">Personalisation needs fixing</p>
+            <p className="text-muted-foreground mt-0.5">{personalisationNotice.message}</p>
+            <p className="text-muted-foreground mt-1">Remove this item from your cart and add it again with the corrected details.</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Link href={ROUTES.cart} className="inline-flex items-center h-8 px-3 rounded-lg border border-border text-xs font-semibold hover:bg-muted transition-colors">
+                Go to cart
+              </Link>
+              {personalisationNotice.href && (
+                <Link href={personalisationNotice.href} className="inline-flex items-center h-8 px-3 rounded-lg border border-border text-xs font-semibold hover:bg-muted transition-colors">
+                  View product
+                </Link>
+              )}
+              {onRetryPreview && (
+                <button
+                  type="button"
+                  onClick={onRetryPreview}
+                  disabled={previewLoading}
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border text-xs font-semibold hover:bg-muted transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw size={12} className={previewLoading ? "animate-spin" : undefined} aria-hidden="true" /> Re-check
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Preview error — shown if server couldn't compute pricing */}
       {previewError && (
         <div className="flex items-start gap-2 p-3 rounded-xl bg-destructive/5 border border-destructive/20 text-xs">
@@ -356,7 +391,7 @@ export function ReviewStep({
         </button>
         <button
           onClick={onPlaceOrder}
-          disabled={isPlacing || previewLoading || ordersHalted}
+          disabled={isPlacing || previewLoading || ordersHalted || Boolean(personalisationNotice)}
           className={cn(
             "flex-1 h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2",
             "bg-brand-orange hover:bg-brand-orange/90 text-brand-orange-foreground",

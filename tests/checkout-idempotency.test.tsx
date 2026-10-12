@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { ApiError } from "@/lib/api/client";
+import { ApiError, NetworkError, ResponseHandlingError } from "@/lib/api/client";
 import { mapCartItem } from "@/lib/api/cart";
 import { mapOrderDetail, mapPreview, isPriceChangedError } from "@/lib/api/orders";
 import { cartItemOnSale, orderOnSale, previewRepriced } from "./fixtures/mrp-contract";
@@ -62,14 +62,14 @@ describe("checkout Idempotency-Key", () => {
     const user = userEvent.setup();
     api.previewOrder.mockResolvedValue(matching);
     api.createOrder
-      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockRejectedValueOnce(new NetworkError("Failed to fetch"))
       .mockResolvedValueOnce({ ...mapOrderDetail(orderOnSale), id: "10" });
 
     const place = await reachReview(user);
     await user.click(place);
 
     await waitFor(() =>
-      expect(toast.error).toHaveBeenCalledWith(expect.stringMatching(/Connection lost.*won't be charged twice/), expect.anything())
+      expect(toast.error).toHaveBeenCalledWith(expect.stringMatching(/Connection lost.*try again.*won't be charged twice/), expect.anything())
     );
     expect(replace).not.toHaveBeenCalled();
 
@@ -92,6 +92,8 @@ describe("checkout Idempotency-Key", () => {
       expect(toast.error).toHaveBeenCalledWith(expect.stringMatching(/still being processed — please wait/), expect.anything())
     );
     expect(screen.getByRole("button", { name: /Place Order|Placing/ })).toBeDisabled();
+    await new Promise((r) => setTimeout(r, 1800));
+    expect(screen.getByRole("button", { name: /Place Order|Placing/ })).toBeDisabled();
     const again = await screen.findByRole("button", { name: /Place Order/ }, { timeout: 6000 });
     await waitFor(() => expect(again).toBeEnabled());
     await user.click(again);
@@ -99,6 +101,26 @@ describe("checkout Idempotency-Key", () => {
     expect(keyOf(1)).toBe(keyOf(0));
     await waitFor(() => expect(replace).toHaveBeenCalled());
   }, 12000);
+
+  it("a mapping failure after a 2xx is not 'connection lost': points to My Orders and keeps the key", async () => {
+    const user = userEvent.setup();
+    api.previewOrder.mockResolvedValue(matching);
+    api.createOrder
+      .mockRejectedValueOnce(new ResponseHandlingError("bad shape", new TypeError("x is undefined")))
+      .mockResolvedValueOnce({ ...mapOrderDetail(orderOnSale), id: "10" });
+
+    await user.click(await reachReview(user));
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        "Your order may have been created — please check My Orders before trying again.",
+        expect.objectContaining({ action: expect.objectContaining({ label: "My Orders" }) })
+      )
+    );
+    expect(toast.error).not.toHaveBeenCalledWith(expect.stringMatching(/Connection lost/), expect.anything());
+    await user.click(await screen.findByRole("button", { name: /Place Order/ }));
+    await waitFor(() => expect(api.createOrder).toHaveBeenCalledTimes(2));
+    expect(keyOf(1)).toBe(keyOf(0));
+  });
 
   it("keeps the key for 429 but resets it for 422", async () => {
     const user = userEvent.setup();
@@ -187,7 +209,7 @@ describe("checkout Idempotency-Key", () => {
     const user = userEvent.setup();
     api.previewOrder.mockResolvedValueOnce(matching).mockResolvedValueOnce(repriced);
     api.createOrder
-      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockRejectedValueOnce(new NetworkError("Failed to fetch"))
       .mockRejectedValueOnce(new ApiError("Prices have changed", 409, "price_changed"))
       .mockResolvedValueOnce({ ...mapOrderDetail(orderOnSale), id: "10" });
 
@@ -205,5 +227,55 @@ describe("checkout Idempotency-Key", () => {
     await waitFor(() => expect(api.createOrder).toHaveBeenCalledTimes(3));
     expect(api.createOrder.mock.calls[2][0].expectedTotal).toBe(1100);
     expect(keyOf(2)).not.toBe(keyOf(1));
+  });
+
+  it("a non-JSON 2xx on create (captive portal) is 'connection lost' and keeps the key", async () => {
+    const user = userEvent.setup();
+    api.previewOrder.mockResolvedValue(matching);
+    api.createOrder
+      .mockRejectedValueOnce(new NetworkError("Unexpected non-JSON response"))
+      .mockResolvedValueOnce({ ...mapOrderDetail(orderOnSale), id: "10" });
+    await user.click(await reachReview(user));
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith(expect.stringMatching(/Connection lost/), expect.anything()));
+    await user.click(await screen.findByRole("button", { name: /Place Order/ }));
+    await waitFor(() => expect(api.createOrder).toHaveBeenCalledTimes(2));
+    expect(keyOf(1)).toBe(keyOf(0));
+  });
+
+  it("a personalisation 422 on create sets the review notice too", async () => {
+    const user = userEvent.setup();
+    api.previewOrder.mockResolvedValue(matching);
+    const pid = useCartStore.getState().items[0].product.id;
+    api.createOrder.mockRejectedValueOnce(
+      new ApiError("Please fill in: Your name", 422, "personalisation_required", { error: "personalisation_required", product_id: String(pid), fields: [] })
+    );
+    await user.click(await reachReview(user));
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toContain("Please fill in: Your name");
+    expect(screen.getByRole("button", { name: /Place Order/ })).toBeDisabled();
+  });
+
+  it("a personalisation 422 on preview shows on the review step with a link, and blocks paying", async () => {
+    const user = userEvent.setup();
+    const pid = useCartStore.getState().items[0].product.id;
+    api.previewOrder.mockRejectedValue(
+      new ApiError("Please fill in: Your name", 422, "personalisation_required", {
+        error: "personalisation_required", fields: [{ id: "your_name", label: "Your name" }], product_id: String(pid),
+      })
+    );
+    render(<CheckoutPageClient siteStatus={status} />);
+    await user.click(screen.getByText("address-next"));
+    await user.click(screen.getByText("payment-next"));
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toContain("Please fill in: Your name");
+    expect(screen.getByRole("link", { name: "View product" }).getAttribute("href")).toMatch(/^\/products\//);
+    expect(screen.getByRole("link", { name: "Go to cart" }).getAttribute("href")).toBe("/cart");
+    expect(alert.textContent).toContain("Remove this item from your cart and add it again");
+    expect(screen.getByRole("button", { name: /Place Order/ })).toBeDisabled();
+    api.previewOrder.mockResolvedValue(matching);
+    await user.click(screen.getByRole("button", { name: /Re-check/ }));
+    await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+    await waitFor(() => expect(screen.getByRole("button", { name: /Place Order/ })).toBeEnabled());
+    expect(screen.queryByText(/Could not confirm pricing/)).toBeNull();
   });
 });

@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { checkServiceability } from "@/lib/api/shipping";
+import { toAsciiDigits } from "@/lib/digits";
+import { ApiError } from "@/lib/api/client";
 import type { ServiceabilityResult } from "@/types";
 
 // Same regex discipline as lib/pincode.ts — 6 digits, checked before any request fires.
@@ -15,7 +17,14 @@ type CheckState =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "success"; result: ServiceabilityResult }
+  | { status: "invalid"; message: string }
   | { status: "error" };
+
+// Only 400/404/422 mean the pincode itself was rejected (the API answers 422 for e.g. 000000);
+// every other failure (429, 401/403, 5xx, network) gets the "try again in a bit" message.
+function isRejectedPincode(err: unknown): boolean {
+  return err instanceof ApiError && (err.status === 400 || err.status === 404 || err.status === 422);
+}
 
 function formatEta(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("en-IN", {
@@ -48,19 +57,23 @@ export function DeliveryCheck({ turnaroundDays }: DeliveryCheckProps) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!isValidFormat || state.status === "loading") return;
+    if (state.status === "loading") return;
+    if (!isValidFormat) {
+      setState({ status: "invalid", message: "Enter a valid 6-digit pincode" });
+      return;
+    }
 
     setState({ status: "loading" });
     try {
       const result = await checkServiceability(pincode);
       setState({ status: "success", result });
-    } catch {
-      setState({ status: "error" });
+    } catch (err) {
+      setState(isRejectedPincode(err) ? { status: "invalid", message: "Enter a valid pincode" } : { status: "error" });
     }
   }
 
   function handlePincodeChange(value: string) {
-    setPincode(value.replace(/\D/g, "").slice(0, 6));
+    setPincode(toAsciiDigits(value).replace(/\D/g, "").slice(0, 6));
     setState({ status: "idle" });
   }
 
@@ -76,14 +89,13 @@ export function DeliveryCheck({ turnaroundDays }: DeliveryCheckProps) {
           value={pincode}
           onValueChange={(value) => handlePincodeChange(value)}
           inputMode="numeric"
-          maxLength={6}
           placeholder="Enter 6-digit pincode"
           aria-label="Pincode"
           className="h-10"
         />
         <Button
           type="submit"
-          disabled={!isValidFormat || state.status === "loading"}
+          disabled={state.status === "loading"}
           className="h-10 px-4 shrink-0"
         >
           {state.status === "loading" ? <Loader2 size={14} className="animate-spin" /> : "Check"}
@@ -118,6 +130,10 @@ export function DeliveryCheck({ turnaroundDays }: DeliveryCheckProps) {
         <Badge variant="destructive" className="mt-2.5">
           Not deliverable to this pincode
         </Badge>
+      )}
+
+      {state.status === "invalid" && (
+        <p role="alert" className="text-xs text-destructive mt-2.5">{state.message}</p>
       )}
 
       {state.status === "error" && (

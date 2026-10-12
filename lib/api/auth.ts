@@ -1,6 +1,7 @@
 import type { User } from "@/types";
 import { apiFetch, ApiError } from "./client";
 import { logApiError } from "./logApiError";
+import { refreshSession, broadcastLogout } from "./refreshSession";
 
 const AUTH = "/auth";
 
@@ -223,15 +224,14 @@ export async function getMe(token: string): Promise<User | null> {
 
 export async function refreshTokens(): Promise<string | null> {
   // REAL API: POST /api/v1/auth/refresh  (refresh_token sent automatically as httpOnly cookie)
-  try {
-    const res = await apiFetch<{ access_token: string }>(`${AUTH}/refresh`, {
-      method: "POST",
-    });
-    return res.access_token;
-  } catch (err) {
-    logApiError("refreshTokens", err);
-    return null;
-  }
+  // Single-flight across tabs — see lib/api/refreshSession.ts.
+  // null means the session is really gone (401/403); a transient failure (offline, timeout, 5xx, 429) throws
+  // so callers keep the session instead of logging the customer out.
+  const outcome = await refreshSession();
+  if (outcome.kind === "token") return outcome.token;
+  if (outcome.kind === "unauthenticated") return null;
+  logApiError("refreshTokens", outcome.error);
+  throw outcome.error;
 }
 
 export async function logout(token?: string): Promise<void> {
@@ -240,6 +240,7 @@ export async function logout(token?: string): Promise<void> {
     method: "POST",
     ...(token && { headers: { Authorization: `Bearer ${token}` } }),
   });
+  broadcastLogout();
 }
 
 // ─── Legacy (email OTP verify — kept for email registration path if needed) ───

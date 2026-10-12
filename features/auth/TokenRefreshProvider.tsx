@@ -10,6 +10,7 @@ export function TokenRefreshProvider({ children }: { children: React.ReactNode }
   const token           = useAuthStore((s) => s.token);
   const setUser         = useAuthStore((s) => s.setUser);
   const clearUser       = useAuthStore((s) => s.clearUser);
+  const setToken        = useAuthStore((s) => s.setToken);
 
   useEffect(() => {
     if (!_isHydrated) return;
@@ -19,19 +20,32 @@ export function TokenRefreshProvider({ children }: { children: React.ReactNode }
     // isAuthenticated is true (from localStorage) but token is gone (page refresh).
     // Restore the session: refresh the access token then fetch the user profile.
     // No PII is kept in localStorage — profile always comes from the API.
-    refreshTokens().then(async (newToken) => {
-      if (!newToken) {
-        clearUser();
-        return;
-      }
-      const user = await getMe(newToken);
-      if (user) {
-        setUser(user, newToken);
-      } else {
-        clearUser();
-      }
-    });
-  }, [_isHydrated, isAuthenticated, token, setUser, clearUser]);
+    let cancelled = false;
+    function attempt() {
+      refreshTokens()
+        .then(async (newToken) => {
+          if (cancelled) return;
+          if (!newToken) {
+            clearUser();
+            return;
+          }
+          const user = await getMe(newToken);
+          if (cancelled) return;
+          // getMe is null on any failure; the refresh itself succeeded, so keep the session and token.
+          if (user) setUser(user, newToken);
+          else setToken(newToken);
+        })
+        .catch(() => {
+          // Transient (offline, timeout, 5xx, 429): keep the session and try again once we're back online.
+          if (!cancelled) window.addEventListener("online", attempt, { once: true });
+        });
+    }
+    attempt();
+    return () => {
+      cancelled = true;
+      window.removeEventListener("online", attempt);
+    };
+  }, [_isHydrated, isAuthenticated, token, setUser, setToken, clearUser]);
 
   return <>{children}</>;
 }

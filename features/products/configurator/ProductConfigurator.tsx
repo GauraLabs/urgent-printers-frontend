@@ -1,5 +1,6 @@
 "use client";
 
+import { trimTemplateData } from "@/lib/templateFields";
 import { useState, forwardRef, useEffect } from "react";
 import { ShoppingBag, CheckCircle2, Info } from "lucide-react";
 import { motion, AnimatePresence, usePresence, useAnimationControls } from "motion/react";
@@ -331,7 +332,7 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
         optionMultiplier,
         artworkFileKey,
         artworkFileName,
-        templateData,
+        templateData: trimTemplateData(templateData),
       };
 
       addItem(

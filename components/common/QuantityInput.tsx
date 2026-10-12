@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toAsciiDigits, normalizeDecimalComma } from "@/lib/digits";
 import { clampQuantity, formatQty, MAX_LINE_QUANTITY, normalizeUnitLabel, stepQuantity } from "@/lib/quantity";
 
 const DEBOUNCE_MS = 150;
@@ -61,12 +62,17 @@ export function QuantityInput({ value, min, max, unitLabel, onChange, onEmptyCha
   }, []);
 
   function handleType(raw: string) {
-    const digits = raw.replace(/\D/g, "").slice(0, MAX_DIGITS);
+    // "12.5" is not 125: drop the fraction instead of gluing the digits together.
+    const text = normalizeDecimalComma(toAsciiDigits(raw));
+    const hasFraction = /^[^.]*\.\d*[1-9]/.test(text);
+    const whole = text.includes(".") ? text.slice(0, text.indexOf(".")) : text;
+    const digits = whole.replace(/\D/g, "").slice(0, MAX_DIGITS);
     setDraft(digits);
     setNotice(null);
     clearTimeout(noticeRef.current);
     const typed = parseDigits(digits);
     onEmptyChange?.(typed === 0);
+    if (hasFraction) showNotice("Enter a whole number — decimals are not allowed");
     clearTimeout(debounceRef.current);
     if (typed === 0) return;
     debounceRef.current = setTimeout(() => onChange(clampQuantity(typed, min, max)), DEBOUNCE_MS);
@@ -85,7 +91,7 @@ export function QuantityInput({ value, min, max, unitLabel, onChange, onEmptyCha
     const clamped = clampQuantity(typed, min, max);
     onEmptyChange?.(false);
     onChange(clamped);
-    if (clamped !== typed) showNotice(`Adjusted to ${formatQty(clamped, unit)}`);
+    if (clamped !== typed) showNotice(`Adjusted to ${formatQty(clamped, unit)} (${clamped > typed ? "minimum" : "maximum"} order)`);
   }
 
   function step(dir: "up" | "down") {
@@ -126,7 +132,6 @@ export function QuantityInput({ value, min, max, unitLabel, onChange, onEmptyCha
             pattern="[0-9]*"
             enterKeyHint="done"
             autoComplete="off"
-            maxLength={MAX_DIGITS}
             aria-label="Quantity"
             aria-describedby={helper ? hintId : undefined}
             value={shown}
