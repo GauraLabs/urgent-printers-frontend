@@ -25,6 +25,41 @@ export class ApiError extends Error {
   }
 }
 
+// fetch() itself rejected: offline, DNS failure, connection refused, CORS/TLS. No HTTP response
+// exists, so the request may or may not have reached the server.
+export class NetworkError extends Error {
+  readonly cause?: unknown;
+
+  constructor(message = "Network request failed", cause?: unknown) {
+    super(message);
+    this.name = "NetworkError";
+    this.cause = cause;
+  }
+}
+
+// The server answered 2xx but we couldn't read or map the result. The server-side effect
+// (e.g. a created order) has happened; this is NOT a connectivity problem.
+export class ResponseHandlingError extends Error {
+  readonly cause?: unknown;
+
+  constructor(message = "Could not read the server response", cause?: unknown) {
+    super(message);
+    this.name = "ResponseHandlingError";
+    this.cause = cause;
+  }
+}
+
+async function safeFetch(url: string, init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(url, init);
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") throw err;
+    // Only fetch's own rejections (TypeError / DOMException) are connectivity; anything else is a bug and propagates.
+    if (err instanceof TypeError || err instanceof DOMException) throw new NetworkError(err.message, err);
+    throw err;
+  }
+}
+
 export interface BackendMeta {
   page: number;
   page_size: number;
@@ -58,29 +93,25 @@ async function handleUnauthorized(
   if (!hasAuthHeader || typeof window === "undefined" || !API_URL) return null;
 
   try {
-    const refreshRes = await fetch(`${API_URL}/auth/refresh`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-    });
+    const { refreshSession } = await import("./refreshSession");
+    const { useAuthStore } = await import("@/features/auth/store");
+    const outcome = await refreshSession();
 
-    if (!refreshRes.ok) {
-      // Refresh token expired — log the user out silently
-      const { useAuthStore } = await import("@/features/auth/store");
+    if (outcome.kind === "unauthenticated") {
+      // The server says the session is gone — log the user out silently
       useAuthStore.getState().clearUser();
       return null;
     }
+    // Offline / timeout / 5xx / 429: keep the session and let the caller see the real failure.
+    if (outcome.kind === "transient") throw outcome.error;
 
-    const refreshData = await refreshRes.json() as { data?: { access_token: string } };
-    const newToken = refreshData.data?.access_token;
-    if (!newToken) return null;
-
-    // Persist new token in memory
-    const { useAuthStore } = await import("@/features/auth/store");
+    // A logout while the refresh was in flight must not be undone by its late token.
+    if (!useAuthStore.getState().isAuthenticated) return null;
+    const newToken = outcome.token;
     useAuthStore.getState().setToken(newToken);
 
     // Retry the original request with the new token
-    const retryRes = await fetch(url, {
+    const retryRes = await safeFetch(url, {
       ...init,
       credentials: "include",
       headers: {
@@ -92,17 +123,25 @@ async function handleUnauthorized(
 
     return retryRes.ok ? retryRes : null; // retry also failed — fall through to error
   } catch (err) {
+    if (err instanceof NetworkError || err instanceof ApiError) throw err;
     logApiError("handleUnauthorized", err);
     return null;
   }
 }
 
-async function parseEnvelope<T>(res: Response): Promise<T> {
-  if (res.status === 204) return undefined as T;
-  const json: unknown = await res.json();
-  if (json !== null && typeof json === "object" && "data" in json) {
-    return (json as { data: T }).data;
+// A 2xx whose body isn't JSON is a captive portal / proxy page, not our API: treat it as connectivity.
+async function readJson(res: Response): Promise<unknown> {
+  try {
+    return await res.json();
+  } catch (err) {
+    throw new NetworkError("Unexpected non-JSON response", err);
   }
+}
+
+async function parseSuccess<T>(res: Response): Promise<T> {
+  if (res.status === 204) return undefined as T;
+  const json = await readJson(res);
+  if (json !== null && typeof json === "object" && "data" in json) return (json as { data: T }).data;
   return json as T;
 }
 
@@ -110,7 +149,7 @@ async function parseEnvelope<T>(res: Response): Promise<T> {
 
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const url = `${API_URL}${path}`;
-  const res = await fetch(url, {
+  const res = await safeFetch(url, {
     ...init,
     credentials: "include",
     headers: {
@@ -119,12 +158,12 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     },
   });
 
-  if (res.ok) return parseEnvelope<T>(res);
+  if (res.ok) return parseSuccess<T>(res);
 
   if (res.status === 401) {
     const hasAuth = !!(init?.headers as Record<string, string> | undefined)?.["Authorization"];
     const retryRes = await handleUnauthorized(url, init, hasAuth);
-    if (retryRes) return parseEnvelope<T>(retryRes);
+    if (retryRes) return parseSuccess<T>(retryRes);
   }
 
   let detail = "";
@@ -141,20 +180,24 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   throw new ApiError(codedErrorMessage(code, detail) ?? (detail || `API ${res.status}: ${path}`), res.status, code, body);
 }
 
+async function parseSuccessPage<T>(res: Response): Promise<BackendPage<T>> {
+  return (await readJson(res)) as BackendPage<T>;
+}
+
 export async function apiFetchPage<T>(path: string, init?: RequestInit): Promise<BackendPage<T>> {
   const url = `${API_URL}${path}`;
-  const res = await fetch(url, {
+  const res = await safeFetch(url, {
     ...init,
     credentials: "include",
     headers: { "Content-Type": "application/json", ...init?.headers },
   });
 
-  if (res.ok) return res.json() as Promise<BackendPage<T>>;
+  if (res.ok) return parseSuccessPage<T>(res);
 
   if (res.status === 401) {
     const hasAuth = !!(init?.headers as Record<string, string> | undefined)?.["Authorization"];
     const retryRes = await handleUnauthorized(url, init, hasAuth);
-    if (retryRes) return retryRes.json() as Promise<BackendPage<T>>;
+    if (retryRes) return parseSuccessPage<T>(retryRes);
   }
 
   throw new ApiError(`API ${res.status}: ${path}`, res.status);

@@ -1,4 +1,4 @@
-import { ApiError } from "./client";
+import { ApiError, NetworkError } from "./client";
 
 // Used to decide whether a cart/checkout fetch failure should flip on the
 // "degraded" site-status banner (see features/site-status/trackConnectivity.ts).
@@ -13,13 +13,9 @@ export function isInfrastructureFailure(err: unknown): boolean {
     return err.status >= 500;
   }
 
-  // Browsers throw a TypeError ("Failed to fetch" / "NetworkError...") when
-  // fetch() can't even reach the server — offline, DNS failure, connection
-  // refused. This never happens for a response that actually came back,
-  // including 4xx business-logic errors like validateCoupon's own
-  // `throw new Error(data.message)` for an invalid code — those are plain
-  // Error instances, not TypeError, so they're correctly excluded below.
-  if (err instanceof TypeError) return true;
+  // apiFetch converts a rejected fetch() into NetworkError. A bare TypeError is NOT
+  // connectivity: it is just as likely a mapping bug after a 2xx response.
+  if (err instanceof NetworkError) return true;
 
   // A fetch aborted by a timeout surfaces as a DOMException named AbortError.
   if (err instanceof DOMException && err.name === "AbortError") return true;

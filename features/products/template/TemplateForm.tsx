@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState, type ClipboardEvent } from "react";
 import { cn } from "@/lib/utils";
 import type { TemplateField } from "@/types";
+import { fieldMaxLength } from "@/lib/templateFields";
 
 interface TemplateFormProps {
   fields: TemplateField[];
@@ -15,11 +16,26 @@ export function TemplateForm({ fields, onChange, showErrors = false }: TemplateF
     () => Object.fromEntries(fields.map((f) => [f.id, ""]))
   );
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const pastedRef = useRef<string | null>(null);
+  const [trimmed, setTrimmed] = useState<Record<string, boolean>>({});
 
   function handleChange(id: string, value: string) {
+    if (pastedRef.current === id) pastedRef.current = null;
+    else setTrimmed((t) => (t[id] ? { ...t, [id]: false } : t));
     const next = { ...values, [id]: value };
     setValues(next);
     onChange(next);
+  }
+
+  // The browser silently cuts a paste at maxLength; compare before it does so the customer is told.
+  function handlePaste(field: TemplateField, e: ClipboardEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    const el = e.currentTarget;
+    const pasted = e.clipboardData.getData("text/plain") || e.clipboardData.getData("text");
+    const selected = (el.selectionEnd ?? 0) - (el.selectionStart ?? 0);
+    if (el.value.length - selected + pasted.length > fieldMaxLength(field)) {
+      pastedRef.current = field.id;
+      setTrimmed((t) => ({ ...t, [field.id]: true }));
+    }
   }
 
   function handleBlur(id: string) {
@@ -53,8 +69,9 @@ export function TemplateForm({ fields, onChange, showErrors = false }: TemplateF
                 value={values[field.id]}
                 onChange={(e) => handleChange(field.id, e.target.value)}
                 onBlur={() => handleBlur(field.id)}
+                onPaste={(e) => handlePaste(field, e)}
                 placeholder={field.placeholder}
-                maxLength={field.maxLength}
+                maxLength={fieldMaxLength(field)}
                 rows={3}
                 className={cn(inputBase, borderClass, "resize-none")}
               />
@@ -64,8 +81,9 @@ export function TemplateForm({ fields, onChange, showErrors = false }: TemplateF
                 value={values[field.id]}
                 onChange={(e) => handleChange(field.id, e.target.value)}
                 onBlur={() => handleBlur(field.id)}
+                onPaste={(e) => handlePaste(field, e)}
                 placeholder={field.placeholder}
-                maxLength={field.maxLength}
+                maxLength={fieldMaxLength(field)}
                 className={cn(inputBase, borderClass)}
               />
             )}
@@ -73,13 +91,13 @@ export function TemplateForm({ fields, onChange, showErrors = false }: TemplateF
             <div className="flex justify-between mt-1">
               {hasError
                 ? <p className="text-destructive text-[11px]">{field.label} is required</p>
-                : <span />
+                : trimmed[field.id]
+                  ? <p role="status" className="text-muted-foreground text-[11px]">Trimmed to {fieldMaxLength(field)} characters</p>
+                  : <span />
               }
-              {field.maxLength && values[field.id] && (
-                <p className="text-muted-foreground text-[10px]">
-                  {values[field.id].length}/{field.maxLength}
-                </p>
-              )}
+              <p className="text-muted-foreground text-[10px]" aria-live="off">
+                {values[field.id].length}/{fieldMaxLength(field)}
+              </p>
             </div>
           </div>
         );

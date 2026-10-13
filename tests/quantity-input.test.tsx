@@ -33,7 +33,7 @@ describe("QuantityInput", () => {
     expect(field().getAttribute("pattern")).toBe("[0-9]*");
     expect(field().getAttribute("enterkeyhint")).toBe("done");
     expect(field().getAttribute("autocomplete")).toBe("off");
-    expect(field().maxLength).toBe(7);
+    expect(field().maxLength).toBe(-1);
   });
 
   it("strips non-digits as typed and commits the clamped value after the debounce", () => {
@@ -59,9 +59,33 @@ describe("QuantityInput", () => {
     expect(onValue).toHaveBeenLastCalledWith(40);
     fireEvent.blur(field());
     expect(field().value).toBe("40");
-    expect(screen.getByRole("status").textContent).toBe("Adjusted to 40 pcs");
+    expect(screen.getByRole("status").textContent).toBe("Adjusted to 40 pcs (minimum order)");
     act(() => void vi.advanceTimersByTime(3000));
     expect(screen.getByRole("status").textContent).toBe("");
+  });
+
+  it("never turns a decimal into 10x: floors it and says so", () => {
+    render(<Harness min={1} start={1} />);
+    fireEvent.focus(field());
+    fireEvent.change(field(), { target: { value: "12.5" } });
+    expect(field().value).toBe("12");
+    expect(screen.getByRole("status").textContent).toMatch(/whole number/);
+  });
+
+  it("pastes with grouping, Devanagari/fullwidth digits and decimal commas", () => {
+    render(<Harness min={1} start={1} max={null} />);
+    fireEvent.focus(field());
+    fireEvent.change(field(), { target: { value: "10,00,000" } });
+    expect(field().value).toBe("1000000");
+    fireEvent.change(field(), { target: { value: "१२०" } });
+    expect(field().value).toBe("120");
+    fireEvent.change(field(), { target: { value: "３０" } });
+    expect(field().value).toBe("30");
+    fireEvent.change(field(), { target: { value: "12,5" } });
+    expect(field().value).toBe("12");
+    expect(screen.getByRole("status").textContent).toMatch(/whole number/);
+    fireEvent.change(field(), { target: { value: "10,000" } });
+    expect(field().value).toBe("10000");
   });
 
   it("explains the maximum and snaps down on Enter", () => {
@@ -71,7 +95,7 @@ describe("QuantityInput", () => {
     expect(screen.getByRole("status").textContent).toBe("Maximum order is 5,000 pcs");
     fireEvent.keyDown(field(), { key: "Enter" });
     expect(field().value).toBe("5000");
-    expect(screen.getByRole("status").textContent).toBe("Adjusted to 5,000 pcs");
+    expect(screen.getByRole("status").textContent).toBe("Adjusted to 5,000 pcs (maximum order)");
   });
 
   it("restores the last valid value when left empty and reports emptiness meanwhile", () => {

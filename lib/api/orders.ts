@@ -5,7 +5,7 @@ import type {
   OrderPreview, OrderPreviewItem,
   ProofInfo, ProofApprovalResult, ItemProofInfo,
 } from "@/types";
-import { apiFetch, apiFetchPage, API_URL, ApiError } from "./client";
+import { apiFetch, apiFetchPage, API_URL, ApiError, ResponseHandlingError } from "./client";
 import { logApiError } from "./logApiError";
 import { normalizeUnitLabel } from "@/lib/quantity";
 
@@ -417,7 +417,11 @@ export async function createOrder(
     },
     body: JSON.stringify(buildOrderBody(data)),
   });
-  return mapOrderDetail(raw);
+  try {
+    return mapOrderDetail(raw);
+  } catch (err) {
+    throw new ResponseHandlingError(undefined, err);
+  }
 }
 
 export async function verifyPayment(

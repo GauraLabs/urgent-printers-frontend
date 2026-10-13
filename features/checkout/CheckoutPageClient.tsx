@@ -10,7 +10,7 @@ import { PaymentStep, type PaymentMethod } from "@/features/checkout/PaymentStep
 import { ReviewStep } from "@/features/checkout/ReviewStep";
 import { useCartStore } from "@/features/cart/store";
 import { useAuthStore } from "@/features/auth/store";
-import { ApiError } from "@/lib/api/client";
+import { ApiError, NetworkError, ResponseHandlingError } from "@/lib/api/client";
 import { getPreviousPaymentInfo } from "@/lib/api/orders";
 import { createOrder, previewOrder, verifyPayment, isPriceChangedError, isQuantityLimitError, isCodUnavailableError, getCart, getSiteStatus } from "@/lib/api";
 import { revalidateAppliedCoupon } from "@/features/cart/couponRevalidation";
@@ -19,6 +19,7 @@ import { resolveCod, codBlockApplies, type ServerCodBlock } from "./cod";
 import { applyPreviewPrices, pricesDiffer } from "./repricing";
 import type { SiteStatus } from "@/lib/api/siteStatus";
 import { isInfrastructureFailure } from "@/lib/api/errorClassification";
+import { showPersonalisationError, describePersonalisationError, type PersonalisationNotice } from "@/features/cart/personalisationToast";
 import { trackConnectivity } from "@/features/site-status/trackConnectivity";
 import { ROUTES } from "@/lib/constants/routes";
 import { RAZORPAY_THEME_COLOR } from "@/lib/constants/payment";
@@ -63,6 +64,7 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError,   setPreviewError]   = useState<string | null>(null);
   const [priceNotice,    setPriceNotice]    = useState<string | null>(null);
+  const [personalisationNotice, setPersonalisationNotice] = useState<PersonalisationNotice | null>(null);
   const [refreshedStatus, setRefreshedStatus] = useState<SiteStatus | null>(null);
   const liveStatus = refreshedStatus ?? siteStatus;
   const [codNotice,      setCodNotice]      = useState<string | null>(null);
@@ -161,6 +163,7 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
     reviewStep = false
   ): Promise<OrderPreview | null> {
     setPreviewLoading(true);
+    setPersonalisationNotice(null);
     try {
       const request = buildRequest(addr);
       let clientPricing: ClientPricing | null = null;
@@ -187,6 +190,12 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
     } catch (err) {
       if (isQuantityLimitError(err)) {
         void sendBackToCart(err, token);
+      }
+      const personalisation = describePersonalisationError(err, items);
+      if (personalisation) {
+        setPersonalisationNotice(personalisation);
+        setPreviewError(null);
+        return null;
       }
       setPreviewError(
         isInfrastructureFailure(err)
@@ -265,8 +274,14 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
     setIsPlacing(false);
   }
 
+  const cooldownUntilRef = useRef(0);
+  const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
+  }, []);
+
   async function handlePlaceOrder() {
-    if (!address || hasUnavailable || inFlightRef.current) return;
+    if (!address || hasUnavailable || inFlightRef.current || Date.now() < cooldownUntilRef.current) return;
     const token = useAuthStore.getState().token;
     if (!token) {
       toast.error("Session expired. Please sign in again.");
@@ -326,15 +341,29 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
         if (err instanceof ApiError && err.code === "idempotency_request_in_progress") {
           // The first attempt is still running server-side: same key, and no new tap until the cooldown ends.
           toast.error("Your order is still being processed — please wait a moment.", { duration: IN_PROGRESS_COOLDOWN_MS });
-          setTimeout(() => release(true), IN_PROGRESS_COOLDOWN_MS);
+          cooldownUntilRef.current = Date.now() + IN_PROGRESS_COOLDOWN_MS;
+          cooldownTimerRef.current = setTimeout(() => {
+            cooldownTimerRef.current = null;
+            release(true);
+          }, IN_PROGRESS_COOLDOWN_MS);
+          return;
+        }
+        if (err instanceof ResponseHandlingError) {
+          // The server answered 2xx, so the order very likely exists; keep the key so a blind retry replays it, never duplicates it.
+          toast.error("Your order may have been created — please check My Orders before trying again.", {
+            duration: 15000,
+            action: { label: "My Orders", onClick: () => router.push(ROUTES.accountOrders) },
+          });
+          release(true);
           return;
         }
         if (err instanceof ApiError) {
           if (DEFINITIVE_ERROR_STATUSES.has(err.status)) idempotencyRef.current = null;
           throw err;
         }
+        if (!(err instanceof NetworkError) && !isInfrastructureFailure(err)) throw err;
         toast.error(
-          "Connection lost while placing your order. Please check your connection and tap Place Order again — you won't be charged twice.",
+          "Connection lost while placing your order. Please check your connection and try again — you won't be charged twice.",
           { duration: 10000 }
         );
         release(true);
@@ -485,6 +514,8 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
         toast.error(msg);
         void getSiteStatus().then(setRefreshedStatus);
         void runPreview(address, token, "Totals below use the latest prices. Review them before placing your order.");
+      } else if (showPersonalisationError(err, items, (href) => router.push(href))) {
+        setPersonalisationNotice(describePersonalisationError(err, items));
       } else {
         toast.error(err instanceof Error ? err.message : "Failed to place order. Please try again.");
       }
@@ -521,6 +552,7 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
           ordersHalted={siteStatus.orders_halted}
           haltMessage={siteStatus.message}
           priceNotice={priceNotice}
+          personalisationNotice={personalisationNotice}
           onRetryPreview={retryPreview}
         />
       )}
