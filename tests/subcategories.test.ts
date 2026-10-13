@@ -321,3 +321,43 @@ describe("root-only category tiles and nested filter list", () => {
     expect(nestCategories(all).map((n) => `${n.depth}:${n.category.id}`)).toEqual(["0:a", "1:a1", "1:a2", "0:b", "0:orphan"]);
   });
 });
+
+describe("category page data hardening", () => {
+  const live: BackendCategory = {
+    id: 9, name: "Wedding Petal Cones", slug: "wedding-petal-cones", description: "d", icon_name: null,
+    meta_title: "t", meta_description: "m", is_active: true, parent_id: 2, sort_order: 6, product_count: 15,
+    thumbnail_url: null, medium_url: null, banner_url: null, video_url: null, video_thumbnail_url: null,
+    seo_intro: "Intro line.", seo_body: "Para one.\n\nPara two.", google_product_category: "5455",
+    faqs: [{ question: "Size?", answer: "A5." }],
+  };
+
+  it("maps google_product_category and populated SEO copy, and builds every page JSON-LD", () => {
+    const c = mapCategory(live);
+    expect(c.googleProductCategory).toBe("5455");
+    expect(toParagraphs(c.seoBody)).toEqual(["Para one.", "Para two."]);
+    const faqs = cleanFaqs(c.faqs);
+    expect(buildFaqPageJsonLd(faqs)).not.toBeNull();
+    expect(() => buildCategoryMetadata(c, {})).not.toThrow();
+    expect(() => serializeJsonLd(buildBreadcrumbJsonLd(categoryCrumbs(c)))).not.toThrow();
+  });
+
+  it("never throws on odd field types (numbers, objects, nulls, junk faqs)", () => {
+    const odd = {
+      ...live,
+      google_product_category: 5709,
+      seo_intro: 42,
+      seo_body: { x: 1 },
+      meta_title: null,
+      faqs: [null, "x", { question: 7, answer: null }, { question: "Q", answer: "A" }],
+    } as unknown as BackendCategory;
+    const c = mapCategory(odd);
+    expect(c.googleProductCategory).toBe("5709");
+    expect(toParagraphs(c.seoIntro)).toEqual(["42"]);
+    expect(toParagraphs(c.seoBody)).toEqual([]);
+    expect(cleanFaqs(c.faqs)).toEqual([{ question: "Q", answer: "A" }]);
+    expect(cleanFaqs({ not: "array" })).toEqual([]);
+    expect(cleanFaqs(null)).toEqual([]);
+    expect(() => buildCategoryMetadata(c, {})).not.toThrow();
+    expect(mapCategory({ ...live, faqs: "oops" } as unknown as BackendCategory).faqs).toEqual([]);
+  });
+});
