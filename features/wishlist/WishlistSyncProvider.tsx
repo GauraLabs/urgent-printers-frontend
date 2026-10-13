@@ -45,6 +45,7 @@ export function WishlistSyncProvider({ children }: { children: React.ReactNode }
     void (async () => {
       try {
         const serverItems = await getSavedItems(token);
+        if (useAuthStore.getState().token !== token) return; // logged out (or switched) while loading
         const localItems  = useWishlistStore.getState().items;
 
         if (serverItems.length === 0) {

@@ -95,11 +95,12 @@ async function handleUnauthorized(
   try {
     const { refreshSession } = await import("./refreshSession");
     const { useAuthStore } = await import("@/features/auth/store");
+    const { endLocalSession } = await import("@/features/auth/clearDeviceUserData");
     const outcome = await refreshSession();
 
     if (outcome.kind === "unauthenticated") {
       // The server says the session is gone — log the user out silently
-      useAuthStore.getState().clearUser();
+      endLocalSession();
       return null;
     }
     // Offline / timeout / 5xx / 429: keep the session and let the caller see the real failure.

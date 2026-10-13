@@ -11,6 +11,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { useAuthStore } from "@/features/auth/store";
+import { endLocalSession } from "@/features/auth/clearDeviceUserData";
 import { logout } from "@/lib/api";
 import { ROUTES } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils";
@@ -27,11 +28,14 @@ export function AccountNav() {
   const pathname = usePathname();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const clearUser = useAuthStore((s) => s.clearUser);
 
   async function handleLogout() {
-    await logout();
-    clearUser();
+    try {
+      await logout();
+    } catch {
+      // Server-side cookie clear failed; the device must still be signed out and wiped.
+    }
+    endLocalSession();
     router.replace(ROUTES.home);
   }
 
