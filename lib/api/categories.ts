@@ -36,12 +36,27 @@ export interface BackendCategory {
   seo_intro?: string | null;
   seo_body?: string | null;
   faqs?: { question: string; answer: string }[] | null;
-  google_product_category?: string | null;
+  google_product_category?: string | number | null;
   noindex?: boolean;
 }
 
 export function mapCategoryRefs(refs: BackendCategoryRef[] | null | undefined): CategoryRef[] | null {
   return refs ? refs.map((r) => ({ id: String(r.id), name: r.name, slug: r.slug })) : null;
+}
+
+function textOrNull(v: unknown): string | null {
+  if (typeof v === "string") return v;
+  if (typeof v === "number" && Number.isFinite(v)) return String(v);
+  return null;
+}
+
+function mapFaqs(raw: unknown): { question: string; answer: string }[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((f: unknown) => {
+    if (!f || typeof f !== "object") return [];
+    const { question, answer } = f as { question?: unknown; answer?: unknown };
+    return [{ question: textOrNull(question) ?? "", answer: textOrNull(answer) ?? "" }];
+  });
 }
 
 export function mapCategory(c: BackendCategory): Category {
@@ -70,10 +85,10 @@ export function mapCategory(c: BackendCategory): Category {
     ancestors: mapCategoryRefs(c.ancestors),
     path: c.path ?? null,
     directProductCount: c.direct_product_count ?? null,
-    seoIntro: c.seo_intro ?? null,
-    seoBody: c.seo_body ?? null,
-    faqs: (c.faqs ?? []).map((f) => ({ question: f.question, answer: f.answer })),
-    googleProductCategory: c.google_product_category ?? null,
+    seoIntro: textOrNull(c.seo_intro),
+    seoBody: textOrNull(c.seo_body),
+    faqs: mapFaqs(c.faqs),
+    googleProductCategory: textOrNull(c.google_product_category),
     noindex: c.noindex ?? false,
   };
 }

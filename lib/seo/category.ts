@@ -132,8 +132,9 @@ const BLOCK_BREAK = /<\s*(?:br\s*\/?|\/p|\/div|\/li)\s*>/gi;
  * pasted in, strip it instead of rendering it: output is only ever rendered as
  * React text nodes and is the same string used in JSON-LD.
  */
-export function toPlainText(raw: string | null | undefined): string {
-  if (!raw) return "";
+export function toPlainText(raw: unknown): string {
+  if (typeof raw === "number" && Number.isFinite(raw)) raw = String(raw);
+  if (typeof raw !== "string" || !raw) return "";
   return raw
     .replace(BLOCK_BREAK, "\n")
     .replace(TAG, "")
@@ -142,15 +143,19 @@ export function toPlainText(raw: string | null | undefined): string {
     .trim();
 }
 
-export function toParagraphs(raw: string | null | undefined): string[] {
+export function toParagraphs(raw: unknown): string[] {
   return toPlainText(raw)
     .split(/\n\s*\n|\n/)
     .map((p) => p.trim())
     .filter(Boolean);
 }
 
-export function cleanFaqs(faqs: CategoryFaq[] | undefined): CategoryFaq[] {
-  return (faqs ?? [])
-    .map((f) => ({ question: toPlainText(f.question), answer: toPlainText(f.answer) }))
+export function cleanFaqs(faqs: unknown): CategoryFaq[] {
+  if (!Array.isArray(faqs)) return [];
+  return faqs
+    .map((f: unknown) => {
+      const item = (f ?? {}) as { question?: unknown; answer?: unknown };
+      return { question: toPlainText(item.question), answer: toPlainText(item.answer) };
+    })
     .filter((f) => f.question && f.answer);
 }
