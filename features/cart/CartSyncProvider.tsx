@@ -68,6 +68,7 @@ export function CartSyncProvider({ children }: { children: React.ReactNode }) {
     void (async () => {
       try {
         const serverItems = await trackConnectivity(getCart(token));
+        if (useAuthStore.getState().token !== token) return; // logged out (or switched) while loading
         const localItems  = useCartStore.getState().items;
 
         if (serverItems.length === 0) {
@@ -89,7 +90,9 @@ export function CartSyncProvider({ children }: { children: React.ReactNode }) {
         setItems(merged);
         const localIds = new Set(localItems.map((l) => l.cartItemId));
         toastCorrected(serverItems.filter((i) => i.quantityCorrected && !localIds.has(i.cartItemId)));
-        announceCorrections(await trackConnectivity(syncCart(merged, token)));
+        const synced = await trackConnectivity(syncCart(merged, token));
+        if (useAuthStore.getState().token !== token) return;
+        announceCorrections(synced);
         useCartStore.getState().clearPendingRemovals();
 
         if (addedFromServer) {

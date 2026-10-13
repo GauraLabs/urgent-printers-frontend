@@ -42,7 +42,7 @@ function getChannel(): BroadcastChannel | null {
         lastBroadcast = { token: msg.token, at: Date.now() };
       } else if (msg.type === "logout") {
         lastBroadcast = null;
-        void import("@/features/auth/store").then(({ useAuthStore }) => useAuthStore.getState().clearUser());
+        void import("@/features/auth/clearDeviceUserData").then(({ endLocalSession }) => endLocalSession());
       }
     };
   } catch {

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useAuthStore } from "./store";
+import { endLocalSession } from "./clearDeviceUserData";
 import { refreshTokens, getMe } from "@/lib/api";
 
 export function TokenRefreshProvider({ children }: { children: React.ReactNode }) {
@@ -9,7 +10,6 @@ export function TokenRefreshProvider({ children }: { children: React.ReactNode }
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const token           = useAuthStore((s) => s.token);
   const setUser         = useAuthStore((s) => s.setUser);
-  const clearUser       = useAuthStore((s) => s.clearUser);
   const setToken        = useAuthStore((s) => s.setToken);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export function TokenRefreshProvider({ children }: { children: React.ReactNode }
         .then(async (newToken) => {
           if (cancelled) return;
           if (!newToken) {
-            clearUser();
+            endLocalSession();
             return;
           }
           const user = await getMe(newToken);
@@ -45,7 +45,7 @@ export function TokenRefreshProvider({ children }: { children: React.ReactNode }
       cancelled = true;
       window.removeEventListener("online", attempt);
     };
-  }, [_isHydrated, isAuthenticated, token, setUser, setToken, clearUser]);
+  }, [_isHydrated, isAuthenticated, token, setUser, setToken]);
 
   return <>{children}</>;
 }
