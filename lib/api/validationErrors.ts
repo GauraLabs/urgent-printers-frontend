@@ -14,7 +14,7 @@ function humanizeLoc(loc: unknown[]): string {
       const prev = parts.pop();
       parts.push(prev ? `${prev.replace(/s$/, "")} ${Number(p) + 1}` : `#${Number(p) + 1}`);
     } else {
-      parts.push(p.replace(/_/g, " "));
+      parts.push(p.replace(/_/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase());
     }
   }
   const text = parts.join(" ");

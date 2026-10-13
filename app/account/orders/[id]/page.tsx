@@ -5,6 +5,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, ExternalLink, Loader2, XCircle, Lock, CreditCard, Download, FileSearch } from "lucide-react";
 import { SafeImage } from "@/components/common/SafeImage";
+import { cancelSuccessMessage } from "@/features/account/cancelMessage";
 import { getOrderById, cancelOrder, verifyPayment, downloadReceipt } from "@/lib/api";
 import ItemProofPanel from "./ItemProofPanel";
 import { useAuthStore } from "@/features/auth/store";
@@ -64,9 +65,9 @@ export default function OrderDetailPage() {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
     setCancelling(true);
     try {
-      await cancelOrder(order.id, token);
-      setOrder((prev) => prev ? { ...prev, status: "cancelled" } : prev);
-      toast.success("Order cancelled.");
+      const { paymentStatus } = await cancelOrder(order.id, token);
+      setOrder((prev) => prev ? { ...prev, status: "cancelled", ...(paymentStatus && { paymentStatus }) } : prev);
+      toast.success(cancelSuccessMessage(paymentStatus));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not cancel order.");
     } finally {
