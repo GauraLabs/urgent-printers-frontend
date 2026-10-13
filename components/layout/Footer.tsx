@@ -99,7 +99,7 @@ export async function Footer() {
         <Separator className="my-8 max-md:my-4" />
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} Urgent Printers Pvt. Ltd. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Urgent Printers All rights reserved.</p>
           <div className="flex gap-4">
             <Link href="/policies/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
             <Link href="/policies/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>

@@ -10,7 +10,7 @@ export default function PrivacyPage() {
     <article>
       <h1>Privacy Policy</h1>
       <p className="text-sm text-muted-foreground">Last updated: April 2026</p>
-      <p>Urgent Printers Pvt. Ltd. (&ldquo;we&rdquo;, &ldquo;our&rdquo;, &ldquo;us&rdquo;) is committed to protecting your personal information in accordance with the <strong>Information Technology Act, 2000</strong> and the <strong>Digital Personal Data Protection Act, 2023</strong>.</p>
+      <p>Urgent Printers (&ldquo;we&rdquo;, &ldquo;our&rdquo;, &ldquo;us&rdquo;) is committed to protecting your personal information in accordance with the <strong>Information Technology Act, 2000</strong> and the <strong>Digital Personal Data Protection Act, 2023</strong>.</p>
       <h2>Information We Collect</h2>
       <ul>
         <li><strong>Account data</strong> — name, email address, mobile number when you register</li>
@@ -32,7 +32,7 @@ export default function PrivacyPage() {
       <h2>Your Rights</h2>
       <p>You may access, correct, or request deletion of your personal data by emailing <a href="mailto:privacy@urgentprinters.com">privacy@urgentprinters.com</a>.</p>
       <h2>Contact</h2>
-      <p>Data Protection Officer: <a href="mailto:privacy@urgentprinters.com">privacy@urgentprinters.com</a> | Urgent Printers Pvt. Ltd., Kotwali Rd, Tilak Dwar, Mathura, Uttar Pradesh 281001, India.</p>
+      <p>Data Protection Officer: <a href="mailto:privacy@urgentprinters.com">privacy@urgentprinters.com</a> | Urgent Printers, Kotwali Rd, Tilak Dwar, Mathura, Uttar Pradesh 281001, India.</p>
     </article>
   );
 }
