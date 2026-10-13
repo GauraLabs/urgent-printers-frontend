@@ -303,13 +303,14 @@ export async function getOrderById(orderId: string, token: string): Promise<Orde
   }
 }
 
-export async function cancelOrder(orderId: string, token: string): Promise<void> {
+export async function cancelOrder(orderId: string, token: string): Promise<{ paymentStatus?: string }> {
   // REAL API: POST /api/v1/orders/{id}/cancel
-  await apiFetch(`/orders/${orderId}/cancel`, {
+  const data = await apiFetch<{ paymentStatus?: string } | null>(`/orders/${orderId}/cancel`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify({ reason: "Cancelled by customer" }),
   });
+  return { paymentStatus: data?.paymentStatus };
 }
 
 export function mapPreview(raw: BackendPreview): OrderPreview {

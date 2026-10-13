@@ -46,6 +46,19 @@ describe("apiFetch error messages", () => {
     respond(422, { message: [{ loc: ["body", "x"], msg: "bad", type: "t" }] });
     expect((await failure()).message).toBe("X: bad");
   });
+  it("order-level 422s for bounded fields read as plain sentences, never a raw code", async () => {
+    respond(422, { detail: [
+      { loc: ["body", "items"], msg: "List should have at most 50 items after validation, not 51", type: "too_long" },
+      { loc: ["body", "shippingAddress", "postalCode"], msg: "String should match pattern", type: "string_pattern_mismatch" },
+      { loc: ["body", "shippingAddress", "addressLine1"], msg: "String should have at most 200 characters", type: "string_too_long" },
+    ] });
+    const e = await failure();
+    expect(e.status).toBe(422);
+    expect(e.message).toBe(
+      "Items: List should have at most 50 items after validation, not 51; Shipping address postal code: String should match pattern; Shipping address address line1: String should have at most 200 characters"
+    );
+    expect(e.message).not.toMatch(/\[object|Connection lost|API 422/);
+  });
   it.each([
     ["invalid_option", /print option is no longer available/],
     ["invalid_turnaround", /turnaround option is no longer available/],

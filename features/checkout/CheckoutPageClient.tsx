@@ -12,13 +12,20 @@ import { useCartStore } from "@/features/cart/store";
 import { useAuthStore } from "@/features/auth/store";
 import { ApiError, NetworkError, ResponseHandlingError } from "@/lib/api/client";
 import { getPreviousPaymentInfo } from "@/lib/api/orders";
-import { createOrder, previewOrder, verifyPayment, isPriceChangedError, isQuantityLimitError, isCodUnavailableError, getCart, getSiteStatus } from "@/lib/api";
+import { createOrder, previewOrder, verifyPayment, getOrderById, isPriceChangedError, isQuantityLimitError, isCodUnavailableError, getCart, getSiteStatus } from "@/lib/api";
 import { revalidateAppliedCoupon } from "@/features/cart/couponRevalidation";
 import { buildClientPricing } from "./clientPricing";
 import { resolveCod, codBlockApplies, type ServerCodBlock } from "./cod";
 import { applyPreviewPrices, pricesDiffer } from "./repricing";
 import type { SiteStatus } from "@/lib/api/siteStatus";
 import { isInfrastructureFailure } from "@/lib/api/errorClassification";
+import {
+  classifyVerifyError,
+  pollUntilPaid,
+  verifyFailedMessage,
+  verifyMismatchMessage,
+  VERIFY_CONFIRMING_MESSAGE,
+} from "./verifyOutcome";
 import { showPersonalisationError, describePersonalisationError, type PersonalisationNotice } from "@/features/cart/personalisationToast";
 import { trackConnectivity } from "@/features/site-status/trackConnectivity";
 import { ROUTES } from "@/lib/constants/routes";
@@ -439,10 +446,27 @@ export function CheckoutPageClient({ siteStatus }: CheckoutPageClientProps) {
               }, token));
               idempotencyRef.current = null;
               finishOrder(order.id);
-            } catch {
+            } catch (verifyErr) {
+              const outcome = classifyVerifyError(verifyErr);
+              if (outcome === "confirming") {
+                const paid = await pollUntilPaid(async () => (await getOrderById(order.id, token))?.paymentStatus ?? null);
+                idempotencyRef.current = null;
+                clearCart();
+                setAppliedCoupon(null);
+                if (paid) {
+                  toast.success("Order placed successfully!");
+                  router.replace(ROUTES.checkoutConfirmation(order.id));
+                } else {
+                  toast(VERIFY_CONFIRMING_MESSAGE, { duration: 12000 });
+                  router.replace(ROUTES.accountOrder(order.id));
+                }
+                return;
+              }
               // Payment captured by Razorpay but verify failed — money may be deducted, don't retry
               toast.error(
-                `Payment received but confirmation failed. Contact support with order #${order.orderNumber}.`,
+                outcome === "amount_mismatch"
+                  ? verifyMismatchMessage(order.orderNumber)
+                  : verifyFailedMessage(order.orderNumber),
                 { duration: 12000 }
               );
               release();
