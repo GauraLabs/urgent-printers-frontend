@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { AuthGuard } from "@/features/auth/AuthGuard";
 import { AccountNav } from "@/features/account/AccountNav";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   return (

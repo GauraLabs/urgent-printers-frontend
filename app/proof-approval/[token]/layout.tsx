@@ -1,3 +1,9 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
+
 export default function ProofApprovalLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background flex items-start justify-center pt-12 px-4 pb-16">

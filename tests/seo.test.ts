@@ -176,7 +176,8 @@ describe("robots and llms.txt", () => {
   it("allows catalog, blocks private areas, names AI crawlers, points at the sitemap", () => {
     const r = buildRobots(SITE);
     const rules = r.rules as { userAgent: string | string[]; allow: string; disallow: string[] }[];
-    expect(rules[0].disallow).toEqual(expect.arrayContaining(["/cart", "/checkout", "/account", "/api/"]));
+    expect(rules[0].disallow).toEqual(["/api/", "/proof-approval/"]);
+    expect(rules[1].disallow).toEqual(["/api/", "/proof-approval/"]);
     expect(rules[1].userAgent).toEqual(["GPTBot", "ClaudeBot", "PerplexityBot", "Google-Extended"]);
     expect(r.sitemap).toBe(`${SITE}/sitemap.xml`);
   });
