@@ -120,3 +120,5 @@ npm run build        # next build (sitemap/robots/llms.txt are runtime routes: a
 ```
 
 One required env var for production: `NEXT_PUBLIC_SITE_URL` (canonical origin for metadata, JSON-LD, sitemap, robots; read only via `lib/seo/site.ts`; recommended prod value `https://www.urgentprinters.com`). SEO builders live in `lib/seo/` and `lib/structured-data.ts`.
+
+Optional: `NEXT_PUBLIC_GCR_MERCHANT_ID` (`5844943747`) enables the Google Customer Reviews opt-in on the order confirmation page (`features/checkout/GoogleCustomerReviewsOptIn.tsx`, config built by `lib/gcr.ts`); unset renders nothing.

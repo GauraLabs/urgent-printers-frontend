@@ -26,6 +26,7 @@ Set these in **Vercel Dashboard → Project → Settings → Environment Variabl
 | Variable | Example | Required |
 |---|---|---|
 | `NEXT_PUBLIC_SITE_URL` | `https://urgentprinters.com` | Yes (for sitemap + og URLs) |
+| `NEXT_PUBLIC_GCR_MERCHANT_ID` | `5844943747` | No (Google Customer Reviews opt-in on the order confirmation page; unset = nothing rendered) |
 
 > For preview branches, Vercel sets `VERCEL_URL` automatically. The site falls back to `https://urgentprinters.com` if `NEXT_PUBLIC_SITE_URL` is not set.
 
