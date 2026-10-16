@@ -19,11 +19,14 @@ import { orderLinePrice } from "@/features/cart/savings";
 import { getOrderById, downloadReceipt } from "@/lib/api";
 import { useAuthStore } from "@/features/auth/store";
 import { useOrderItemCategorySlugs } from "@/hooks/useOrderItemCategorySlugs";
+import { GoogleCustomerReviewsOptIn } from "@/features/checkout/GoogleCustomerReviewsOptIn";
+import { buildGcrConfig } from "@/lib/gcr";
 import type { Order } from "@/types";
 
 export default function OrderConfirmationPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const token = useAuthStore((s) => s.token);
+  const email = useAuthStore((s) => s.user?.email);
   const [order,       setOrder]       = useState<Order | null>(null);
   const [loading,     setLoading]     = useState(true);
   const [downloading, setDownloading] = useState(false);
@@ -244,6 +247,10 @@ export default function OrderConfirmationPage() {
             Our team will review your artwork and begin printing. You&apos;ll receive updates at each stage —
             Confirmed → Printing → Shipped → Delivered.
           </div>
+
+          <GoogleCustomerReviewsOptIn
+            config={buildGcrConfig(order, email, process.env.NEXT_PUBLIC_GCR_MERCHANT_ID)}
+          />
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3">

@@ -27,6 +27,8 @@ export default function PrivacyPage() {
       </ul>
       <h2>Data Sharing</h2>
       <p>We do not sell your personal data. We share data only with: (a) payment processors (Razorpay/PayU) under their own privacy policies; (b) logistics partners for order delivery; (c) legal authorities when required by law.</p>
+      <h2>Google Customer Reviews</h2>
+      <p>After you place an order, we may show you a Google Customer Reviews invitation. If you choose to opt in, your email address, order number, delivery country and estimated delivery date are shared with Google, which will email you a short survey about your Urgent Printers experience. Google handles this data under its own <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>. Nothing is shared unless you opt in.</p>
       <h2>Data Retention</h2>
       <p>Account data is retained for the duration of your account. Order data is retained for 7 years as required by Indian tax law. Artwork files are deleted 30 days after delivery.</p>
       <h2>Your Rights</h2>
