@@ -3,13 +3,10 @@ import { SITE_URL } from "./site";
 
 export const AI_CRAWLERS: readonly string[] = ["GPTBot", "ClaudeBot", "PerplexityBot", "Google-Extended"];
 
-// Mirrors the noindex facet rules in lib/seo/metadata.ts. Blocking crawl of these
-// would hide the noindex tag, so only private/transactional areas are disallowed.
+// /cart, /checkout, /account and /auth are deliberately NOT disallowed: they carry a
+// noindex meta (set in their layouts) that Google can only see if it may crawl them.
+// Only non-page endpoints and token links stay uncrawled.
 export const DISALLOWED_PATHS: readonly string[] = [
-  "/cart",
-  "/checkout",
-  "/account",
-  "/auth",
   "/api/",
   "/proof-approval/",
 ];
