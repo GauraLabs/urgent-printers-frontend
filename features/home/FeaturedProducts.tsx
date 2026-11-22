@@ -38,9 +38,9 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
           >
             <SectionHeading
               id="featured-heading"
-              eyebrow="Bestsellers"
-              title="Popular Products"
-              description="Our customers' most-ordered products"
+              eyebrow="Our picks"
+              title="Featured designs"
+              description="Handpicked wedding and gifting favourites"
               align="left"
             />
           </motion.div>

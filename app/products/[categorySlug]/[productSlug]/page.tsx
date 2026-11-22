@@ -192,7 +192,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     key={tag}
                     className="px-3 py-1 rounded-full text-xs bg-secondary text-secondary-foreground border border-border capitalize"
                   >
-                    {tag.replace("-", " ")}
+                    {tag.replaceAll("-", " ")}
                   </span>
                 ))}
               </div>

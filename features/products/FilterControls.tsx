@@ -8,23 +8,24 @@ import { cn } from "@/lib/utils";
 import { nestCategories } from "@/lib/seo/category";
 import type { Category, ProductBadgeFilter } from "@/types";
 
-// These tag values are cross-checked against real product tags in
-// lib/mock-data/products.ts and the backend's freeform Product.tags — the
-// backend has no tag-facet endpoint, so this list is a curated, verified
-// subset rather than a full taxonomy. "Bestseller" deliberately isn't here —
-// it's a Product.badge value, not a Product.tags entry (see Highlights below).
+// The backend has no tag-facet endpoint, so this is a curated subset of the
+// real Product.tags values (lowercase, hyphenated), not a full taxonomy.
+// "Bestseller" isn't here: it's a Product.badge value (see Highlights below).
 const AVAILABLE_TAGS = [
-  { value: "luxury", label: "Luxury / Premium" },
-  { value: "eco", label: "Eco Friendly" },
-  { value: "events", label: "Events" },
-  { value: "corporate", label: "Corporate" },
+  { value: "wedding", label: "Wedding" },
+  { value: "haldi", label: "Haldi" },
+  { value: "birthday", label: "Birthday" },
+  { value: "anniversary", label: "Anniversary" },
+  { value: "return-gifts", label: "Return Gifts" },
+  { value: "sweet-box", label: "Sweet Box" },
+  { value: "thank-you", label: "Thank You" },
+  { value: "shagun", label: "Shagun" },
 ];
 
 const BADGE_OPTIONS: { value: ProductBadgeFilter; label: string }[] = [
   { value: "bestseller", label: "Bestseller" },
   { value: "new", label: "New" },
   { value: "sale", label: "On Sale" },
-  { value: "popular", label: "Popular" },
 ];
 
 const CATEGORY_VISIBLE_LIMIT = 6;
