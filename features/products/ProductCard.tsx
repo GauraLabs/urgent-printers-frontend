@@ -3,7 +3,6 @@
 import { productHref } from "@/features/products/productHref";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { motion } from "motion/react";
 import { useCallback, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { SafeImage } from "@/components/common/SafeImage";
@@ -102,9 +101,7 @@ export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: Produ
   }, []);
 
   return (
-    <motion.article
-      whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
-      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+    <article
       onMouseEnter={handleHoverStart}
       onMouseLeave={handleHoverEnd}
       className={cn("group relative flex flex-col hover:z-10", className)}
@@ -155,7 +152,7 @@ export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: Produ
           <Badge
             variant={cornerBadge.label === "new" ? "success" : "default"}
             className={cn(
-              "absolute top-2.5 left-2.5 z-10 border-0 text-[10px] px-2 capitalize",
+              "absolute top-2.5 left-2.5 z-10 border-0 text-xs px-2 capitalize",
               cornerBadge.label === "bestseller" && "bg-brand-orange text-brand-orange-foreground"
             )}
           >
@@ -163,7 +160,7 @@ export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: Produ
           </Badge>
         )}
         {cornerBadge?.kind === "sale" && (
-          <Badge className="absolute top-2.5 left-2.5 z-10 border-0 text-[10px] px-2 bg-foreground text-background">
+          <Badge className="absolute top-2.5 left-2.5 z-10 border-0 text-xs px-2 bg-foreground text-background">
             Sale
           </Badge>
         )}
@@ -224,6 +221,6 @@ export function ProductCard({ product, className, sizes = DEFAULT_SIZES }: Produ
           </div>
         </div>
       </div>
-    </motion.article>
+    </article>
   );
 }

@@ -1,7 +1,4 @@
-"use client";
-
 import { UploadCloud, Settings2, Printer, PackageCheck } from "lucide-react";
-import { motion } from "motion/react";
 import { SectionHeading } from "@/components/common/SectionHeading";
 
 const STEPS = [
@@ -19,11 +16,7 @@ export function HowItWorks() {
   return (
     <section aria-labelledby="how-heading" className="py-5 md:py-8 lg:py-10 border-t border-border bg-secondary/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.5 }}
+        <div
           className="mb-4 md:mb-6"
         >
           <SectionHeading
@@ -33,23 +26,17 @@ export function HowItWorks() {
             description="From artwork upload to your doorstep, tracked every step"
             align="center"
           />
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {STEPS.map((step, i) => {
             const Icon = step.icon;
             return (
-              <motion.div
+              <div
                 key={i}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.4, delay: i * 0.1 }}
                 className="flex flex-col items-center text-center gap-3"
               >
-                <motion.div
-                  whileHover={{ scale: 1.08 }}
-                  transition={{ type: "spring", stiffness: 300 }}
+                <div
                   className="relative"
                 >
                   <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center">
@@ -58,12 +45,12 @@ export function HowItWorks() {
                   <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-brand-orange text-brand-orange-foreground text-[9px] font-bold flex items-center justify-center leading-none">
                     {i + 1}
                   </span>
-                </motion.div>
+                </div>
                 <div>
                   <h3 className="font-heading font-semibold text-xs mb-1">{step.title}</h3>
                   <p className="sr-only sm:not-sr-only text-muted-foreground text-[11px] leading-relaxed">{step.description}</p>
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>

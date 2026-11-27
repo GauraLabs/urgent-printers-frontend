@@ -2,6 +2,7 @@
 
 import { Suspense, useState, useCallback, useRef } from "react";
 import Link from "next/link";
+import Script from "next/script";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -665,7 +666,10 @@ function LoginContent() {
 
       {/* Content */}
       {method === "phone" && <PhoneFlow onDone={handleDone} />}
-      {method === "google" && <GoogleButton onDone={handleDone} />}
+      {method === "google" && <>
+        <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
+        <GoogleButton onDone={handleDone} />
+      </>}
       {method === "email" && <EmailForm onDone={handleDone} />}
     </>
   );

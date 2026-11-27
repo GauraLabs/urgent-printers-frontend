@@ -18,7 +18,7 @@ export function TrustBadges({ totalProducts }: TrustBadgesProps) {
   return (
     <section aria-label="Why choose Urgent Printers" className="border-y border-border bg-secondary/50">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-5 lg:gap-8 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-3 pr-9">
+        <div tabIndex={0} role="group" aria-label="Delivery and service benefits" className="focus-visible:outline-2 focus-visible:outline-primary flex items-center gap-5 lg:gap-8 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-3 pr-9">
           {totalProducts !== undefined && totalProducts > 0 && (
             <div className="flex items-center gap-2 shrink-0 snap-start pr-5 border-r border-border">
               <Package size={16} className="text-primary shrink-0" aria-hidden="true" />

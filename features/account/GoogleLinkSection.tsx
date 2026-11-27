@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Script from "next/script";
 import { Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/features/auth/store";
@@ -64,6 +65,7 @@ export function GoogleLinkSection() {
 
   return (
     <section className="space-y-3" aria-labelledby="google-heading">
+      {showButton && <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />}
       <h2 id="google-heading" className="font-heading font-semibold text-lg">Google account</h2>
       {user.googleLinked ? (
         <p className="flex items-center gap-2 text-sm text-success">

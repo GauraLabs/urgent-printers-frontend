@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { AnimateIn } from "@/components/common/AnimateIn";
 import { SafeImage } from "@/components/common/SafeImage";
 
 interface CampaignBannerProps {
@@ -26,7 +25,7 @@ export function CampaignBanner({ imageUrl, headline, subheading, ctaText, ctaHre
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent sm:bg-gradient-to-r sm:from-black/80 sm:via-black/45 sm:to-transparent" />
         <div className="absolute inset-0 flex items-end sm:items-center">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-            <AnimateIn className="max-w-lg pb-8 sm:pb-0">
+            <div className="max-w-lg pb-8 sm:pb-0">
               <div className="rounded-2xl bg-black/30 backdrop-blur-sm px-5 py-5 sm:px-7 sm:py-7">
                 <h2 className="font-heading font-bold text-white text-3xl sm:text-4xl lg:text-5xl leading-tight mb-3">
                   {headline}
@@ -44,7 +43,7 @@ export function CampaignBanner({ imageUrl, headline, subheading, ctaText, ctaHre
                   <ArrowRight size={18} />
                 </Link>
               </div>
-            </AnimateIn>
+            </div>
           </div>
         </div>
       </div>

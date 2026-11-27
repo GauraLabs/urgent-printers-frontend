@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ArrowRight, Printer } from "lucide-react";
-import { AnimateIn } from "@/components/common/AnimateIn";
 import { buttonVariants } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils";
@@ -29,7 +28,7 @@ export function PromoBanner() {
             aria-hidden="true"
           />
 
-          <AnimateIn className="relative max-w-xl mx-auto">
+          <div className="relative max-w-xl mx-auto">
             <div className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full bg-white/10 text-white/90 text-xs font-medium">
               <Printer size={13} />
               New customer offer
@@ -50,7 +49,7 @@ export function PromoBanner() {
             >
               Start Designing <ArrowRight size={16} />
             </Link>
-          </AnimateIn>
+          </div>
         </div>
       </div>
     </section>

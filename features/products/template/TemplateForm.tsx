@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ClipboardEvent } from "react";
+import { useId, useRef, useState, type ClipboardEvent } from "react";
 import { cn } from "@/lib/utils";
 import type { TemplateField } from "@/types";
 import { fieldMaxLength } from "@/lib/templateFields";
@@ -12,6 +12,7 @@ interface TemplateFormProps {
 }
 
 export function TemplateForm({ fields, onChange, showErrors = false }: TemplateFormProps) {
+  const formId = useId();
   const [values, setValues] = useState<Record<string, string>>(
     () => Object.fromEntries(fields.map((f) => [f.id, ""]))
   );
@@ -59,13 +60,16 @@ export function TemplateForm({ fields, onChange, showErrors = false }: TemplateF
 
         return (
           <div key={field.id} className={isFullWidth ? "sm:col-span-2" : ""}>
-            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+            <label htmlFor={`${formId}-${field.id}`} className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
               {field.label}
               {field.required && <span className="text-destructive ml-0.5">*</span>}
             </label>
 
             {field.type === "multiline" ? (
               <textarea
+                id={`${formId}-${field.id}`}
+                aria-required={field.required}
+                aria-invalid={hasError || undefined}
                 value={values[field.id]}
                 onChange={(e) => handleChange(field.id, e.target.value)}
                 onBlur={() => handleBlur(field.id)}
@@ -77,6 +81,9 @@ export function TemplateForm({ fields, onChange, showErrors = false }: TemplateF
               />
             ) : (
               <input
+                id={`${formId}-${field.id}`}
+                aria-required={field.required}
+                aria-invalid={hasError || undefined}
                 type={field.type === "phone" ? "tel" : field.type}
                 value={values[field.id]}
                 onChange={(e) => handleChange(field.id, e.target.value)}

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
-import Script from "next/script";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { TokenRefreshProvider } from "@/features/auth/TokenRefreshProvider";
@@ -15,7 +14,7 @@ import { MainContent } from "@/components/layout/MainContent";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
 import { ConsentedScripts } from "@/components/analytics/ConsentedScripts";
-import { CartDrawer } from "@/features/cart/CartDrawer";
+import { LazyCartDrawer } from "@/features/cart/LazyCartDrawer";
 import { getSiteTheme } from "@/lib/api/theme";
 import { DEFAULT_THEME } from "@/lib/themes";
 import { COLOR_MODE_INIT_SCRIPT } from "@/lib/colorMode";
@@ -61,7 +60,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <script dangerouslySetInnerHTML={{ __html: COLOR_MODE_INIT_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: CONSENT_INIT_SCRIPT }} />
         <ColorModeSync />
-        <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
         <ConsentedScripts />
         <QueryProvider>
           <TokenRefreshProvider>
@@ -75,7 +73,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <Footer />
             <MobileBottomNav />
             <CookieConsentBanner />
-            <CartDrawer />
+            <LazyCartDrawer />
             <Toaster
               richColors
               position="bottom-left"
