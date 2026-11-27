@@ -81,8 +81,8 @@ function OptionButton({
           <span className={cn(
             "shrink-0 self-start text-[10px] font-bold px-1.5 py-0.5 rounded-full",
             delta! > 0
-              ? "bg-brand-orange/10 text-brand-orange"
-              : "bg-success/10 text-success"
+              ? "bg-brand-orange text-brand-orange-foreground"
+              : "bg-success text-success-foreground"
           )}>
             {delta! > 0 ? "+" : "−"}{formatPrice(Math.abs(delta!))}
             {perUnitSuffix && <span className="md:hidden">{perUnitSuffix}</span>}
@@ -525,8 +525,8 @@ export const ProductConfigurator = forwardRef<HTMLButtonElement, ProductConfigur
                     <span className={cn(
                       "text-xs font-semibold px-2 py-0.5 rounded-full",
                       opt.extraCost === 0
-                        ? "bg-success/10 text-success"
-                        : "bg-brand-orange/10 text-brand-orange"
+                        ? "bg-success text-success-foreground"
+                        : "bg-brand-orange text-brand-orange-foreground"
                     )}>
                       {costLabel}
                     </span>

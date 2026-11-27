@@ -22,7 +22,7 @@ export function TierRateGuide({ entries, unitLabel, onSelect }: TierRateGuidePro
             key={e.quantity}
             type="button"
             onClick={() => onSelect(e.label)}
-            aria-label={`Set quantity to ${formatQty(e.label, unitLabel)} at ${formatPricePerUnit(e.pricePerUnit)}${suffix}`}
+            aria-label={`${formatCount(e.label)}+ ${formatPricePerUnit(e.pricePerUnit)}${suffix}; Set quantity to ${formatQty(e.label, unitLabel)}`}
             title={`Set quantity to ${formatQty(e.label, unitLabel)}`}
             aria-current={e.current ? "true" : undefined}
             className={cn(

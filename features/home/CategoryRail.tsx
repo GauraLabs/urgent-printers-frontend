@@ -2,11 +2,9 @@
 
 import Link from "next/link";
 import { LayoutGrid } from "lucide-react";
-import { motion } from "motion/react";
 import { EmptyState } from "@/components/common/EmptyState";
 import { SafeImage } from "@/components/common/SafeImage";
 import { SectionHeading } from "@/components/common/SectionHeading";
-import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { ROUTES } from "@/lib/constants/routes";
 import { cn } from "@/lib/utils";
 import { CategoryTile } from "@/features/navigation/CategoryTile";
@@ -19,7 +17,6 @@ interface CategoryRailProps {
   categories: Category[];
 }
 
-const MotionLink = motion.create(Link);
 
 /**
  * Quick-jump nav to every category (the per-category product shelves follow below) —
@@ -29,7 +26,6 @@ const MotionLink = motion.create(Link);
  * category list.
  */
 export function CategoryRail({ categories }: CategoryRailProps) {
-  const prefersReducedMotion = usePrefersReducedMotion();
   const { trackRef, canScrollLeft, canScrollRight, scrollByPage } = useScrollRail();
 
   if (categories.length === 0) {
@@ -58,11 +54,7 @@ export function CategoryRail({ categories }: CategoryRailProps) {
     <section aria-labelledby="category-rail-heading" className="py-5 md:py-12 lg:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between mb-3 md:mb-8">
-          <motion.div
-            initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.5 }}
+          <div
           >
             <SectionHeading
               id="category-rail-heading"
@@ -71,7 +63,7 @@ export function CategoryRail({ categories }: CategoryRailProps) {
               description="Swipe through everything we make, from invitations to event essentials"
               align="left"
             />
-          </motion.div>
+          </div>
           <ScrollRailButtons
             canScrollLeft={canScrollLeft}
             canScrollRight={canScrollRight}
@@ -105,26 +97,9 @@ export function CategoryRail({ categories }: CategoryRailProps) {
           const inverted = index % 2 === 1;
           const cardImage = getRealCategoryCardImage(cat);
           return (
-            <MotionLink
+            <Link
               key={cat.id}
               href={ROUTES.category(cat.slug)}
-              initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
-              whileInView={{
-                opacity: 1,
-                y: 0,
-                transition: { duration: 0.4, delay: Math.min(index * 0.05, 0.3) },
-              }}
-              viewport={{ once: true, margin: "-40px" }}
-              whileHover={
-                prefersReducedMotion
-                  ? undefined
-                  : { y: -4, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] } }
-              }
-              whileTap={
-                prefersReducedMotion
-                  ? undefined
-                  : { scale: 0.98, transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] } }
-              }
               className={cn(
                 "group flex flex-col shrink-0 snap-start overflow-hidden rounded-2xl transition-shadow duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
                 "shadow-[var(--shadow-rail-resting)] hover:shadow-[var(--shadow-rail-hover)]",
@@ -172,7 +147,7 @@ export function CategoryRail({ categories }: CategoryRailProps) {
                   />
                 )}
               </div>
-            </MotionLink>
+            </Link>
           );
         })}
       </div>

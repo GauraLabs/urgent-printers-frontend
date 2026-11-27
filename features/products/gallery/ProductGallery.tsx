@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Play, Pause, ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Navigation, Thumbs, A11y } from "swiper/modules";
+import { Pagination, A11y } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 import { SafeImage } from "@/components/common/SafeImage";
 import { cn } from "@/lib/utils";
@@ -62,7 +62,7 @@ function GalleryVideoSlide({ src, poster, productName }: GalleryVideoSlideProps)
         ref={videoRef}
         src={src}
         poster={poster}
-        preload="metadata"
+        preload="none"
         playsInline
         className="h-full w-full object-cover"
         onPlay={() => setIsPlaying(true)}
@@ -87,7 +87,6 @@ function GalleryVideoSlide({ src, poster, productName }: GalleryVideoSlideProps)
 }
 
 export function ProductGallery({ images, imageThumbnails, productName, videoUrl, videoThumbnailUrl }: ProductGalleryProps) {
-  const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
   const [mainSwiper, setMainSwiper] = useState<SwiperType | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -127,60 +126,20 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
     <div className="flex flex-col gap-3">
       {/* Main image */}
       <div className="relative rounded-2xl overflow-hidden bg-muted aspect-square max-md:aspect-[4/3]">
-        {/* Mobile: Swiper with touch */}
-        <div className="block md:hidden h-full">
-          <Swiper
-            modules={[Pagination, A11y]}
-            pagination={{ clickable: true }}
-            onSlideChange={(s) => setActiveIndex(s.activeIndex)}
-            className="h-full"
-          >
-            {slides.map((slide, i) =>
-              slide.type === "video" ? (
-                <SwiperSlide key={`video-${i}`} className="relative">
-                  <GalleryVideoSlide src={slide.src} poster={slide.poster} productName={productName} />
-                </SwiperSlide>
-              ) : (
-                <SwiperSlide key={`img-${i}`} className="relative">
-                  <SafeImage
-                    src={slide.src}
-                    alt={`${productName} — view ${i - imageIndexOffset + 1}`}
-                    fill
-                    className="object-cover"
-                    priority={i === 0}
-                    loading={i === 0 ? "eager" : "lazy"}
-                    sizes="100vw"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => openLightbox(i)}
-                    aria-label={`Zoom into ${productName} image ${i - imageIndexOffset + 1}`}
-                    className="absolute inset-0 cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                  >
-                    <span className="absolute bottom-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm">
-                      <ZoomIn size={16} />
-                    </span>
-                  </button>
-                </SwiperSlide>
-              )
-            )}
-          </Swiper>
-        </div>
-
-        {/* Desktop: thumbnail-controlled */}
+        {/* One responsive gallery: mobile touch, desktop arrows and thumbnails. */}
         <div
-          className="hidden md:block relative h-full outline-none group"
+          className="relative h-full outline-none group"
           tabIndex={hasMultipleSlides ? 0 : undefined}
           role="group"
           aria-label={`${productName} image gallery`}
           onKeyDown={handleGalleryKeyDown}
         >
           <Swiper
-            modules={[Navigation, Thumbs, A11y]}
-            thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
+            modules={[Pagination, A11y]}
+            pagination={{ clickable: true }}
             onSlideChange={(s) => setActiveIndex(s.activeIndex)}
             onSwiper={setMainSwiper}
-            className="h-full"
+            className="product-gallery-main h-full"
           >
             {slides.map((slide, i) =>
               slide.type === "video" ? (
@@ -194,9 +153,9 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
                     alt={`${productName} — view ${i - imageIndexOffset + 1}`}
                     fill
                     className="object-cover"
-                    priority={i === 0}
+                    fetchPriority={i === 0 ? "high" : "low"}
                     loading={i === 0 ? "eager" : "lazy"}
-                    sizes="(max-width: 1024px) 60vw, 500px"
+                    sizes="(max-width: 767px) calc(100vw - 32px), (max-width: 1024px) 60vw, 500px"
                   />
                   <button
                     type="button"
@@ -219,7 +178,7 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
                 type="button"
                 onClick={() => goToSlide(-1)}
                 aria-label="Previous image"
-                className="absolute left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm opacity-0 transition-all group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-black/60 hover:scale-110"
+                className="absolute left-2 top-1/2 z-10 hidden md:flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm opacity-0 transition-all group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-black/60 hover:scale-110"
               >
                 <ChevronLeft size={20} />
               </button>
@@ -227,7 +186,7 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
                 type="button"
                 onClick={() => goToSlide(1)}
                 aria-label="Next image"
-                className="absolute right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm opacity-0 transition-all group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-black/60 hover:scale-110"
+                className="absolute right-2 top-1/2 z-10 hidden md:flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm opacity-0 transition-all group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-black/60 hover:scale-110"
               >
                 <ChevronRight size={20} />
               </button>
@@ -239,17 +198,13 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
       {/* Thumbnail strip — desktop only */}
       {slides.length > 1 && (
         <div className="hidden md:block">
-          <Swiper
-            modules={[Thumbs]}
-            onSwiper={setThumbsSwiper}
-            slidesPerView={Math.min(slides.length, 4)}
-            spaceBetween={8}
-            watchSlidesProgress
-            className="w-full"
-          >
+          <div className="flex gap-2 overflow-x-auto">
             {slides.map((slide, i) => (
-              <SwiperSlide key={slide.type === "video" ? `video-thumb-${i}` : `img-thumb-${i}`}>
+              <div key={slide.type === "video" ? `video-thumb-${i}` : `img-thumb-${i}`} className="w-[calc((100%-24px)/4)] shrink-0">
                 <button
+                  type="button"
+                  onClick={() => mainSwiper?.slideTo(i)}
+                  aria-current={activeIndex === i ? "true" : undefined}
                   aria-label={slide.type === "video" ? `Play video` : `View image ${i + 1}`}
                   className={cn(
                     "relative w-full aspect-square rounded-lg overflow-hidden border-2 transition-all",
@@ -285,9 +240,9 @@ export function ProductGallery({ images, imageThumbnails, productName, videoUrl,
                     </span>
                   )}
                 </button>
-              </SwiperSlide>
+              </div>
             ))}
-          </Swiper>
+          </div>
         </div>
       )}
 

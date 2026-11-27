@@ -2,227 +2,135 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, A11y } from "swiper/modules";
-import type { Swiper as SwiperClass } from "swiper/types";
-import { motion } from "motion/react";
+import { Pause, Play } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { SafeImage } from "@/components/common/SafeImage";
 import { cn } from "@/lib/utils";
 import type { HeroBanner } from "@/types";
 
-import "swiper/css";
-
-const HeroSparkles = dynamic(() => import("./HeroSparkles").then((m) => m.HeroSparkles), { ssr: false });
-
 interface HeroBannerSectionProps {
   banners: HeroBanner[];
 }
 
-interface SparklesRect {
-  top: number;
-  left: number;
-  width: number;
-  height: number;
-}
-
-// Swiper's loop + centeredSlides combination rounds slidesPerView up to an
-// odd number (3, for any fractional value >1 we'd use here) and then pads it
-// with a loopedSlides buffer of its own, so it silently needs at least 5 real
-// slides before loop will initialize at all — below that it disables looping
-// outright (and the next-arrow with it). Banners are admin-managed and can be
-// as few as 1-2, so pad the rendered slide set by repeating the banner list
-// until it clears that floor. Pagination below tracks the *real* banner
-// (swiper.realIndex % banners.length), never the padded slide count.
-const MIN_LOOP_SLIDES = 5;
-
-function buildLoopSlides(banners: HeroBanner[]): HeroBanner[] {
-  if (banners.length <= 1 || banners.length >= MIN_LOOP_SLIDES) return banners;
-  const repeatCount = Math.ceil(MIN_LOOP_SLIDES / banners.length);
-  return Array.from({ length: repeatCount }, () => banners).flat();
-}
-
 export function HeroBannerSection({ banners }: HeroBannerSectionProps) {
-  const [showSparkles, setShowSparkles] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [sparklesRect, setSparklesRect] = useState<SparklesRect | null>(null);
-  const swiperRef = useRef<SwiperClass | null>(null);
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const slides = buildLoopSlides(banners);
+  const [paused, setPaused] = useState(false);
+  const [interacting, setInteracting] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(true);
+  const trackRef = useRef<HTMLDivElement>(null);
 
-  // Sparkles must be clipped to the active slide's photo, not the whole
-  // section — the section also spans the peek-slide gutters and the
-  // page-background padding around the carousel, which aren't photo content.
-  const updateSparklesRect = useCallback(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-    const activePhoto = section.querySelector<HTMLElement>(".swiper-slide-active .hero-slide-photo");
-    if (!activePhoto) return;
-    const photoRect = activePhoto.getBoundingClientRect();
-    const sectionRect = section.getBoundingClientRect();
-    setSparklesRect({
-      top: photoRect.top - sectionRect.top,
-      left: photoRect.left - sectionRect.left,
-      width: photoRect.width,
-      height: photoRect.height,
+  useEffect(() => {
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReducedMotion(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  const goToSlide = useCallback((index: number) => {
+    const track = trackRef.current;
+    const slide = track?.children[index] as HTMLElement | undefined;
+    if (!track || !slide) return;
+    // The track's symmetric CSS gutters center the first and last slides too.
+    const first = track.children[0] as HTMLElement;
+    track.scrollTo({
+      left: slide.offsetLeft - first.offsetLeft,
+      behavior: reducedMotion ? "instant" : "smooth",
     });
-  }, []);
-
-  // Hover-pause is scoped to the title/CTA content block only (not the whole
-  // banner) so hovering the background photo or empty gutters keeps the
-  // carousel auto-sliding, while hovering the text a reader is reading or the
-  // button they're about to click holds the current slide in place.
-  const handleContentMouseEnter = useCallback(() => {
-    swiperRef.current?.autoplay.pause();
-  }, []);
-
-  const handleContentMouseLeave = useCallback(() => {
-    swiperRef.current?.autoplay.resume();
-  }, []);
+  }, [reducedMotion]);
 
   useEffect(() => {
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
-    if (prefersReducedMotion || !isDesktop) return;
+    if (banners.length < 2 || paused || interacting || reducedMotion) return;
+    const timer = window.setInterval(() => {
+      if (!document.hidden) goToSlide((activeIndex + 1) % banners.length);
+    }, 6000);
+    return () => window.clearInterval(timer);
+  }, [activeIndex, banners.length, goToSlide, interacting, paused, reducedMotion]);
 
-    const timer = window.setTimeout(() => {
-      updateSparklesRect();
-      setShowSparkles(true);
-    }, 1500);
-    return () => window.clearTimeout(timer);
-  }, [updateSparklesRect]);
-
-  useEffect(() => {
-    if (!showSparkles) return;
-    const section = sectionRef.current;
-    if (!section) return;
-
-    updateSparklesRect();
-    const observer = new ResizeObserver(() => updateSparklesRect());
-    observer.observe(section);
-    window.addEventListener("resize", updateSparklesRect);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", updateSparklesRect);
-    };
-  }, [showSparkles, updateSparklesRect]);
+  if (banners.length === 0) return null;
 
   return (
-    <section ref={sectionRef} aria-label="Featured promotions" className="relative w-full pt-4 sm:pt-6 lg:pt-8">
-      {/* Swiper loop clones slides, so the page's only h1 lives outside the carousel. */}
+    <section
+      aria-label="Featured promotions"
+      aria-roledescription="carousel"
+      className="relative w-full pt-4 sm:pt-6 lg:pt-8"
+      onMouseEnter={() => setInteracting(true)}
+      onMouseLeave={() => setInteracting(false)}
+      onFocusCapture={() => setInteracting(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setInteracting(false);
+      }}
+    >
       <h1 className="sr-only">Urgent Printers — Wedding Cards, Invitations &amp; Celebration Printing</h1>
-      <Swiper
-        modules={[Autoplay, A11y]}
-        autoplay={{ delay: 2750, disableOnInteraction: false }}
-        onSwiper={(swiper) => {
-          swiperRef.current = swiper;
+      {/* Native scrolling has identical geometry before and after hydration.
+          No loop cloning, width measurement, or JS-dependent initial position. */}
+      <div
+        ref={trackRef}
+        className="hero-banner-track"
+        onPointerDown={() => setPaused(true)}
+        onScroll={(event) => {
+          const track = event.currentTarget;
+          const first = track.children[0] as HTMLElement | undefined;
+          const second = track.children[1] as HTMLElement | undefined;
+          if (!first || !second) return;
+          const step = second.offsetLeft - first.offsetLeft;
+          if (step > 0) setActiveIndex(Math.min(banners.length - 1, Math.max(0, Math.round(track.scrollLeft / step))));
         }}
-        onSlideChange={(swiper) => {
-          if (banners.length > 0) setActiveIndex(swiper.realIndex % banners.length);
-          updateSparklesRect();
-        }}
-        loop={banners.length > 1}
-        centeredSlides
-        slidesPerView={1.15}
-        spaceBetween={12}
-        breakpoints={{
-          640: { slidesPerView: 1.2, spaceBetween: 16 },
-          1024: { slidesPerView: 1.22, spaceBetween: 20 },
-        }}
-        className="hero-banner-swiper w-full !pb-9"
       >
-        {slides.map((banner, i) => {
-          return (
-          <SwiperSlide key={`${banner.id}-${i}`}>
-            <div className="hero-slide-photo relative w-full aspect-[4/3] sm:aspect-video lg:aspect-[9/4] max-h-[720px] rounded-xl overflow-hidden brightness-60 transition-[filter] duration-300 ease-out [.swiper-slide-active_&]:brightness-100">
+        {banners.map((banner, i) => (
+          <div key={banner.id} className="hero-banner-slide" role="group" aria-roledescription="slide" aria-label={`${i + 1} of ${banners.length}`}>
+            <div className={cn(
+              "hero-slide-photo relative w-full aspect-[4/3] sm:aspect-video lg:aspect-[9/4] max-h-[720px] rounded-xl overflow-hidden transition-[filter] duration-300 motion-reduce:transition-none",
+              i === activeIndex ? "brightness-100" : "brightness-60"
+            )}>
               <SafeImage
                 src={banner.imageUrl}
                 alt={banner.headline}
                 fill
-                priority
-                loading="eager"
+                loading={i === 0 ? "eager" : "lazy"}
+                fetchPriority={i === 0 ? "high" : "low"}
                 className="object-cover"
                 sizes="(min-width: 1024px) 82vw, (min-width: 640px) 83vw, 87vw"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
               <div className="absolute inset-0 z-10 flex items-end pb-6 sm:pb-8 lg:pb-10">
                 <div className="w-full px-5 sm:px-8 lg:px-10">
-                  <div
-                    className="max-w-xl"
-                    onMouseEnter={handleContentMouseEnter}
-                    onMouseLeave={handleContentMouseLeave}
-                  >
-                    <motion.h2
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                      className="font-sans font-black uppercase text-white text-3xl sm:text-4xl lg:text-6xl leading-[0.95] tracking-tight mb-3 lg:mb-4 line-clamp-2"
-                    >
+                  <div className="max-w-xl">
+                    <h2 className="font-sans font-black uppercase text-white text-3xl sm:text-4xl lg:text-6xl leading-[0.95] tracking-tight mb-3 lg:mb-4 line-clamp-2">
                       {banner.headline}
-                    </motion.h2>
-                    <motion.div
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 0.4 }}
-                      className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3"
-                    >
-                      {/* Stacks above the CTA on mobile; sits beside it from sm up. */}
-                      <p className="order-first sm:order-last text-white/85 text-xs sm:text-sm leading-snug line-clamp-2 sm:line-clamp-1">
+                    </h2>
+                    <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3">
+                      <p className="order-first sm:order-last text-white/95 text-sm leading-snug line-clamp-2 sm:line-clamp-1">
                         {banner.subheading}
                       </p>
-                      <Link
-                        href={banner.ctaHref}
-                        className={cn(
-                          buttonVariants({ size: "sm" }),
-                          "shrink-0 h-9 px-4 gap-1.5 text-sm rounded-full bg-white text-neutral-900 font-semibold [a]:hover:bg-primary [a]:hover:text-white"
-                        )}
-                      >
+                      <Link href={banner.ctaHref} tabIndex={i === activeIndex ? 0 : -1} className={cn(
+                        buttonVariants({ size: "sm" }),
+                        "shrink-0 min-h-11 px-4 gap-1.5 text-sm rounded-full bg-white text-neutral-900 font-semibold [a]:hover:bg-primary [a]:hover:text-white"
+                      )}>
                         {banner.ctaText}
                       </Link>
-                    </motion.div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </SwiperSlide>
-          );
-        })}
-      </Swiper>
-
+          </div>
+        ))}
+      </div>
       {banners.length > 1 && (
-        <nav
-          aria-label="Slide navigation"
-          className="absolute left-1/2 -translate-x-1/2 bottom-3 z-20 flex items-center gap-1.5"
-        >
+        <nav aria-label="Slide navigation" className="flex h-12 items-center justify-center">
           {banners.map((banner, i) => (
-            <button
-              key={banner.id}
-              type="button"
-              aria-label={`Go to slide ${i + 1}`}
-              aria-current={i === activeIndex}
-              onClick={() => swiperRef.current?.slideToLoop(i)}
-              className={cn(
-                "h-[7px] rounded-full transition-[width,background-color] duration-300",
-                i === activeIndex ? "w-6 bg-primary" : "w-[7px] bg-primary/40 hover:bg-primary/70"
-              )}
-            />
+            <button key={banner.id} type="button" aria-label={`Go to slide ${i + 1}`} aria-current={i === activeIndex ? "true" : undefined}
+              onClick={() => { setPaused(true); goToSlide(i); }}
+              className="flex h-11 w-11 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+              <span aria-hidden="true" className={cn("h-2 rounded-full transition-[width,background-color] duration-300 motion-reduce:transition-none", i === activeIndex ? "w-6 bg-primary" : "w-2 bg-primary/50")} />
+            </button>
           ))}
+          <button type="button" disabled={reducedMotion} aria-label={paused ? "Play slideshow" : "Pause slideshow"} onClick={() => setPaused((value) => !value)}
+              className="flex h-11 w-11 items-center justify-center rounded-full text-primary disabled:invisible focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+              {paused ? <Play size={16} aria-hidden="true" /> : <Pause size={16} aria-hidden="true" />}
+          </button>
         </nav>
-      )}
-
-      {showSparkles && sparklesRect && (
-        <div
-          className="absolute z-[1] overflow-hidden rounded-xl pointer-events-none"
-          style={{
-            top: sparklesRect.top,
-            left: sparklesRect.left,
-            width: sparklesRect.width,
-            height: sparklesRect.height,
-          }}
-        >
-          <HeroSparkles />
-        </div>
       )}
     </section>
   );

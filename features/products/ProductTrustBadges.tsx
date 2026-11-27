@@ -17,7 +17,8 @@ export function ProductTrustBadges() {
     {/* Mobile: one compact scrollable strip (icon + title); the grid below is md+ only. */}
     <ul
       aria-label="Why buy from Urgent Printers"
-      className="md:hidden flex gap-4 overflow-x-auto scrollbar-hide py-2.5 border-y border-border"
+      tabIndex={0}
+      className="focus-visible:outline-2 focus-visible:outline-primary md:hidden flex gap-4 overflow-x-auto scrollbar-hide py-2.5 border-y border-border"
     >
       {PRODUCT_TRUST_BADGES.map((badge) => (
         <li key={badge.title} className="flex shrink-0 items-center gap-1.5 text-[11px] font-medium">

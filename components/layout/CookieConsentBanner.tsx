@@ -38,7 +38,7 @@ export function CookieConsentBanner() {
             We use cookies to run essential site features and, with your consent, to understand how the
             site is used.{" "}
             <Link href="/policies/cookies" className="underline underline-offset-2 font-medium text-foreground">
-              Learn more
+              Read our cookie policy
             </Link>
           </p>
         </div>
