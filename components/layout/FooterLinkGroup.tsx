@@ -4,10 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { NavLink } from "@/lib/api/navLinks";
 
 interface FooterLinkGroupProps {
   title: string;
-  links: { label: string; href: string }[];
+  links: NavLink[];
 }
 
 // md+: a plain heading and an always-visible list (unchanged). Below md: the
@@ -31,7 +32,7 @@ export function FooterLinkGroup({ title, links }: FooterLinkGroupProps) {
       </button>
       <ul id={panelId} className={cn("space-y-2.5 max-md:space-y-0 max-md:pb-3", !open && "max-md:hidden")}>
         {links.map((link) => (
-          <li key={link.label}>
+          <li key={link.id ?? link.label}>
             <Link
               href={link.href}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors max-md:inline-flex max-md:min-h-9 max-md:items-center"

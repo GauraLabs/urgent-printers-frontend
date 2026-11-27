@@ -147,7 +147,7 @@ export function MobileNavDrawer({ navLinks }: MobileNavDrawerProps) {
               <SectionTitle id="mobile-quick-heading">Quick links</SectionTitle>
               <ul>
                 {navLinks.map((link) => (
-                  <li key={link.href}>
+                  <li key={link.id ?? link.href}>
                     <Link href={link.href} onClick={close} className={cn(ROW, "text-muted-foreground hover:text-foreground")}>
                       {link.label}
                     </Link>

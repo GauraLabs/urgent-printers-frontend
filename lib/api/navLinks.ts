@@ -19,6 +19,7 @@ interface BackendNavLink {
 }
 
 export interface NavLink {
+  id?: string;
   label: string;
   href: string;
 }
@@ -29,7 +30,7 @@ function resolveHref(link: BackendNavLink): string {
 }
 
 function mapNavLink(link: BackendNavLink): NavLink {
-  return { label: link.label, href: resolveHref(link) };
+  return { id: String(link.id), label: link.label, href: resolveHref(link) };
 }
 
 // ─── API functions ────────────────────────────────────────────────────────────
